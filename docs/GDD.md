@@ -9,10 +9,10 @@ Documento vivo. Se escribe parte por parte y cada parte queda cerrada cuando se 
 | 3. Niveles y mecánicas | Cerrada (2026-09-28) |
 | 4. Lo que hace volver | Cerrada (2026-09-28) |
 | 5. Tablas, perfiles, reto del día y temporadas | Cerrada (2026-09-28) |
-| 6. Cinemáticas y perspectiva | En discusión |
-| 7. Arte y sonido | Pendiente |
-| 8. Técnica | Pendiente |
-| 9. Etapas | Pendiente |
+| 6. Cinemáticas y perspectiva | Cerrada (2026-09-28) |
+| 7. Arte y sonido | Borrador (2026-09-28) |
+| 8. Técnica | Borrador (2026-09-28) |
+| 9. Etapas | Borrador (2026-09-28) |
 
 La investigación que respalda cada decisión, con sus fuentes, está en [`investigacion/`](investigacion/).
 
@@ -452,8 +452,171 @@ Las tablas, los perfiles públicos y el reto del día se publican también en JS
 
 ## 6. Cinemáticas y perspectiva
 
-En discusión.
+### Cinco vistas del mismo mundo
 
-## 7. a 9.
+El monitor siempre muestra la ciudad desde el aire. El juego la muestra desde cinco lados, para que el jugador piense «así se ve desde aquí». Cada lugar conserva sus señas en todas las vistas: la antena y la baliza de la torre, el color de cada distrito, su edificio más reconocible.
 
-Pendientes.
+| Vista | Dónde aparece | Qué tiene de nuevo |
+|---|---|---|
+| **Desde el aire** | Los niveles | La que ya conocen del monitor. |
+| **De frente, en panorámica** | La apertura y el amanecer | La ciudad de costado, con capas que se mueven a distinta velocidad. |
+| **Desde la torre** | El amanecer | Las calles bajando hacia uno. |
+| **Desde adentro** | El menú | La ciudad por la ventana de la torre. |
+| **En retrato** | La selfie del distrito | Los habitantes de la lente posando de frente. |
+
+El patrón que se toma de Link's Awakening, Mario Odyssey y Paper Mario: el cambio de vista es corto, llega por sorpresa, cambia la regla del juego y no solo el dibujo, y pasa en el mismo mundo reconocible.
+
+### El menú: el interior de la torre
+
+El menú no es una lista: es la sala de la torre vista desde adentro.
+
+- Por la ventana se ve la ciudad, con la luz de la hora real del jugador.
+- Sobre el escritorio están el **catalejo** (tocarlo es elegir nivel y lente), el **cuaderno de la vigía** y la **tabla**.
+- En la pared, la placa y las insignias del guardia.
+- El robot anda por la sala y comenta.
+
+### Las escenas
+
+| Escena | Cuándo | Duración | Qué cuenta |
+|---|---|---|---|
+| **La torre vacía** | Al empezar | 25 s | Panorámica de frente de la ciudad de noche, la torre apagada. El guardia sube, enciende la luz y el robot despierta. |
+| **Entre horas** | Tras cada nivel | 10 s | El catalejo gira y la ciudad cambia de lente ante los ojos del jugador, con un volteo de tarjeta. El robot comenta; lo que dice cambia según las estrellas. |
+| **La caída** | Antes de las 05:00 | 15 s | Se apagan tres salas a la vez. |
+| **Bajar del cielo** | Entrada al amanecer | 5 s | La cámara baja hacia la torre, la imagen se cierra en un círculo y se abre la vista desde la torre. |
+| **La verdad** | Tras el amanecer | 20 s | Las lentes caen una a una hasta dejar la Terminal. Luego, «Esto pasó anoche». |
+
+### La selfie del distrito
+
+Al sacar tres estrellas en un nivel, los habitantes de esa lente posan de frente, con un flash, en una foto con el apodo, el rango y la fecha del guardia. Se guarda como imagen vertical, lista para TikTok o Instagram.
+
+### Reglas de las escenas
+
+- Siempre se pueden saltar, y no se repiten si ya se vieron. Se pueden volver a ver desde el cuaderno.
+- Texto letra por letra, entre 5 y 20 caracteres por segundo. Un toque completa la línea y otro avanza.
+- Entre 10 y 40 segundos.
+- Verticales, así que sirven también como video para redes.
+- Sin voces: imagen, texto y sonido.
+
+---
+
+## 7. Arte y sonido
+
+### La mezcla
+
+La misma regla de los temas de Atalaya: **pixel art como acento, texto y formas nítidos.** Personajes, íconos, carteles y efectos en pixel; los textos siempre a resolución completa y en una fuente legible. La letra pixel solo en títulos y números grandes. Nunca se baja la resolución de la pantalla para que «se vea pixel». Nunca emojis.
+
+### Qué se reutiliza y qué es nuevo
+
+- **Se reutiliza de Atalaya** (misma licencia AGPL): el elenco de cada lente, los sprites, las paletas y los dibujos de la ciudad, la villa, el castillo, la oficina, la planta y Ops.
+- **Es nuevo:**
+  - las capas de la panorámica de frente (cielo, distritos lejanos, calle, primer plano);
+  - la vista desde la torre;
+  - el interior de la torre;
+  - los retratos de la selfie;
+  - el robot en tamaño grande, con sus gestos;
+  - la interfaz del juego.
+
+Lo nuevo es lo que más cuesta. Por eso las vistas nuevas se diseñan para reutilizarse: las capas de la apertura son las mismas del amanecer.
+
+### Los personajes
+
+- **El robot** se llama **Chispa**. Es el robot de Atalaya, más grande y con gestos: sorpresa, alegría, preocupación, cansancio.
+- **La vigía** se llama **Alba**, como el amanecer. Nunca se ve su cara: su letra en el cuaderno, su silla, su taza, su abrigo en el perchero.
+
+Los dos nombres son de trabajo hasta que se vean dibujados.
+
+### Legibilidad
+
+- Lo bueno y lo malo nunca se distinguen solo por el color: también por la forma, el rótulo o el movimiento, para quien no distingue colores.
+- Rótulos cortos y grandes; en el teléfono se leen sin acercarse.
+- Opción de reducir el movimiento y los destellos.
+
+### Sonido
+
+- **Efectos generados por código**, sin archivos: cada acierto, cada escalón del combo, cada sello tiene su sonido, y el combo sube de tono.
+- **Música que sigue la carga**: pocos instrumentos en calma y más capas a medida que la noche aprieta, como en Mini Metro. En El correo, la música es el ritmo del nivel.
+- Vibración corta en el teléfono en los aciertos grandes y en las fallas, que se puede apagar.
+- Todo el juego se entiende sin sonido.
+
+---
+
+## 8. Técnica
+
+Borrador. Se cierra cuando empiece la construcción.
+
+### En el navegador
+
+- **JavaScript sin librerías ni compilación**, como el resto de Atalaya. Canvas 2D.
+- **Carga inicial de menos de 300 KB.** Cada lente se carga al entrar a su nivel.
+- Funciona sin conexión una vez cargado. Los puntajes se guardan y se envían al volver la conexión.
+
+### El núcleo que se puede verificar
+
+La lógica de cada motor está separada del dibujo y es **determinista**: con la misma semilla y las mismas jugadas, da siempre el mismo resultado, en el navegador y en el servidor.
+
+- Paso de tiempo fijo, 30 veces por segundo.
+- Números enteros en la lógica, sin trigonometría ni `Math.random`.
+- Generador de azar propio con semilla (PCG).
+- Cada partida registra sus jugadas: en qué paso, dónde y qué.
+
+El servidor vuelve a jugar la partida con el mismo código y calcula el puntaje él mismo. Es lo que hace confiable la tabla.
+
+### El servidor
+
+- Un **servicio pequeño en Node**, con su propio usuario del sistema, escuchando solo en el servidor. Se llega a él por `neracosu.com/atalaya/juego/api`, igual que el monitor se sirve por neracosu.com.
+- **Base de datos MariaDB** propia del juego, con un usuario que solo entra a esa base.
+- Guarda: guardias (apodo, bandera, rango, correo opcional), partidas con sus jugadas, tablas, retos del día, insignias, temporadas y niveles de la comunidad.
+- **Cuenta:** al entrar se crea una llave al azar que queda en el teléfono; en la base solo se guarda su huella. Con el correo opcional se entra desde otro teléfono con un código de un solo uso.
+- **Topes:** envíos por conexión, códigos de correo por hora, tamaño de cada partida.
+- **Borrar mi guardia:** un botón que borra el perfil, las partidas y el correo.
+- **Esto pasó anoche** lee una vez al día los totales públicos de un Atalaya real (intentos de entrar, robots frenados, visitas). Solo totales, nunca direcciones ni nombres.
+
+### El formato de un nivel
+
+Un archivo JSON por nivel, validado contra un esquema:
+
+- `formato`: la versión del esquema;
+- `id`, `titulo`, `autor` (nombre y usuario de GitHub), `hecho_con` (opcional);
+- `motor`: cuál de los siete;
+- `lente`, `duracion_s`, `semilla`;
+- `oleadas`, `boletin`, `sorpresas`: lo que el motor necesita;
+- `estrellas`: los tres umbrales;
+- `verificacion`: la partida con que el autor lo superó;
+- `licencia`: CC BY-SA 4.0.
+
+### En el repositorio
+
+- Pruebas automáticas en cada cambio: el esquema, cada motor y una partida sin pantalla de cada nivel para comprobar que se puede superar.
+- `AGENTS.md`: las instrucciones para el agente de IA de quien quiera aportar.
+- Formularios de GitHub en español: «Idea de nivel», «Error», «Propuesta».
+- `CONTRIBUTING.md` en español, que da la bienvenida a lo hecho con IA.
+
+### Medición
+
+Con el mismo contador de Atalaya, sin cookies:
+
+- cuántos terminan el nivel 1;
+- cuántos vuelven al día siguiente;
+- cuántos llegan al amanecer;
+- cuántos tocan «probar Atalaya».
+
+### A resolver antes de publicar
+
+El sitio de Atalaya en `neracosu.com/atalaya` lo genera un exportador que reemplaza la carpeta entera. Hay que decidir cómo convive el juego con él antes de la primera publicación.
+
+---
+
+## 9. Etapas
+
+Borrador.
+
+Cada etapa termina con algo que se puede jugar y publicar. La primera decide todo: si el nivel 1 no engancha, el resto no importa.
+
+| Etapa | Qué trae | Qué se mide |
+|---|---|---|
+| **1. El núcleo** | Núcleo determinista, dibujo, sonido, El peaje completo con estrellas, el interior de la torre como menú y la escena «La torre vacía». | Si engancha en el primer minuto. |
+| **2. El recorrido** | La patrulla y La cuarentena, «Entre horas», el cuaderno y el progreso guardado en el teléfono. | Si vuelven a jugar. |
+| **3. La competencia** | El servidor y la base, el apodo, la tabla validada, el reto del día, los países y la tarjeta para compartir. | Si vuelven al día siguiente. |
+| **4. La noche completa** | Las tuberías, El correo y La caída, las mejoras de la torre, las insignias y la selfie. | Cuántos llegan lejos. |
+| **5. El amanecer** | La defensa de la torre, «Bajar del cielo», «La verdad», «Esto pasó anoche» y la invitación. Estreno de la temporada 1. | Cuántos tocan «probar Atalaya». |
+| **6. La comunidad** | Perfiles, rangos, formato de niveles, pruebas, `AGENTS.md`, formularios, editor de niveles y Guardia sin fin. | Cuántos niveles llegan. |
