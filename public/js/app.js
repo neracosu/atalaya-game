@@ -4,12 +4,12 @@ import { nivelPeaje, crearPartida, jugar, avanzar, resumen, estrellasDe, ESTRELL
 import { crearEscena } from './dibujo/escena.js';
 import { imagenResultado, fuentesListas } from './dibujo/postal.js';
 import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, aSVG } from './dibujo/sprites.js';
-import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques } from './reto.js';
+import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques, cargarAnoche, hoyEnVenezuela } from './reto.js';
+import { conectarRevision } from './puerta.js';
+import { compartir, aArchivo } from './compartir.js';
 import { T } from './textos.js';
 import * as S from './sonido.js';
 
-// La nube de Atalaya: la revisión pública del dominio y el alta gratis de un sitio
-const NUBE = 'https://nube.neracosu.com';
 const REPO = 'https://github.com/neracosu/atalaya-game';
 const ATALAYA = 'https://neracosu.com/atalaya';
 
@@ -42,13 +42,7 @@ function el(tag, clase, texto) {
 // ---------- portada ----------
 function portada() {
   $('torre-portada').innerHTML = aSVG(TORRE, PALETA_TORRE_ENCENDIDA);
-  const r = retoDeHoy();
-  const hecho = datos.retos && datos.retos[r.fecha];
-  $('reto-titulo').textContent = hecho ? T.retoHecho : T.reto(r.numero);
-  $('reto-detalle').textContent = hecho ? `${hecho.estrellas} de 3 estrellas · ${T.cambios[r.cambio]}` : T.cambios[r.cambio];
-  const racha = rachaActual(datos, r.fecha);
-  $('racha').hidden = !racha;
-  $('racha').textContent = T.racha(racha);
+  pintarReto();
   for (const [id, k] of [['aj-asistido', 'asistido'], ['aj-sonido', 'sonido'], ['aj-vibracion', 'vibracion'], ['aj-movimiento', 'movimiento']]) {
     $(id).checked = !!datos.ajustes[k];
     $(id).onchange = () => { datos.ajustes[k] = $(id).checked; guardar(datos); S.activarSonido(datos.ajustes.sonido); };
@@ -56,6 +50,28 @@ function portada() {
   S.activarSonido(datos.ajustes.sonido);
   mostrar('portada');
   $('portada').scrollTop = 0;
+}
+
+// ---------- el reto del día, con el tono de la noche real si llegó datos/anoche.json ----------
+let anoche = null;
+function pintarReto() {
+  const r = retoDeHoy(Date.now(), anoche);
+  const hecho = datos.retos && datos.retos[r.fecha];
+  $('reto-titulo').textContent = hecho ? T.retoHecho : T.reto(r.numero);
+  $('reto-detalle').textContent = hecho ? `${hecho.estrellas} de 3 estrellas · ${T.cambios[r.cambio]}` : T.cambios[r.cambio];
+  $('reto-tono').hidden = !r.tono;
+  $('reto-tono').textContent = r.tono ? T.tonos[r.tono.id](r.tono.cifra) : '';
+  const racha = rachaActual(datos, r.fecha);
+  $('racha').hidden = !racha;
+  $('racha').textContent = T.racha(racha);
+}
+function leerAnoche() {
+  return cargarAnoche(hoyEnVenezuela()).then(d => { anoche = d; return d; });
+}
+// el reto espera al archivo (casi siempre ya llegó): así nadie juega sin el tono por tocar muy rápido
+function empezarReto() {
+  S.despertar();
+  leerAnoche().then(() => empezar('reto'));
 }
 
 // ---------- la sección de abajo de la portada ----------
@@ -136,7 +152,7 @@ function empezar(tipo) {
   modo = tipo;
   let nivel;
   if (tipo === 'reto') {
-    retoActual = retoDeHoy();
+    retoActual = retoDeHoy(Date.now(), anoche);
     nivel = { ...retoActual.nivel, asistido: datos.ajustes.asistido };
   } else {
     retoActual = null;
@@ -361,22 +377,16 @@ function terminar() {
   $('ficha-texto').textContent = T.deVerdad.texto;
   $('compartido').hidden = true;
   ultimo.imagen = prepararImagen(ultimo);
-  anoche();
+  pintarAnoche();
   mostrar('fin');
   $('fin').scrollTop = 0;
 }
 
 // Esto pasó anoche: un archivo que Atalaya escribe una vez al día con totales redondeados de un servidor real
-let anocheCache = null;
-async function anoche() {
+async function pintarAnoche() {
   try {
-    if (!anocheCache) {
-      const res = await fetch('datos/anoche.json', { cache: 'no-cache' });
-      if (!res.ok) throw 0;
-      anocheCache = await res.json();
-    }
-    const d = anocheCache;
-    if (![d.intentos, d.robots, d.visitas].every(Number.isFinite)) throw 0;
+    const d = await leerAnoche();
+    if (!d || ![d.intentos, d.robots, d.visitas].every(Number.isFinite)) throw 0;
     $('anoche-texto').textContent = T.anoche.texto(d);
     $('anoche').hidden = false;
   } catch { $('anoche').hidden = true; }
@@ -400,12 +410,10 @@ async function prepararImagen(u) {
       sello: T.marcas.bloqueado,
       direccion: T.imagen.direccion,
     });
-    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-    return blob ? new File([blob], T.imagen.archivo, { type: 'image/png' }) : null;
+    return await aArchivo(c, T.imagen.archivo);
   } catch { return null; }
 }
 
-let enlaceImagen = null;
 $('compartir').addEventListener('click', async () => {
   if (!ultimo) return;
   const texto = ultimo.modo === 'reto' && ultimo.reto
@@ -413,87 +421,18 @@ $('compartir').addEventListener('click', async () => {
     : T.tarjetaPartida(ultimo.r.puntos, ultimo.estrellas);
   medir('compartir');
   const archivo = ultimo.imagen ? await ultimo.imagen : null;
-  if (archivo && navigator.canShare) {
-    try {
-      if (navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], text: texto }); return; }
-    } catch (e) { if (e && e.name === 'AbortError') return; }
-  }
-  try {
-    if (navigator.share) { await navigator.share({ text: texto }); return; }
-  } catch (e) { if (e && e.name === 'AbortError') return; }
-  // sin la hoja de compartir: se copia el texto y la imagen queda para descargar
-  const aviso = $('compartido');
-  aviso.replaceChildren();
-  try { await navigator.clipboard.writeText(texto); aviso.append(T.fin.copiado); } catch { }
-  if (archivo) {
-    if (enlaceImagen) URL.revokeObjectURL(enlaceImagen);
-    enlaceImagen = URL.createObjectURL(archivo);
-    const a = el('a', '', T.imagen.descargar);
-    a.href = enlaceImagen;
-    a.download = T.imagen.archivo;
-    aviso.append(aviso.childNodes.length ? ' ' : '', a);
-  }
-  aviso.hidden = !aviso.childNodes.length;
+  await compartir({ texto, archivo, aviso: $('compartido'), nombre: T.imagen.archivo });
 });
-
-// ---------- El peaje de su sitio ----------
-const DOMINIO = /^(?=.{4,253}$)(?!-)([a-z0-9-]{1,63}\.)+[a-z]{2,63}$/;
-function limpiarDominio(v) {
-  return v.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, '').replace(/\.$/, '');
-}
-function conectarRevision(form) {
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const dom = limpiarDominio(form.querySelector('.dominio').value);
-    const inf = form.parentElement.querySelector('.informe');
-    inf.innerHTML = '';
-    const linea = (t, clase) => { const p = document.createElement('p'); p.textContent = t; if (clase) p.className = clase; inf.append(p); return p; };
-    if (!DOMINIO.test(dom)) { linea(T.suSitio.invalido); return; }
-    medir('dominio');
-    linea(T.suSitio.revisando);
-    try {
-      const ctl = new AbortController();
-      const reloj = setTimeout(() => ctl.abort(), 15000);
-      const res = await fetch(`${NUBE}/api/revision?dominio=${encodeURIComponent(dom)}`, { signal: ctl.signal });
-      clearTimeout(reloj);
-      if (!res.ok) throw 0;
-      const d = await res.json();
-      inf.innerHTML = '';
-      linea(T.suSitio.fallas(d.fallas), 'titulo');
-      const ul = document.createElement('ul');
-      for (const p of d.puntos || []) {
-        const li = document.createElement('li');
-        if (!p.ok) li.className = 'falla';
-        const i = document.createElement('i');
-        const cuerpo = document.createElement('span');
-        const b = document.createElement('b'); b.textContent = p.titulo;
-        cuerpo.append(b, document.createTextNode(p.detalle ? ` · ${p.detalle}` : ''));
-        li.append(i, cuerpo);
-        ul.append(li);
-      }
-      inf.append(ul);
-      linea(T.suSitio.cierre, 'cierre');
-      const a = document.createElement('a');
-      a.className = 'boton principal';
-      a.href = `${NUBE}/vigilar?dominio=${encodeURIComponent(dom)}`;
-      a.rel = 'noopener';
-      a.textContent = T.suSitio.atalaya;
-      a.addEventListener('click', () => medir('ir-atalaya'));
-      inf.append(a);
-    } catch {
-      inf.innerHTML = '';
-      linea(T.suSitio.error);
-    }
-  });
-}
 
 // ---------- botones ----------
 $('empezar').addEventListener('click', () => empezar('partida'));
-$('reto').addEventListener('click', () => empezar('reto'));
-$('otra-vez').addEventListener('click', () => { medir('otra-vez'); empezar(ultimo && ultimo.modo === 'reto' ? 'reto' : 'partida'); });
+$('reto').addEventListener('click', empezarReto);
+$('otra-vez').addEventListener('click', () => { medir('otra-vez'); if (ultimo && ultimo.modo === 'reto') empezarReto(); else empezar('partida'); });
 $('volver').addEventListener('click', portada);
 addEventListener('resize', () => { if ($('juego').classList.contains('activa')) escena.redimensionar(); });
 
 pintarLanding();
-for (const f of document.querySelectorAll('.form-sitio')) conectarRevision(f);
+// «El peaje de su sitio» (puerta.js), en el resultado y en la portada
+for (const f of document.querySelectorAll('.form-sitio')) conectarRevision(f, { medir });
 portada();
+leerAnoche().then(() => { if ($('portada').classList.contains('activa')) pintarReto(); });

@@ -3,7 +3,7 @@
 // enteros; la capa de código (cielo, luz de la baliza, textos) generada aparte y siempre nítida.
 // No es parte del motor: aquí el azar del decorado tiene su propia semilla fija, para que cada postal salga igual.
 
-import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, BARRERA_POSTE, PALETA_BARRERA, ESTRELLA, aCanvas } from './sprites.js';
+import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, BARRERA_POSTE, PALETA_BARRERA, ESTRELLA, PUERTA, PALETA_PUERTA, PALETA_PUERTA_FALLAS, BIEN, FALLA, PALETA_MARCAS, aCanvas } from './sprites.js';
 
 export const FUENTE_PIXEL = "'Silkscreen', ui-monospace, Menlo, monospace";
 export const FUENTE_TEXTO = "'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif";
@@ -248,6 +248,83 @@ export function imagenResultado(d) {
   pintarEstrellas(g, cx, ESTRELLAS_Y, d.estrellas, LADO_ESTRELLA, HUECO_ESTRELLA);
   if (nBloques) pintarBloques(g, cx, bloquesY, d.bloques, BLOQUE, HUECO_BLOQUE, POR_FILA);
 
+  g.fillStyle = '#22d3ee';
+  g.font = `400 36px ${FUENTE_PIXEL}`;
+  escribir(g, d.direccion, cx, alto - 52, 2);
+  return c;
+}
+
+// La imagen vertical de «Su puerta», 1080x1350, para compartir. No recibe el dominio: solo lo que se puede mostrar.
+// d = { rotulo, titulo, resumen, fallas, detalle, puntos: [{ titulo, ok }], bien, falla, direccion }
+export function imagenPuerta(d) {
+  const ancho = 1080, alto = 1350, u = 6;
+  const c = document.createElement('canvas');
+  c.width = ancho; c.height = alto;
+  const g = c.getContext('2d');
+  const H = Math.floor(alto / u);
+  const calle = H - 30;
+  const cx = ancho / 2;
+  const hayFallas = d.fallas > 0;
+
+  // la puerta pixel arriba, a la izquierda del título
+  const ESCALA_PUERTA = 7, puertaY = 70;
+  const lineas = [
+    ['#22d3ee', `400 32px ${FUENTE_PIXEL}`, d.rotulo.toUpperCase(), 108, 8],
+    ['#e6edf7', `400 92px ${FUENTE_PIXEL}`, d.titulo.toUpperCase(), 206, 4],
+    [hayFallas ? '#f87171' : '#4ade80', `400 76px ${FUENTE_PIXEL}`, d.resumen.toUpperCase(), 298, 2],
+    ['#a9b6ca', `500 36px ${FUENTE_TEXTO}`, d.detalle, 358, 0],
+  ];
+  const libres = lineas.map(([, fuente, texto, base, espacio]) => cajaDeTexto(g, fuente, texto, cx + 60, base, { alinear: 'center', espacio }));
+  const FILA = 58, panelX = 70, panelY = 396, panelAncho = ancho - 140;
+  const panelAlto = d.puntos.length * FILA + 36;
+  libres.push([panelX - 16, panelY - 16, panelX + panelAncho + 16, panelY + panelAlto + 16]);
+  libres.push([60, puertaY - 16, 60 + 12 * ESCALA_PUERTA + 32, puertaY + 16 * ESCALA_PUERTA + 16]);
+
+  g.fillStyle = '#050914';
+  g.fillRect(0, 0, ancho, alto);
+  pintarCalle(g, {
+    ancho, alto, u, calle, torreX: Math.floor(ancho / u) - 34, torreEscala: 1, barreraX: 96, edificios: [8, 24], estrellas: 110, haz: Math.PI * 1.3, libres,
+    autos: [
+      { tipo: 'cliente', paleta: 3, x: 12 },
+      { tipo: 'cliente', paleta: 0, x: 35 },
+      { tipo: 'sospechoso', x: 74, bajo: 2, alfa: 0.85 },
+      { tipo: 'cliente', paleta: 1, x: 128 },
+    ],
+  });
+
+  g.drawImage(aCanvas(PUERTA, hayFallas ? PALETA_PUERTA_FALLAS : PALETA_PUERTA, ESCALA_PUERTA), 76, puertaY);
+
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
+  for (const [color, fuente, texto, base, espacio] of lineas) {
+    g.fillStyle = color;
+    g.font = fuente;
+    escribir(g, texto, cx + 60, base, espacio);
+  }
+
+  // los puntos revisados, uno por fila: la marca pixel, el nombre y cómo salió
+  g.fillStyle = 'rgba(13, 21, 40, 0.94)';
+  g.fillRect(panelX, panelY, panelAncho, panelAlto);
+  g.fillStyle = 'rgba(34, 211, 238, 0.45)';
+  g.fillRect(panelX, panelY, panelAncho, 3);
+  const ESCALA_MARCA = 5;
+  d.puntos.forEach((p, i) => {
+    const y = panelY + 18 + i * FILA;
+    if (i) { g.fillStyle = 'rgba(148, 163, 184, 0.14)'; g.fillRect(panelX + 24, y, panelAncho - 48, 2); }
+    g.drawImage(aCanvas(p.ok ? BIEN : FALLA, PALETA_MARCAS, ESCALA_MARCA), panelX + 32, y + 12);
+    g.textAlign = 'left';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#e6edf7';
+    g.font = `600 38px ${FUENTE_TEXTO}`;
+    g.fillText(p.titulo, panelX + 32 + 7 * ESCALA_MARCA + 28, y + FILA / 2 + 2);
+    g.textAlign = 'right';
+    g.fillStyle = p.ok ? '#4ade80' : '#f87171';
+    g.font = `400 28px ${FUENTE_PIXEL}`;
+    escribir(g, (p.ok ? d.bien : d.falla).toUpperCase(), panelX + panelAncho - 32, y + FILA / 2 + 2, 2);
+  });
+
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
   g.fillStyle = '#22d3ee';
   g.font = `400 36px ${FUENTE_PIXEL}`;
   escribir(g, d.direccion, cx, alto - 52, 2);

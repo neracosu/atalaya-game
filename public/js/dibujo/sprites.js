@@ -91,6 +91,31 @@ export const PALETA_TORRE_ENCENDIDA = { ...PALETA_TORRE, w: '#e2e8f0', v: '#0e74
 export const ESTRELLA = ['....y....', '....y....', '...yyy...', 'yyyyyyyyy', '.yyyyyyy.', '..yyyyy..', '..yy.yy..', '.yy...yy.', 'y.......y'];
 export const TORRECITA = ['...b...', '..kkk..', '.kwwwk.', 'kkkkkkk', '.kgggk.', '.kgggk.', '.kgggk.', 'kgggggk', 'kkkkkkk'];
 
+// el informe de «Su puerta»: la puerta 12x16 con su luz arriba (verde sin fallas, roja con fallas) y las marcas 7x7
+export const PUERTA = [
+  '.kkkLLLLkkk.',
+  'kWWWWWWWWWWk',
+  'kWwwwwwwwwWk',
+  'kWwWWWWWWwWk',
+  'kWwWwwwwWwWk',
+  'kWwWwwwwWwWk',
+  'kWwWWWWWWwWk',
+  'kWwwwwwwwwWk',
+  'kWwwwwwwyyWk',
+  'kWwwwwwwyyWk',
+  'kWwWWWWWWwWk',
+  'kWwWwwwwWwWk',
+  'kWwWwwwwWwWk',
+  'kWwWWWWWWwWk',
+  'kWwwwwwwwwWk',
+  'kkkkkkkkkkkk',
+];
+export const PALETA_PUERTA = { k: '#0b1020', W: '#78350f', w: '#a16207', y: '#facc15', L: '#22c55e' };
+export const PALETA_PUERTA_FALLAS = { ...PALETA_PUERTA, L: '#ef4444' };
+export const BIEN = ['.......', '......g', '.....gg', 'g...gg.', 'gg.gg..', '.ggg...', '..g....'];
+export const FALLA = ['r.....r', 'rr...rr', '.rr.rr.', '..rrr..', '.rr.rr.', 'rr...rr', 'r.....r'];
+export const PALETA_MARCAS = { g: '#22c55e', r: '#ef4444' };
+
 // Convierte un sprite en un canvas a escala entera (sin suavizado: cada pixel del dibujo es un cuadro exacto)
 export function aCanvas(filas, paleta, escala) {
   const alto = filas.length, ancho = filas[0].length;

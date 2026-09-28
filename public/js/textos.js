@@ -75,12 +75,43 @@ export const T = {
     placeholder: 'susitio.com',
     boton: 'Revisar mi puerta',
     revisando: 'Revisando…',
-    error: 'No pudimos revisarlo ahora. Intente de nuevo en un rato.',
     invalido: 'Escriba solo el dominio, por ejemplo susitio.com',
     fallas: n => n === 0 ? 'Su puerta: sin fallas a la vista' : n === 1 ? 'Su puerta: 1 falla' : `Su puerta: ${n} fallas`,
     cierre: 'Esto lo revisamos una vez. Atalaya lo mira cada cinco minutos.',
     atalaya: 'Vigilar mi sitio con Atalaya, gratis',
     etiqueta: 'Su dominio',
+    detalle: n => `${n} puntos que cualquiera puede ver`,
+    // la imagen para compartir
+    imagenTitulo: 'Su puerta',
+    resumen: n => n === 0 ? 'Sin fallas' : n === 1 ? '1 falla' : `${n} fallas`,
+    bien: 'bien',
+    falla: 'falla',
+    compartir: 'Compartir mi puerta',
+    sinDominio: 'La imagen no muestra su dominio.',
+    // al compartir: sin el dominio, nunca
+    tarjeta: (fallas, total) => `Atalaya: la guardia · Su puerta\n${fallas === 0 ? `Sin fallas a la vista en ${total} puntos` : `${fallas} de ${total} puntos con fallas`}. ¿Y la suya?\natalaya.neracosu.com/juego`,
+    archivo: 'atalaya-su-puerta.png',
+    noSePudo: 'No se pudo revisar',
+    // cuando la revisión no contesta con su propio mensaje
+    errores: {
+      sinConexion: 'Parece que no tiene conexión. Revise su internet e intente de nuevo.',
+      tiempo: 'La revisión tardó demasiado. Intente de nuevo en un rato.',
+      noDisponible: 'La revisión no está disponible en este momento. Intente de nuevo en un rato.',
+      noAbierta: 'La revisión de sitios todavía no está abierta. Vuelva pronto.',
+      caida: 'La revisión no responde ahora. Intente de nuevo en un rato.',
+      espera: 'Hizo muchas revisiones seguidas. Espere un rato e intente de nuevo.',
+      pausa: 'La revisión está en pausa. Intente más tarde.',
+      origen: 'Esta revisión solo funciona desde el juego.',
+      noExiste: 'No encontramos ese dominio. Revise que esté bien escrito.',
+      incompleta: 'La respuesta de la revisión llegó incompleta. Intente de nuevo.',
+    },
+  },
+
+  // el reto del día con el tono de la noche real (datos/anoche.json)
+  tonos: {
+    rafaga: n => `Hoy el reto trae la ráfaga de anoche: ${n.toLocaleString('es')} robots frenados en un servidor real.`,
+    asedio: n => `Hoy el reto trae el asedio de anoche: ${n.toLocaleString('es')} intentos de entrar a un servidor real.`,
+    clientela: n => `Hoy el reto trae la clientela de anoche: ${n.toLocaleString('es')} visitas en un servidor real.`,
   },
 
   // la sección de abajo de la portada: qué es, cómo se juega y de dónde sale

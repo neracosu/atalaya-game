@@ -70,10 +70,12 @@ public/                 lo que se publica, tal cual
   tarjeta.png           la tarjeta al compartir el enlace (1200x630)
   js/app.js             la interfaz: pantallas, entrada, resultado, compartir
   js/textos.js          todos los textos que ve el jugador
-  js/reto.js            el reto del día, la racha y lo que se guarda en el teléfono
+  js/reto.js            el reto del día (con el tono de la noche real), la racha y lo que se guarda en el teléfono
+  js/puerta.js          «El peaje de su sitio»: la revisión del dominio y el informe «Su puerta»
+  js/compartir.js       compartir una imagen con su texto (hoja del teléfono, o copiar y descargar)
   js/sonido.js          efectos generados por código, sin archivos
   js/motor/             el núcleo determinista: la lógica de cada nivel, sin dibujo
-  js/dibujo/            sprites, la escena de la partida y las postales (imagen del resultado)
+  js/dibujo/            sprites, la escena de la partida y las postales (imagen del resultado y de «Su puerta»)
   fuentes/              Silkscreen y Space Grotesk, servidas desde el propio sitio
 scripts/                herramientas que no se publican (la tarjeta y los íconos)
 test/                   pruebas con node --test
