@@ -103,7 +103,7 @@ Son los temas que ya existen en Atalaya, ahora con una razón dentro de la histo
 
 | Lente | Quien vigila | Quien sondea | El archivo malicioso | La fila de espera |
 |---|---|---|---|---|
-| Ciudad | Patrulla | Auto sospechoso | Bicho | Autos en fila |
+| Ciudad | Patrulla y patrulla voladora | Auto que sondea | Bicho | Autos en fila |
 | Villa | Guardia y búho guardián | Ladrón encapuchado | Rata | Aldeanos en fila |
 | Castillo | Centinela y gárgola | Espectro | Araña | Murciélagos |
 | Oficina | Guardia de seguridad y dron | Intruso de capucha | Cucaracha | Aviones de papel |
