@@ -20,7 +20,10 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
   `postal.js` (dibujos quietos: la imagen del resultado y la tarjeta).
 - `public/js/reto.js`: el reto del día, la racha y lo que se guarda en el teléfono.
 - `public/js/sonido.js`: efectos generados con WebAudio, sin archivos.
-- `scripts/`: herramientas que no se publican (`tarjeta.mjs` regenera la tarjeta y los íconos).
+- `public/js/medir.js`: la medición del embudo. `app.js` solo llama a `medir('nombre')`; la lista de lo que
+  puede salir está ahí y en el `README.md` («Qué se mide y qué no»). Nada de datos del jugador en un evento.
+- `scripts/`: herramientas que no se publican (`tarjeta.mjs` regenera la tarjeta y los íconos; `embudo.mjs`
+  lee el embudo de la analítica).
 - `test/`: pruebas con `node --test`. `bots.mjs` juega partidas sin pantalla.
 
 ## Cómo correr y probar
@@ -73,7 +76,9 @@ vienen y la revisión de partidas. Reglas:
   resolución** del canvas para que se vea «más pixel».
 - **Política de seguridad de contenido estricta.** En el HTML no hay `<script>` sin `src`, ni `<style>`, ni
   atributos `style`, ni `onclick` y similares. En JavaScript, `elemento.style` sí se puede.
-- **Nada de afuera.** Ni fuentes, ni imágenes, ni scripts de otros sitios: todo se sirve desde `public/`.
+- **Nada de afuera.** Ni fuentes, ni imágenes, ni scripts de otros sitios: todo se sirve desde `public/`. La única
+  excepción es el script de medición de Atalaya, que carga `medir.js` solo en el sitio publicado; el juego
+  tiene que funcionar igual sin él.
 - **Nombres ficticios.** Nada de nombres reales de proyectos, clientes ni personas, ni en comentarios, ni en
   pruebas, ni en datos de ejemplo. Tampoco metas de negocio ni datos privados de ningún servidor.
 - **Comentarios en español**, cortos, sobre el porqué.

@@ -7,6 +7,7 @@ import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, a
 import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques } from './reto.js';
 import { T } from './textos.js';
 import * as S from './sonido.js';
+import { medir } from './medir.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
 
 // La nube de Atalaya: la revisión pública del dominio y el alta gratis de un sitio
 const NUBE = 'https://nube.neracosu.com';
@@ -18,9 +19,6 @@ let datos = leer();
 datos.ajustes = { sonido: true, vibracion: true, asistido: false, movimiento: false, ...(datos.ajustes || {}) };
 
 const escena = crearEscena($('mundo'), { menosMovimiento: () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches });
-
-// ---------- analítica de Atalaya, sin cookies (si el script está cargado) ----------
-function medir(evento) { try { if (window.atalaya) window.atalaya('event', evento); } catch { } }
 
 function vibrar(ms) { if (datos.ajustes.vibracion && navigator.vibrate) try { navigator.vibrate(ms); } catch { } }
 
@@ -335,7 +333,7 @@ function terminar() {
   }
   guardar(datos);
   partida = null;
-  medir('fin-peaje');
+  medir('fin-peaje', estrellas);
   S.sonarFin(estrellas > 0);
 
   $('fin-rotulo').textContent = modo === 'reto' ? `${T.reto(retoActual.numero)}${contado ? '' : ' · sin contar'}` : T.hora;

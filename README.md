@@ -27,6 +27,28 @@ solo cuenta el primer intento. El resultado se comparte como texto o como imagen
 Etapa 0: El peaje jugable, con sonido, estrellas, reto del día sin tabla, la portada con su sección informativa
 y el resultado con «Esto pasa de verdad» y «¿Y su sitio?». El plan completo está en `docs/GDD.md`.
 
+## Qué se mide y qué no
+
+Para saber si el juego engancha (la prueba «seguir, cambiar o parar» de `docs/GDD.md`, partes 9 y 10), el sitio
+publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está en `public/js/medir.js`.
+
+- **Qué se cuenta**, siempre como un nombre fijo y sumado por día: que se vio la portada, que empezó la primera
+  partida, que la terminó y con cuántas estrellas (0 a 3), que llegó a 1, 2, 3, 5 o 10 reintentos, que empezó el
+  reto del día, que compartió, que revisó un dominio (solo el hecho), que tocó «vigilar» y si es la primera
+  visita, vuelve al día siguiente o vuelve otro día, y cuando llega a 3 y a 7 días distintos. El script de Atalaya suma además el tiempo con la página a la
+  vista, cuánto bajó en la portada, la página de donde llegó (sin lo que va después del `?`), que envió un
+  formulario y los clics a otros sitios (solo el nombre del sitio).
+- **Qué no**: ni el dominio que escribe, ni los puntos exactos, ni la partida, ni un identificador suyo. Sin
+  cookies y sin nada que lo siga de un sitio a otro. Estos conteos no guardan su dirección de conexión: el script
+  la usa solo como tope contra abusos. Aparte, como todo sitio web, el servidor lleva sus registros de acceso.
+- **Qué queda en su teléfono**: la fecha de su última visita y cuántos días distintos jugó (la clave
+  `guardia-visitas`), para saber si volvió. Eso no se envía: solo sale «volvió al día siguiente» u «otro día».
+  Puede borrarla con los datos del sitio.
+- **Cuándo no se mide nada**: si su navegador pide no ser seguido (Global Privacy Control o Do Not Track), si
+  bloquea el script o si el juego corre en otro sitio (su máquina, una copia). El juego funciona igual.
+
+`scripts/embudo.mjs` lee los archivos de esa analítica y compara el embudo con las metas del GDD.
+
 ## Correrlo en su máquina
 
 No hay nada que instalar ni que compilar: es HTML, CSS y JavaScript servidos tal cual. Hace falta un servidor
@@ -72,10 +94,11 @@ public/                 lo que se publica, tal cual
   js/textos.js          todos los textos que ve el jugador
   js/reto.js            el reto del día, la racha y lo que se guarda en el teléfono
   js/sonido.js          efectos generados por código, sin archivos
+  js/medir.js           qué se mide del embudo y cómo (ver «Qué se mide y qué no»)
   js/motor/             el núcleo determinista: la lógica de cada nivel, sin dibujo
   js/dibujo/            sprites, la escena de la partida y las postales (imagen del resultado)
   fuentes/              Silkscreen y Space Grotesk, servidas desde el propio sitio
-scripts/                herramientas que no se publican (la tarjeta y los íconos)
+scripts/                herramientas que no se publican (la tarjeta, los íconos y el embudo)
 test/                   pruebas con node --test
 docs/GDD.md             el documento de diseño del juego
 docs/investigacion/     lo que se investigó de otros juegos para decidir, con fuentes
@@ -88,7 +111,8 @@ licencias/              las licencias de las fuentes
 - Todos los textos al jugador en `public/js/textos.js`, en español y tratando de usted.
 - Sin emojis, en ningún lado: solo pixel art.
 - Pixel art como acento, texto nítido. Nunca se baja la resolución.
-- Nada de código ni estilos en línea en el HTML y nada cargado de otros sitios.
+- Nada de código ni estilos en línea en el HTML y nada cargado de otros sitios (la única excepción es el
+  script de medición de Atalaya, ver arriba).
 - Nada de nombres reales de proyectos, clientes ni personas, ni siquiera en comentarios o pruebas.
 - Los secretos (por ejemplo, la clave que firma los puntajes) nunca van al repo.
 
