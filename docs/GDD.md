@@ -8,8 +8,8 @@ Documento vivo. Se escribe parte por parte y cada parte queda cerrada cuando se 
 | 2. Historia y mundo | Cerrada (2026-09-28) |
 | 3. Niveles y mecánicas | Cerrada (2026-09-28) |
 | 4. Lo que hace volver | Cerrada (2026-09-28) |
-| 5. Tablas, reto del día y temporadas | En discusión |
-| 6. Cinemáticas y perspectiva | Pendiente |
+| 5. Tablas, perfiles, reto del día y temporadas | Cerrada (2026-09-28) |
+| 6. Cinemáticas y perspectiva | En discusión |
 | 7. Arte y sonido | Pendiente |
 | 8. Técnica | Pendiente |
 | 9. Etapas | Pendiente |
@@ -347,10 +347,113 @@ Premian estilos distintos de jugar, para que no todo sea el puntaje. Por ejemplo
 
 ---
 
-## 5. Tablas, reto del día y temporadas
+## 5. Tablas, perfiles, reto del día y temporadas
+
+### El día del juego
+
+El día cambia a la **medianoche de Venezuela** (UTC-4, sin horario de verano). A esa hora sale el reto nuevo, se cuentan las rachas y cierran las tablas del día.
+
+### Las tablas
+
+- **Por nivel**, semanal e histórica.
+- **General:** la suma del mejor puntaje de cada nivel.
+- **Del reto del día.**
+- **Guardia sin fin:** récord de oleadas.
+- **Por categoría:** combo máximo, noches sin fallas, cero falsos positivos.
+- **De amigos:** quienes jugaron el mismo enlace de reto.
+- **Por país** (abajo).
+
+Además del top 10, cada jugador ve a los cinco que tiene arriba y a los cinco que tiene abajo. Ver que falta poco para pasar al de arriba motiva más que un primer lugar imposible.
+
+### Los países
+
+- Cada jugador elige su bandera, en pixel. No se le ubica por la conexión y puede no elegir ninguna.
+- En cada tabla se puede filtrar por país: «los mejores de Venezuela».
+- **La tabla de países** compara a los países entre sí con el promedio de sus diez mejores jugadores de la semana, para que no gane siempre el país con más gente sino el que juega mejor. Un país necesita al menos diez jugadores esa semana para entrar.
+
+### Los perfiles públicos
+
+Cada guardia tiene su página: `neracosu.com/atalaya/juego/guardia/<apodo>`. Muestra:
+
+- el apodo, la bandera, el rango y la placa;
+- la torre con sus colores;
+- la vitrina: tres insignias que el propio jugador elige destacar, y debajo todas las demás;
+- los mejores puntajes por nivel y su posición;
+- el récord de Guardia sin fin y la racha del reto;
+- las temporadas jugadas, con sus placas;
+- los niveles que creó, con su escalón (Aceptado, Destacado, De temporada);
+- las páginas del cuaderno que lleva.
+
+Nunca muestra el correo ni ningún otro dato de la persona. Se entra desde cualquier tabla tocando un apodo.
+
+### Los rangos
+
+Como en los foros de antes: un rango que se gana con el tiempo y el esfuerzo, y que **nunca se pierde**. Sale de los **puntos de guardia**, que se ganan con:
+
+- estrellas;
+- insignias;
+- retos del día jugados;
+- noches completas;
+- niveles creados que entran al juego.
+
+| Rango | Qué pide (a afinar) |
+|---|---|
+| Aprendiz | Empezar |
+| Vigía | Terminar el primer nivel con una estrella |
+| Centinela | Terminar la noche |
+| Guardián | Buena parte de las estrellas y de los retos |
+| Guardián mayor | Casi todo, durante más de una temporada |
+| Atalaya | El más alto. Muy pocos |
+
+El rango se ve junto al apodo en todas las tablas y en el perfil.
+
+**Los creadores tienen su propio rango**, aparte, que sale de sus niveles: cuántos entraron al juego y a qué escalón llegaron. Como los puntos de creador de Geometry Dash.
+
+### Las insignias
+
+- Tres grados, **bronce, plata y oro**, como en Stack Overflow. Las de bronce se ganan jugando; las de oro son raras y se notan.
+- Premian estilos distintos: puntaje, precisión, constancia, creación.
+- Algunas son de temporada o de evento, y quedan en el perfil para siempre como recuerdo.
+
+### El reto del día
+
+- El mismo nivel, la misma semilla y los mismos cambios para todos.
+- Solo el primer intento cuenta para la tabla del día. Después se juega las veces que se quiera, sin puntuar.
+- Racha que perdona un día, y tarjeta para compartir (parte 4).
+
+### Cómo se cuida la tabla
+
+- El servidor vuelve a jugar cada partida con su semilla y sus jugadas, y calcula el puntaje él mismo.
+- Compara el tiempo real con la duración de la partida, porque ralentizar el juego es la trampa típica.
+- Tope de envíos por conexión.
+- Un puntaje sospechoso se oculta de la tabla en lugar de convivir con los demás.
+- **Apodos:** de 3 a 12 caracteres, con una lista de palabras vetadas y un botón para reportar un apodo o un perfil.
+
+### API pública
+
+Las tablas, los perfiles públicos y el reto del día se publican también en JSON, para que la comunidad arme bots, sitios y estadísticas, como TibiaData con Tibia.
+
+### Las temporadas
+
+- **Tres meses**, con la fecha de cierre anunciada desde el primer día.
+- **Cada una trae** una noche nueva, una amenaza nueva, al menos una lente nueva, una pista más sobre la vigía, y niveles oficiales y de la comunidad.
+- **Al cerrar:**
+  - se corona a los primeros y reciben la placa de la temporada;
+  - se conservan las estrellas, las insignias, el rango, el cuaderno y los récords por nivel;
+  - las temporadas pasadas quedan jugables en el archivo.
+- **Cada temporada abre con un llamado a enviar niveles**, y la comunidad vota en qué se enfoca la siguiente: un nivel, un invasor o una lente. Se aprueba con 70 % y votan quienes han jugado.
+- **Eventos del mes:** la ciudad se redecora (Navidad, Carnaval) con un invasor especial y una insignia de la fecha.
+
+### Pendiente
+
+- Premios reales para los ganadores de temporada: por decidir más adelante.
+
+---
+
+## 6. Cinemáticas y perspectiva
 
 En discusión.
 
-## 6. a 9.
+## 7. a 9.
 
 Pendientes.
