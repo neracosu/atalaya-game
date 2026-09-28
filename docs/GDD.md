@@ -5,8 +5,8 @@ Documento vivo. Se escribe parte por parte y cada parte queda cerrada cuando se 
 | Parte | Estado |
 |---|---|
 | 1. Visión | Cerrada (2026-09-28) |
-| 2. Historia y mundo | En discusión |
-| 3. Niveles y mecánicas | Pendiente |
+| 2. Historia y mundo | Cerrada (2026-09-28) |
+| 3. Niveles y mecánicas | En discusión |
 | 4. Lo que hace volver | Pendiente |
 | 5. Tablas, reto del día y temporadas | Pendiente |
 | 6. Cinemáticas y perspectiva | Pendiente |
@@ -91,8 +91,78 @@ Cuando haya una duda de diseño, se decide con estos cuatro:
 
 ## 2. Historia y mundo
 
+### La premisa
+
+Una noche, la torre de la ciudad amanece vacía. Quien la cuidaba, la vigía, se fue sin avisar, y la ciudad se queda sin nadie que la mire justo cuando empieza a llegar el Enjambre. El jugador sube, enciende la luz y toma la guardia.
+
+Desde la torre se ve la ciudad a través de un catalejo con varias lentes. Cada lente muestra la misma ciudad con otro disfraz: como castillo, como villa, como oficina. Cambiar de nivel es cambiar de lente. Al amanecer las lentes se caen y queda la verdad.
+
+### Las lentes
+
+Son los temas que ya existen en Atalaya, ahora con una razón dentro de la historia. El problema de fondo es siempre el mismo (una visita, un intruso, un archivo malicioso, una cola que se desborda); lo que cambia es el disfraz. Cada lente trae su propio elenco, el mismo que usa el monitor:
+
+| Lente | Quien vigila | Quien sondea | El archivo malicioso | La fila de espera |
+|---|---|---|---|---|
+| Ciudad | Patrulla | Auto sospechoso | Bicho | Autos en fila |
+| Villa | Guardia y búho guardián | Ladrón encapuchado | Rata | Aldeanos en fila |
+| Castillo | Centinela y gárgola | Espectro | Araña | Murciélagos |
+| Oficina | Guardia de seguridad y dron | Intruso de capucha | Cucaracha | Aviones de papel |
+| Planta | Montacargas y dron de la planta | Dron hostil | Bicho oxidado | Cajas en fila |
+| Ops | Blindado y dron | Marcador hostil | Virus | Contactos en espera |
+| Raid | Paladín y dragoncito | Esbirro | Slime | Héroes en fila |
+| Acuario | Caballito de mar y tortuga | Tiburón | Erizo | Peces en espera |
+| **Terminal** | — | — | — | — |
+
+La **Terminal** es la última lente, y no es un disfraz: es la verdad. Solo texto, como en el monitor.
+
+La temporada 1 usa seis lentes más la Terminal. Las demás quedan para temporadas siguientes y para lentes que haga la comunidad, igual que los temas de Atalaya.
+
+### La noche
+
+Cada nivel es una hora de la noche, de medianoche al amanecer, y en cada hora cambia la lente. Qué nivel va en qué hora y con qué lente se cierra en la parte 3. La forma de la noche es esta:
+
+1. **Medianoche.** Todo tranquilo. El robot compañero enseña lo básico con el primer problema, el más simple.
+2. **La madrugada.** Los problemas se suman y se cruzan, y el Enjambre prueba cada puerta de la ciudad.
+3. **La caída.** Antes del amanecer, varias cosas fallan a la vez. Es el momento más tenso.
+4. **El amanecer.** La defensa de la torre: el Enjambre ataca la torre por todas las calles y el jugador la defiende, con la ciudad vista desde la torre y no desde el aire. Es el jefe final.
+5. **La verdad.** Si la torre resiste, las lentes se caen una por una y queda la Terminal: `root@atalaya`. La ciudad nunca fue una ciudad.
+6. **Esto pasó anoche.** Justo después, las cifras de la noche anterior en un servidor real: cuántos intentos de entrar hubo, cuántos robots se frenaron, cuántas visitas pasaron. Salen del modo público de Atalaya, solo como totales, sin ningún dato privado. El jugador descubre que lo que acaba de jugar ocurre cada noche, y ahí llega la invitación a probar Atalaya.
+
+### Los personajes
+
+- **El guardia** es el jugador, con su apodo. No hay que elegir personaje ni leer una presentación para empezar.
+- **El robot** es el compañero de la torre: el mismo robot pixel que en el monitor representa a una sesión de Claude Code trabajando. Enseña, avisa lo que viene y comenta entre niveles. Para quien programa con IA es un guiño directo: su herramienta está ahí, ayudando a cuidar la ciudad. Nunca juega por el jugador.
+- **La vigía** cuidaba la torre antes. Nunca aparece; solo quedan rastros: notas en la torre, ajustes que dejó hechos, una lente que nadie sabe para qué sirve. Por qué se fue es el hilo que atraviesa las temporadas: cada una deja una pista más.
+- **El Enjambre** es el atacante: miles de robots sin cara que prueban todas las puertas, como una red de bots real. En la temporada 1 no tiene rostro. Si alguien lo dirige es una pregunta que queda abierta.
+
+Los nombres del robot y de la vigía se deciden en la parte 7, con su diseño.
+
+### El tono
+
+Ambiente serio y humor en los mensajes. La noche, la torre y el Enjambre se toman en serio; los textos de lo que falla tienen el humor de quien ya lo vivió.
+
+- «Su base de datos pidió vacaciones.»
+- «429: demasiadas peticiones. El robot también se cansa.»
+- «Ese no era un robot. Era su cliente.»
+
+Reglas del humor:
+
+- Se ríe de las fallas que un programador vive de verdad, nunca del jugador.
+- Nada de nombres reales de empresas, proyectos ni personas.
+- Los textos del juego tratan al jugador de usted.
+
+### Las temporadas en la historia
+
+Cada temporada es una noche nueva: una amenaza nueva, al menos una lente nueva y una pista más sobre la vigía. Todas terminan igual, con la verdad y con lo que pasó anoche de verdad, porque eso no cambia: cada noche es real.
+
+La temporada 1 se llama **«La primera guardia»**.
+
+---
+
+## 3. Niveles y mecánicas
+
 En discusión.
 
-## 3. a 9.
+## 4. a 9.
 
 Pendientes.
