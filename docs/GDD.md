@@ -7,8 +7,8 @@ Documento vivo. Se escribe parte por parte y cada parte queda cerrada cuando se 
 | 1. Visión | Cerrada (2026-09-28) |
 | 2. Historia y mundo | Cerrada (2026-09-28) |
 | 3. Niveles y mecánicas | Cerrada (2026-09-28) |
-| 4. Lo que hace volver | En discusión |
-| 5. Tablas, reto del día y temporadas | Pendiente |
+| 4. Lo que hace volver | Cerrada (2026-09-28) |
+| 5. Tablas, reto del día y temporadas | En discusión |
 | 6. Cinemáticas y perspectiva | Pendiente |
 | 7. Arte y sonido | Pendiente |
 | 8. Técnica | Pendiente |
@@ -291,8 +291,66 @@ Así la comunidad crea niveles nuevos sin escribir código, con los siete motore
 
 ## 4. Lo que hace volver
 
+Un juego con un solo ciclo se agota. Este tiene tres, uno dentro de otro.
+
+### Cada segundo: la partida
+
+- Sonido, número y efecto en cada acierto; el combo que estalla al subir de escalón.
+- Eventos sorpresa: la visita dorada, la ráfaga, el combo que se duplica.
+- Reintento en menos de un segundo.
+- Al perder, cuánto faltó: «Le faltaron 40 puntos para la tercera estrella.»
+
+### Cada día: el progreso
+
+- **Estrellas.** Tres por nivel, 21 en la noche. El siguiente nivel se abre con una estrella; el amanecer pide 15.
+- **Reto del día**, igual para todos (parte 5).
+- **Racha del reto del día**, visible. Perdona un día sin jugar, y ese perdón se gana con estrellas. Nunca se compra ni castiga.
+- **Tarjeta para compartir** el resultado del reto: bloques pixel con las oleadas contenidas y las que se escaparon, el número del día, las estrellas y el enlace. Sin emojis y sin revelar nada del reto.
+- **Retar a un amigo** con un enlace a la misma partida, con la misma semilla.
+
+### Cada semana y cada temporada: la competencia
+
+- Tablas semanales que se reinician, históricas y por categoría (parte 5).
+- Eventos del mes: la ciudad se redecora.
+- Temporadas de tres meses (parte 5).
+
+### El cuaderno de la vigía
+
+Es la colección del juego. Cada ficha de «Esto pasa de verdad» que el jugador descubre se vuelve una página del cuaderno que la vigía dejó en la torre, y queda para siempre.
+
+- Las páginas técnicas explican, en el tono de alguien que cuidó la torre muchos años, lo real detrás de cada nivel: fail2ban, un WAF, SPF, una réplica.
+- Entre ellas hay notas personales de la vigía, que se ganan con hitos (estrellas, noches completas, insignias) y cuentan de a poco por qué se fue. Es el hilo de las temporadas.
+- Completar el cuaderno de una temporada es, de verdad, aprender cómo se cuida un servidor.
+
+Es el recurso del manual «de época» de TIS-100.
+
+### Las mejoras de la torre
+
+La regla es simple: **en la campaña ayudan; en la competencia, todos juegan igual.**
+
+- **En la campaña**, las mejoras dan progreso que se siente. Se abren con hitos de estrellas totales, sin moneda ni tienda. Ejemplos:
+  - **Integridad extra:** la torre aguanta una falla más.
+  - **Sello de guardia:** el primer error de cada partida no rompe el combo.
+  - **Boletín anticipado:** la regla nueva llega con unos segundos de aviso.
+  - **Dron más ágil:** en La patrulla, menos inercia.
+- **En la competencia** (el reto del día, las tablas y Guardia sin fin) todos juegan con la misma torre. Ahí gana la habilidad, no las horas jugadas.
+- **Lo que se luce es cosmético:** colores de la torre, la placa del guardia, los accesorios del robot y las insignias. Todo se gana jugando.
+
+### Insignias
+
+Premian estilos distintos de jugar, para que no todo sea el puntaje. Por ejemplo:
+
+- **Noche sin fallas:** los siete niveles sin perder integridad.
+- **Cazador de arañas:** cien arañas en cuarentena.
+- **Cero falsos positivos:** una noche entera sin bloquear a nadie bueno.
+- **Guardia de la Temporada 1:** los primeros de la tabla de la temporada.
+
+---
+
+## 5. Tablas, reto del día y temporadas
+
 En discusión.
 
-## 5. a 9.
+## 6. a 9.
 
 Pendientes.
