@@ -14,7 +14,8 @@ pantalla de inicio y la cinemática «La torre vacía».
 
 ## Dónde está cada cosa
 
-- `docs/GDD.md`: el documento de diseño del juego (en preparación).
+- `docs/GDD.md`: el documento de diseño del juego. Se escribe parte por parte.
+- `docs/investigacion/`: lo que se investigó de otros juegos para decidir, con fuentes.
 
 ## Reglas del repo
 
@@ -25,4 +26,5 @@ pantalla de inicio y la cinemática «La torre vacía».
 
 ## Licencia
 
-AGPL-3.0, la misma de Atalaya. Ver `LICENSE`.
+El código es AGPL-3.0, la misma de Atalaya (ver `LICENSE`). Los niveles de la
+comunidad van bajo CC BY-SA 4.0.
