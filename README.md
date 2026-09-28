@@ -22,3 +22,7 @@ pantalla de inicio y la cinemática «La torre vacía».
 - Nada de nombres reales de proyectos, clientes ni personas, ni siquiera en
   comentarios o pruebas.
 - Los secretos (por ejemplo, la clave que firma los puntajes) nunca van al repo.
+
+## Licencia
+
+AGPL-3.0, la misma de Atalaya. Ver `LICENSE`.
