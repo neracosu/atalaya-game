@@ -1,0 +1,57 @@
+name: Idea de nivel
+description: Una situación real de un servidor que daría un buen nivel.
+title: "[Nivel] "
+labels: ["idea de nivel"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por la idea. No hace falta saber programar: cuéntela como la viviría el guardia de la torre.
+        La regla del juego es que todo lo que pasa en él pasa de verdad en un servidor.
+  - type: input
+    id: titulo
+    attributes:
+      label: Nombre del nivel
+      description: Corto, como los de la noche («El peaje», «La cuarentena»).
+      placeholder: El certificado
+    validations:
+      required: true
+  - type: textarea
+    id: de-verdad
+    attributes:
+      label: Qué pasa de verdad en un servidor
+      description: La situación real en la que se basa. Si tiene una fuente o un ejemplo público, compártalo.
+      placeholder: Un certificado vence un domingo a la madrugada y el sitio deja de abrir con un aviso rojo.
+    validations:
+      required: true
+  - type: textarea
+    id: juego
+    attributes:
+      label: Cómo se jugaría
+      description: Qué ve el jugador, qué hace con un dedo y cómo gana o pierde. Se tiene que entender en cinco segundos.
+    validations:
+      required: true
+  - type: textarea
+    id: regla-nueva
+    attributes:
+      label: La regla que llega a mitad del nivel
+      description: Opcional. Algo que cambia cuando el jugador ya le agarró la mano.
+  - type: dropdown
+    id: lo-haria
+    attributes:
+      label: ¿Quiere hacerlo usted?
+      options:
+        - Solo dejo la idea
+        - Me gustaría armar el nivel
+        - Me gustaría programar la mecánica
+    validations:
+      required: true
+  - type: checkboxes
+    id: reglas
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Busqué y no hay otra idea igual abierta.
+          required: true
+        - label: No incluye nombres reales de proyectos, clientes ni personas.
+          required: true

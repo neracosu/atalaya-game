@@ -1,4 +1,5 @@
 // Todos los textos del juego en un solo lugar. Tratan al jugador de usted.
+// \u2060 es la unión de palabras: pegado al guion, evita que «/wp-login.php» se corte en dos líneas.
 
 export const T = {
   titulo: 'Atalaya: la guardia',
@@ -16,6 +17,10 @@ export const T = {
 
   pasar: 'Pasar',
   bloquear: 'Bloquear',
+  chispa: 'Chispa',
+  // lo que se lee sobre los autos y en los chips de las reglas
+  marcas: { pasa: 'pasa', no: 'no', impostor: 'impostor', bloqueado: 'BLOQUEADO' },
+  placas: { buscador: 'buscador', wp: 'wp-login' },
   ayudaCliente: 'Un cliente. Deslice a la derecha: que pase.',
   ayudaSospechoso: 'Auto sospechoso. Deslice a la izquierda: bloquéelo.',
   ayudaListo: 'Así se cuida la puerta. Que no se llene la fila.',
@@ -58,7 +63,7 @@ export const T = {
 
   deVerdad: {
     titulo: 'Esto pasa de verdad',
-    texto: 'Un servidor recién encendido recibe robots buscando /.env y /wp-login.php en cuestión de minutos. Se frenan con reglas como las de este peaje y con un límite de peticiones.',
+    texto: 'Un servidor recién encendido recibe robots buscando /.env y /wp-\u2060login.php en cuestión de minutos. Se frenan con reglas como las de este peaje y con un límite de peticiones.',
   },
   anoche: {
     titulo: 'Esto pasó anoche',
@@ -75,6 +80,53 @@ export const T = {
     fallas: n => n === 0 ? 'Su puerta: sin fallas a la vista' : n === 1 ? 'Su puerta: 1 falla' : `Su puerta: ${n} fallas`,
     cierre: 'Esto lo revisamos una vez. Atalaya lo mira cada cinco minutos.',
     atalaya: 'Vigilar mi sitio con Atalaya, gratis',
+    etiqueta: 'Su dominio',
+  },
+
+  // la sección de abajo de la portada: qué es, cómo se juega y de dónde sale
+  landing: {
+    rotulo: 'Qué es',
+    que: 'Un juego de un minuto: usted cuida la puerta de un servidor, auto por auto, antes de que amanezca.',
+    comoRotulo: 'Cómo se juega',
+    pasos: [
+      { titulo: 'El cliente pasa', texto: 'Trae gente en las ventanas. Deslice a la derecha o toque la mitad derecha.' },
+      { titulo: 'El sospechoso se bloquea', texto: 'Oscuro, con la sirena roja y nadie adentro. Deslice a la izquierda o toque la mitad izquierda.' },
+      { titulo: 'Llegan reglas nuevas', texto: 'El robot del buscador pasa solo si viene del buscador. Quien busca wp-login, no. Y si la fila se llena, se cuelan.' },
+    ],
+    teclado: 'En la computadora, con las flechas: derecha pasa, izquierda bloquea.',
+    verdadRotulo: 'Esto no es inventado',
+    verdadTitulo: 'Todo lo que pasa aquí pasa de verdad en un servidor.',
+    verdadTexto: 'Un servidor recién publicado recibe robots que prueban /.env y /wp-\u2060login.php en cuestión de minutos. Las reglas del peaje son las mismas que los frenan en la vida real.',
+    atalayaRotulo: 'De dónde sale',
+    atalayaTitulo: 'Atalaya',
+    atalayaTexto: 'El monitor que muestra un servidor como una ciudad pixel art: quién entra, quién toca la puerta y qué se frenó. Este juego vive en su universo.',
+    atalayaEnlace: 'Conocer Atalaya',
+    revisionTitulo: 'Revise su sitio gratis',
+    abiertoRotulo: 'Código abierto',
+    abiertoTexto: 'El juego es software libre bajo AGPL-3.0 y los niveles de la comunidad van bajo CC BY-SA 4.0. Puede leerlo, estudiarlo y mejorarlo.',
+    abiertoEnlace: 'Ver el código',
+    iaTitulo: '¿Construye con IA?',
+    iaTexto: 'Aquí tiene su lugar. A lo hecho con IA se le pide lo mismo que a todo: que funcione, que pase las pruebas y que una persona lo firme.',
+    cierre: 'Tomar la guardia',
+  },
+
+  // la imagen vertical del resultado y la tarjeta que se ve al compartir el enlace
+  imagen: {
+    rotulo: 'Atalaya',
+    titulo: 'La guardia',
+    partida: '00:00 · El peaje',
+    reto: n => `Reto del día #${n}`,
+    puntos: 'puntos',
+    direccion: 'atalaya.neracosu.com/juego',
+    archivo: 'atalaya-la-guardia.png',
+    descargar: 'Descargar la imagen',
+  },
+  postal: {
+    rotulo: 'Atalaya:',
+    titulo: 'La guardia',
+    lema: 'Cuide la puerta de un servidor en 60 segundos.',
+    pie: 'Gratis, en el navegador',
+    direccion: 'atalaya.neracosu.com/juego',
   },
 
   tarjeta: (n, estrellas, bloques) => `Atalaya: la guardia · Reto #${n}\n${estrellas} de 3 estrellas\n${bloques}\natalaya.neracosu.com/juego`,

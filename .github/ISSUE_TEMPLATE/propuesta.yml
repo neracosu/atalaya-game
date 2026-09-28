@@ -1,0 +1,39 @@
+name: Propuesta
+description: Un cambio en el juego, en su diseño o en el repo.
+title: "[Propuesta] "
+labels: ["propuesta"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Si piensa hacer un cambio grande, conviene conversarlo aquí antes de programar. El diseño del juego
+        está en docs/GDD.md.
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qué problema resuelve
+      description: Para quién y por qué importa.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Qué propone
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Qué otras opciones pensó
+  - type: checkboxes
+    id: reglas
+    attributes:
+      label: Las reglas del juego
+      description: La propuesta las respeta (ver CONTRIBUTING.md).
+      options:
+        - label: Sin librerías ni compilación, sin recursos de otros sitios.
+          required: true
+        - label: Sin emojis; pixel art como acento y texto nítido.
+          required: true
+        - label: Textos en español, tratando de usted.
+          required: true

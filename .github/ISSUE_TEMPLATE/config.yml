@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Qué es Atalaya
+    url: https://neracosu.com/atalaya
+    about: El monitor del que sale este juego.
+  - name: Un problema de seguridad
+    url: https://github.com/neracosu/atalaya-game/security/advisories/new
+    about: Avísenos en privado, no en un issue público.

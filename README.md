@@ -1,32 +1,105 @@
 # Atalaya: la guardia
 
-Juego web en el universo de Atalaya, el monitor visual del VPS. Usted cuida una
-ciudad que amanece bajo ataque. Cada nivel es un mundo de Atalaya y una mecánica
-sacada de lo que el monitor hace de verdad. Al final descubre que todo eso pasa
-en un servidor real.
+Un juego web gratis en el universo de [Atalaya](https://neracosu.com/atalaya), el monitor que muestra un
+servidor como una ciudad pixel art. Usted cuida la puerta de esa ciudad durante una noche en la que todo sale
+mal. Cada problema del juego es uno que pasa de verdad en un servidor.
+
+Se juega en el navegador, primero en el teléfono, sin descargar nada: <https://atalaya.neracosu.com/juego>
 
 Solo en español.
 
+## Cómo se juega
+
+El primer nivel es **El peaje**: 60 segundos en la barrera de la ciudad, un auto a la vez.
+
+1. **El cliente pasa.** Trae gente en las ventanas: deslice a la derecha o toque la mitad derecha.
+2. **El sospechoso se bloquea.** Oscuro, con la sirena roja y nadie adentro: deslice a la izquierda o toque la
+   mitad izquierda.
+3. **Llegan reglas nuevas.** El robot del buscador pasa solo si viene del buscador; quien busca `wp-login`, no.
+   Si la fila se llena, los autos se cuelan y la puerta pierde integridad.
+
+En la computadora se juega con las flechas (o con A y D). Cada acierto seguido sube el combo y los puntos dan
+hasta tres estrellas. El **reto del día** es el mismo nivel para todos, cambia a la medianoche de Venezuela y
+solo cuenta el primer intento. El resultado se comparte como texto o como imagen, sin revelar la partida.
+
 ## Estado
 
-Etapa 1 en construcción: motor, nivel 1 «El peaje» con sonido y estrellas,
-pantalla de inicio y la cinemática «La torre vacía».
+Etapa 0: El peaje jugable, con sonido, estrellas, reto del día sin tabla, la portada con su sección informativa
+y el resultado con «Esto pasa de verdad» y «¿Y su sitio?». El plan completo está en `docs/GDD.md`.
+
+## Correrlo en su máquina
+
+No hay nada que instalar ni que compilar: es HTML, CSS y JavaScript servidos tal cual. Hace falta un servidor
+local porque el juego usa módulos de JavaScript, que el navegador no carga desde `file://`.
+
+```sh
+cd public
+python3 -m http.server 8000
+```
+
+Luego abra <http://localhost:8000>. Cualquier servidor estático sirve igual.
+
+## Pruebas
+
+Hace falta Node 20 o más nuevo, sin dependencias:
+
+```sh
+npm test
+```
+
+Las pruebas juegan partidas completas sin pantalla con bots, comprueban que volver a jugar una partida desde sus
+jugadas dé exactamente el mismo resultado y revisan las reglas del repo: sin emojis, sin código ni estilos en
+línea, sin recursos de afuera y un núcleo sin azar ni reloj.
+
+## La tarjeta y los íconos
+
+La imagen que se ve al compartir el enlace (`public/tarjeta.png`) y los íconos se dibujan con el mismo arte del
+juego. Para regenerarlos hace falta Playwright y un Chromium que ya tenga en su máquina (el repo no los trae):
+
+```sh
+PLAYWRIGHT_CORE=/ruta/a/node_modules/playwright-core CHROMIUM=/ruta/a/chrome node scripts/tarjeta.mjs
+```
 
 ## Dónde está cada cosa
 
-- `docs/GDD.md`: el documento de diseño del juego. Se escribe parte por parte.
-- `docs/investigacion/`: lo que se investigó de otros juegos para decidir, con fuentes.
+```
+public/                 lo que se publica, tal cual
+  index.html            la única página: portada, partida y resultado
+  estilo.css            todos los estilos
+  manifest.webmanifest  para instalar el juego en el teléfono
+  tarjeta.png           la tarjeta al compartir el enlace (1200x630)
+  js/app.js             la interfaz: pantallas, entrada, resultado, compartir
+  js/textos.js          todos los textos que ve el jugador
+  js/reto.js            el reto del día, la racha y lo que se guarda en el teléfono
+  js/sonido.js          efectos generados por código, sin archivos
+  js/motor/             el núcleo determinista: la lógica de cada nivel, sin dibujo
+  js/dibujo/            sprites, la escena de la partida y las postales (imagen del resultado)
+  fuentes/              Silkscreen y Space Grotesk, servidas desde el propio sitio
+scripts/                herramientas que no se publican (la tarjeta y los íconos)
+test/                   pruebas con node --test
+docs/GDD.md             el documento de diseño del juego
+docs/investigacion/     lo que se investigó de otros juegos para decidir, con fuentes
+licencias/              las licencias de las fuentes
+```
 
 ## Reglas del repo
 
-- Sin emojis: solo pixel art.
-- Nada de nombres reales de proyectos, clientes ni personas, ni siquiera en
-  comentarios o pruebas.
+- JavaScript sin librerías ni compilación.
+- Todos los textos al jugador en `public/js/textos.js`, en español y tratando de usted.
+- Sin emojis, en ningún lado: solo pixel art.
+- Pixel art como acento, texto nítido. Nunca se baja la resolución.
+- Nada de código ni estilos en línea en el HTML y nada cargado de otros sitios.
+- Nada de nombres reales de proyectos, clientes ni personas, ni siquiera en comentarios o pruebas.
 - Los secretos (por ejemplo, la clave que firma los puntajes) nunca van al repo.
 
-## Licencia
+Cómo aportar está en [`CONTRIBUTING.md`](CONTRIBUTING.md). Si trabaja con un agente de IA, sus instrucciones
+están en [`AGENTS.md`](AGENTS.md).
 
-El código es AGPL-3.0, la misma de Atalaya (ver `LICENSE`). Los niveles de la
-comunidad van bajo CC BY-SA 4.0. Quien aporte código o niveles firma una vez un
-acuerdo de licencia de colaborador (CLA): sigue siendo el autor, y permite que el
-juego se distribuya también en tiendas de apps.
+## Licencias
+
+- **El código** es AGPL-3.0, la misma de Atalaya (ver [`LICENSE`](LICENSE)). Si publica una versión modificada
+  del juego en un servidor, tiene que ofrecer su código a quienes la usen.
+- **Los niveles de la comunidad** van bajo CC BY-SA 4.0.
+- **Las fuentes** Silkscreen y Space Grotesk van bajo la SIL Open Font License (ver `licencias/`).
+- **Quien aporte código o niveles** acepta una vez el acuerdo de licencia de colaborador
+  ([`CLA.md`](CLA.md)): sigue siendo el autor y permite que el juego se distribuya también en tiendas de apps.

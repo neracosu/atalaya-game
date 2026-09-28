@@ -4,6 +4,7 @@
 // El motor no sabe nada de esto: la escena solo escucha los eventos que el motor devuelve.
 
 import { SPRITES, PALETAS, BARRERA_POSTE, PALETA_BARRERA, TORRE, PALETA_TORRE, PALETA_TORRE_ENCENDIDA, aCanvas } from './sprites.js';
+import { T } from '../textos.js';
 
 const ANCHO_AUTO = 20;
 const HUECO = 3;
@@ -83,10 +84,10 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
         const cx = (a.x + ANCHO_AUTO / 2) | 0, cy = calle - 16;
         if (ev.e === 'bien') {
           flotantes.push({ x: cx, y: cy, texto: `+${ev.puntos}`, color: ev.tipo === 'dorado' ? '#facc15' : '#a7f3d0', t: 0 });
-          if (!pasa) sellos.push({ x: cx, y: calle - 5, texto: 'BLOQUEADO', color: '#ef4444', t: 0 });
+          if (!pasa) sellos.push({ x: cx, y: calle - 5, texto: T.marcas.bloqueado, color: '#ef4444', t: 0 });
         } else {
           temblor = menosMovimiento() ? 0 : 8;
-          if (!pasa) sellos.push({ x: cx, y: calle - 5, texto: 'BLOQUEADO', color: '#ef4444', t: 0 });
+          if (!pasa) sellos.push({ x: cx, y: calle - 5, texto: T.marcas.bloqueado, color: '#ef4444', t: 0 });
           if (ev.puntos) flotantes.push({ x: cx, y: cy, texto: `${ev.puntos}`, color: '#fca5a5', t: 0 });
         }
       }
@@ -197,12 +198,12 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   }
 
   function placaDe(a) {
-    if (a.tipo === 'buscador') return ['buscador', '#0c4a6e', '#e0f2fe'];
+    if (a.tipo === 'buscador') return [T.placas.buscador, '#0c4a6e', '#e0f2fe'];
     if (a.tipo === 'impostor') {
       const n = (a.id * 2654435761) >>> 0;
       return [`${45 + (n % 150)}.${(n >>> 8) % 255}.${(n >>> 16) % 99}`, '#7f1d1d', '#fee2e2'];
     }
-    if (a.tipo === 'wp') return ['wp-login', '#422006', '#fde68a'];
+    if (a.tipo === 'wp') return [T.placas.wp, '#422006', '#fde68a'];
     return null;
   }
 

@@ -2,6 +2,7 @@
 
 import { nivelPeaje, crearPartida, jugar, avanzar, resumen, estrellasDe, ESTRELLAS, multiplicador, PASOS_POR_SEGUNDO } from './motor/peaje.js';
 import { crearEscena } from './dibujo/escena.js';
+import { imagenResultado, fuentesListas } from './dibujo/postal.js';
 import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, aSVG } from './dibujo/sprites.js';
 import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques } from './reto.js';
 import { T } from './textos.js';
@@ -9,6 +10,8 @@ import * as S from './sonido.js';
 
 // La nube de Atalaya: la revisión pública del dominio y el alta gratis de un sitio
 const NUBE = 'https://nube.neracosu.com';
+const REPO = 'https://github.com/neracosu/atalaya-game';
+const ATALAYA = 'https://neracosu.com/atalaya';
 
 const $ = id => document.getElementById(id);
 let datos = leer();
@@ -23,7 +26,17 @@ function vibrar(ms) { if (datos.ajustes.vibracion && navigator.vibrate) try { na
 
 function mostrar(id) {
   for (const p of document.querySelectorAll('.pantalla')) p.classList.toggle('activa', p.id === id);
+  // solo la portada se desplaza (y en computadora se abre a dos columnas); la partida nunca
+  $('app').classList.toggle('en-portada', id === 'portada');
   if (id === 'juego') escena.redimensionar();
+}
+
+// crea un elemento con su clase y su texto (siempre como texto, nunca como HTML)
+function el(tag, clase, texto) {
+  const e = document.createElement(tag);
+  if (clase) e.className = clase;
+  if (texto !== undefined) e.textContent = texto;
+  return e;
 }
 
 // ---------- portada ----------
@@ -42,6 +55,77 @@ function portada() {
   }
   S.activarSonido(datos.ajustes.sonido);
   mostrar('portada');
+  $('portada').scrollTop = 0;
+}
+
+// ---------- la sección de abajo de la portada ----------
+function pintarLanding() {
+  const L = T.landing;
+  const caja = el('div', 'landing-caja');
+
+  const que = el('section', 'bloque que');
+  que.append(el('p', 'rotulo', L.rotulo), el('p', 'que-texto', L.que));
+
+  const como = el('section', 'bloque como');
+  const lista = el('ol', 'pasos');
+  L.pasos.forEach((paso, i) => {
+    const li = el('li', 'paso');
+    const calle = el('div', `paso-calle paso-${i + 1}`);
+    if (i === 0) calle.innerHTML = `${autoSVG('cliente')}<b class="marca si">${T.marcas.pasa}</b>`;
+    else if (i === 1) calle.innerHTML = `${autoSVG('sospechoso')}<b class="marca no">${T.marcas.no}</b>`;
+    else {
+      calle.innerHTML = `<span class="con-placa"><span class="placa buscador"></span>${autoSVG('buscador')}</span>` +
+        `<span class="con-placa"><span class="placa wp"></span>${autoSVG('wp')}</span>`;
+      calle.querySelector('.placa.buscador').textContent = T.placas.buscador;
+      calle.querySelector('.placa.wp').textContent = T.placas.wp;
+    }
+    const txt = el('div', 'paso-texto');
+    const h = el('h3');
+    h.append(el('span', 'num', String(i + 1)), paso.titulo);
+    txt.append(h, el('p', '', paso.texto));
+    li.append(calle, txt);
+    lista.append(li);
+  });
+  como.append(el('p', 'rotulo', L.comoRotulo), lista, el('p', 'teclado', L.teclado));
+
+  const verdad = el('section', 'bloque verdad');
+  verdad.append(el('p', 'rotulo', L.verdadRotulo), el('h2', '', L.verdadTitulo), el('p', '', L.verdadTexto));
+
+  const atalaya = el('section', 'bloque atalaya');
+  const enlace = el('a', 'boton', L.atalayaEnlace);
+  enlace.href = ATALAYA; enlace.rel = 'noopener';
+  enlace.addEventListener('click', () => medir('landing-atalaya'));
+  const revision = el('div', 'revision');
+  const form = el('form', 'form-sitio');
+  form.noValidate = true;
+  const input = el('input', 'dominio');
+  Object.assign(input, { name: 'dominio', type: 'text', inputMode: 'url', autocomplete: 'url', spellcheck: false, placeholder: T.suSitio.placeholder });
+  input.setAttribute('autocapitalize', 'off');
+  input.setAttribute('aria-label', T.suSitio.etiqueta);
+  const boton = el('button', 'boton principal', T.suSitio.boton);
+  boton.type = 'submit';
+  form.append(input, boton);
+  const informe = el('div', 'informe');
+  informe.setAttribute('aria-live', 'polite');
+  revision.append(el('h3', '', L.revisionTitulo), el('p', '', T.suSitio.texto), form, informe);
+  atalaya.append(el('p', 'rotulo', L.atalayaRotulo), el('h2', 'marca-atalaya', L.atalayaTitulo), el('p', '', L.atalayaTexto), enlace, revision);
+
+  const abierto = el('section', 'bloque abierto');
+  const repo = el('a', '', L.abiertoEnlace);
+  repo.href = REPO; repo.rel = 'noopener';
+  const p = el('p', '', L.abiertoTexto + ' ');
+  p.append(repo);
+  abierto.append(el('p', 'rotulo', L.abiertoRotulo), p);
+
+  const ia = el('section', 'bloque ia');
+  ia.append(el('h3', '', L.iaTitulo), el('p', '', L.iaTexto));
+
+  const cierre = el('button', 'boton principal cierre', L.cierre);
+  cierre.type = 'button';
+  cierre.addEventListener('click', () => { medir('landing-empezar'); empezar('partida'); });
+
+  caja.append(que, como, verdad, atalaya, abierto, ia, cierre);
+  $('landing').replaceChildren(caja);
 }
 
 // ---------- partida ----------
@@ -147,11 +231,11 @@ function reaccionar(evs) {
 }
 
 // el tutorial: los tres primeros autos de la primera partida, con Chispa explicando
+const quien = () => el('span', 'quien', T.chispa);
 function ayuda(tipo) {
   const el = $('ayuda');
   const texto = tipo === 'sospechoso' ? T.ayudaSospechoso : T.ayudaCliente;
-  el.innerHTML = '<span class="quien">Chispa</span>';
-  el.append(texto);
+  el.replaceChildren(quien(), texto);
   el.hidden = false;
   document.querySelector('.lado.izq').classList.toggle('pulso', tipo === 'sospechoso');
   document.querySelector('.lado.der').classList.toggle('pulso', tipo !== 'sospechoso');
@@ -162,8 +246,7 @@ function avanzarAyuda() {
     ayudaPaso = 0;
     document.querySelectorAll('.lado').forEach(l => l.classList.remove('pulso'));
     const el = $('ayuda');
-    el.innerHTML = '<span class="quien">Chispa</span>';
-    el.append(T.ayudaListo);
+    el.replaceChildren(quien(), T.ayudaListo);
     setTimeout(() => { el.hidden = true; }, 1800);
   }
 }
@@ -174,10 +257,11 @@ function pintarReglas() {
   const r = $('reglas');
   r.innerHTML = '';
   const chip = (html) => { const c = document.createElement('span'); c.className = 'chip'; c.innerHTML = html; r.append(c); };
-  chip(`${autoSVG('cliente')}<b class="si">pasa</b>`);
-  chip(`${autoSVG('sospechoso')}<b class="no">no</b>`);
-  if (partida.reglas.includes('buscador')) chip(`${autoSVG('buscador')}<span>buscador</span><b class="si">pasa</b>`);
-  if (partida.reglas.includes('wp')) chip(`${autoSVG('wp')}<span>wp-login</span><b class="no">no</b>`);
+  const { pasa, no } = T.marcas;
+  chip(`${autoSVG('cliente')}<b class="si">${pasa}</b>`);
+  chip(`${autoSVG('sospechoso')}<b class="no">${no}</b>`);
+  if (partida.reglas.includes('buscador')) chip(`${autoSVG('buscador')}<span>${T.placas.buscador}</span><b class="si">${pasa}</b>`);
+  if (partida.reglas.includes('wp')) chip(`${autoSVG('wp')}<span>${T.placas.wp}</span><b class="no">${no}</b>`);
 }
 
 function tarjetaRegla(id) {
@@ -188,10 +272,10 @@ function tarjetaRegla(id) {
   const txt = document.createElement('p'); txt.textContent = regla.texto;
   const ej = document.createElement('div'); ej.className = 'ejemplos';
   if (id === 'buscador') {
-    ej.innerHTML = `<div class="ejemplo">${autoSVG('buscador')}<span class="placa" data-c="bien">buscador</span><b class="si">pasa</b></div>` +
-      `<div class="ejemplo">${autoSVG('impostor')}<span class="placa" data-c="mal">185.22.9</span><b class="no">impostor</b></div>`;
+    ej.innerHTML = `<div class="ejemplo">${autoSVG('buscador')}<span class="placa" data-c="bien">${T.placas.buscador}</span><b class="si">${T.marcas.pasa}</b></div>` +
+      `<div class="ejemplo">${autoSVG('impostor')}<span class="placa" data-c="mal">185.22.9</span><b class="no">${T.marcas.impostor}</b></div>`;
   } else if (id === 'wp') {
-    ej.innerHTML = `<div class="ejemplo">${autoSVG('wp')}<span class="placa" data-c="wp">wp-login</span><b class="no">no</b></div>`;
+    ej.innerHTML = `<div class="ejemplo">${autoSVG('wp')}<span class="placa" data-c="wp">${T.placas.wp}</span><b class="no">${T.marcas.no}</b></div>`;
   }
   for (const p of ej.querySelectorAll('.placa')) {
     const c = { bien: ['#0c4a6e', '#e0f2fe'], mal: ['#7f1d1d', '#fee2e2'], wp: ['#422006', '#fde68a'] }[p.dataset.c];
@@ -276,6 +360,7 @@ function terminar() {
   if (asistido) { const p = document.createElement('div'); p.textContent = T.fin.asistido; dl.append(p); }
   $('ficha-texto').textContent = T.deVerdad.texto;
   $('compartido').hidden = true;
+  ultimo.imagen = prepararImagen(ultimo);
   anoche();
   mostrar('fin');
   $('fin').scrollTop = 0;
@@ -298,16 +383,57 @@ async function anoche() {
 }
 
 // ---------- compartir ----------
+// La imagen vertical del resultado se prepara al terminar, para que al tocar «Compartir» ya esté lista:
+// algunos navegadores solo dejan compartir en el instante del toque.
+async function prepararImagen(u) {
+  try {
+    await fuentesListas();
+    const esReto = u.modo === 'reto' && u.reto;
+    const c = imagenResultado({
+      rotulo: T.imagen.rotulo,
+      titulo: T.imagen.titulo,
+      subtitulo: esReto ? T.imagen.reto(u.reto.numero) : T.imagen.partida,
+      puntos: u.r.puntos.toLocaleString('es'),
+      puntosEtiqueta: T.imagen.puntos,
+      estrellas: u.estrellas,
+      bloques: esReto ? bloques(u.r.historial) : '',
+      sello: T.marcas.bloqueado,
+      direccion: T.imagen.direccion,
+    });
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    return blob ? new File([blob], T.imagen.archivo, { type: 'image/png' }) : null;
+  } catch { return null; }
+}
+
+let enlaceImagen = null;
 $('compartir').addEventListener('click', async () => {
   if (!ultimo) return;
   const texto = ultimo.modo === 'reto' && ultimo.reto
     ? T.tarjeta(ultimo.reto.numero, ultimo.estrellas, bloques(ultimo.r.historial))
     : T.tarjetaPartida(ultimo.r.puntos, ultimo.estrellas);
   medir('compartir');
+  const archivo = ultimo.imagen ? await ultimo.imagen : null;
+  if (archivo && navigator.canShare) {
+    try {
+      if (navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], text: texto }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
   try {
     if (navigator.share) { await navigator.share({ text: texto }); return; }
   } catch (e) { if (e && e.name === 'AbortError') return; }
-  try { await navigator.clipboard.writeText(texto); $('compartido').textContent = T.fin.copiado; $('compartido').hidden = false; } catch { }
+  // sin la hoja de compartir: se copia el texto y la imagen queda para descargar
+  const aviso = $('compartido');
+  aviso.replaceChildren();
+  try { await navigator.clipboard.writeText(texto); aviso.append(T.fin.copiado); } catch { }
+  if (archivo) {
+    if (enlaceImagen) URL.revokeObjectURL(enlaceImagen);
+    enlaceImagen = URL.createObjectURL(archivo);
+    const a = el('a', '', T.imagen.descargar);
+    a.href = enlaceImagen;
+    a.download = T.imagen.archivo;
+    aviso.append(aviso.childNodes.length ? ' ' : '', a);
+  }
+  aviso.hidden = !aviso.childNodes.length;
 });
 
 // ---------- El peaje de su sitio ----------
@@ -315,49 +441,51 @@ const DOMINIO = /^(?=.{4,253}$)(?!-)([a-z0-9-]{1,63}\.)+[a-z]{2,63}$/;
 function limpiarDominio(v) {
   return v.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, '').replace(/\.$/, '');
 }
-$('form-sitio').addEventListener('submit', async e => {
-  e.preventDefault();
-  const dom = limpiarDominio($('dominio').value);
-  const inf = $('informe');
-  inf.innerHTML = '';
-  const linea = (t, clase) => { const p = document.createElement('p'); p.textContent = t; if (clase) p.className = clase; inf.append(p); return p; };
-  if (!DOMINIO.test(dom)) { linea(T.suSitio.invalido); return; }
-  medir('dominio');
-  linea(T.suSitio.revisando);
-  try {
-    const ctl = new AbortController();
-    const reloj = setTimeout(() => ctl.abort(), 15000);
-    const res = await fetch(`${NUBE}/api/revision?dominio=${encodeURIComponent(dom)}`, { signal: ctl.signal });
-    clearTimeout(reloj);
-    if (!res.ok) throw 0;
-    const d = await res.json();
+function conectarRevision(form) {
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const dom = limpiarDominio(form.querySelector('.dominio').value);
+    const inf = form.parentElement.querySelector('.informe');
     inf.innerHTML = '';
-    linea(T.suSitio.fallas(d.fallas), 'titulo');
-    const ul = document.createElement('ul');
-    for (const p of d.puntos || []) {
-      const li = document.createElement('li');
-      if (!p.ok) li.className = 'falla';
-      const i = document.createElement('i');
-      const cuerpo = document.createElement('span');
-      const b = document.createElement('b'); b.textContent = p.titulo;
-      cuerpo.append(b, document.createTextNode(p.detalle ? ` · ${p.detalle}` : ''));
-      li.append(i, cuerpo);
-      ul.append(li);
+    const linea = (t, clase) => { const p = document.createElement('p'); p.textContent = t; if (clase) p.className = clase; inf.append(p); return p; };
+    if (!DOMINIO.test(dom)) { linea(T.suSitio.invalido); return; }
+    medir('dominio');
+    linea(T.suSitio.revisando);
+    try {
+      const ctl = new AbortController();
+      const reloj = setTimeout(() => ctl.abort(), 15000);
+      const res = await fetch(`${NUBE}/api/revision?dominio=${encodeURIComponent(dom)}`, { signal: ctl.signal });
+      clearTimeout(reloj);
+      if (!res.ok) throw 0;
+      const d = await res.json();
+      inf.innerHTML = '';
+      linea(T.suSitio.fallas(d.fallas), 'titulo');
+      const ul = document.createElement('ul');
+      for (const p of d.puntos || []) {
+        const li = document.createElement('li');
+        if (!p.ok) li.className = 'falla';
+        const i = document.createElement('i');
+        const cuerpo = document.createElement('span');
+        const b = document.createElement('b'); b.textContent = p.titulo;
+        cuerpo.append(b, document.createTextNode(p.detalle ? ` · ${p.detalle}` : ''));
+        li.append(i, cuerpo);
+        ul.append(li);
+      }
+      inf.append(ul);
+      linea(T.suSitio.cierre, 'cierre');
+      const a = document.createElement('a');
+      a.className = 'boton principal';
+      a.href = `${NUBE}/vigilar?dominio=${encodeURIComponent(dom)}`;
+      a.rel = 'noopener';
+      a.textContent = T.suSitio.atalaya;
+      a.addEventListener('click', () => medir('ir-atalaya'));
+      inf.append(a);
+    } catch {
+      inf.innerHTML = '';
+      linea(T.suSitio.error);
     }
-    inf.append(ul);
-    linea(T.suSitio.cierre, 'cierre');
-    const a = document.createElement('a');
-    a.className = 'boton principal';
-    a.href = `${NUBE}/vigilar?dominio=${encodeURIComponent(dom)}`;
-    a.rel = 'noopener';
-    a.textContent = T.suSitio.atalaya;
-    a.addEventListener('click', () => medir('ir-atalaya'));
-    inf.append(a);
-  } catch {
-    inf.innerHTML = '';
-    linea(T.suSitio.error);
-  }
-});
+  });
+}
 
 // ---------- botones ----------
 $('empezar').addEventListener('click', () => empezar('partida'));
@@ -366,4 +494,6 @@ $('otra-vez').addEventListener('click', () => { medir('otra-vez'); empezar(ultim
 $('volver').addEventListener('click', portada);
 addEventListener('resize', () => { if ($('juego').classList.contains('activa')) escena.redimensionar(); });
 
+pintarLanding();
+for (const f of document.querySelectorAll('.form-sitio')) conectarRevision(f);
 portada();

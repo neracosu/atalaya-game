@@ -6,7 +6,26 @@
 <title>Atalaya: la guardia</title>
 <meta name="description" content="Cuide la puerta de una ciudad que es un servidor. Un juego de 60 segundos en el universo de Atalaya.">
 <meta name="theme-color" content="#060a14">
+<link rel="canonical" href="https://juego.atalaya.neracosu.com/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Atalaya">
+<meta property="og:locale" content="es_LA">
+<meta property="og:title" content="Atalaya: la guardia">
+<meta property="og:description" content="Cuide la puerta de un servidor en 60 segundos. Un juego gratis en el universo de Atalaya, donde todo lo que pasa, pasa de verdad.">
+<meta property="og:url" content="https://juego.atalaya.neracosu.com/">
+<meta property="og:image" content="https://juego.atalaya.neracosu.com/tarjeta.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="La torre de Atalaya encendida sobre una calle de noche, con autos que esperan en el peaje.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Atalaya: la guardia">
+<meta name="twitter:description" content="Cuide la puerta de un servidor en 60 segundos. Un juego gratis en el universo de Atalaya.">
+<meta name="twitter:image" content="https://juego.atalaya.neracosu.com/tarjeta.png">
+<meta name="twitter:image:alt" content="La torre de Atalaya encendida sobre una calle de noche, con autos que esperan en el peaje.">
 <link rel="stylesheet" href="estilo.css">
 <script type="module" src="js/app.js"></script>
 </head>
@@ -14,25 +33,28 @@
 <main id="app">
 
   <section id="portada" class="pantalla activa" aria-labelledby="titulo">
-    <div class="portada-arriba">
-      <p class="rotulo">Atalaya</p>
-      <h1 id="titulo">La guardia</h1>
-      <p class="lema">Esta noche la torre está vacía. Alguien tiene que cuidar la puerta.</p>
+    <div class="portada-pantalla">
+      <div class="portada-arriba">
+        <p class="rotulo">Atalaya</p>
+        <h1 id="titulo">La guardia</h1>
+        <p class="lema">Esta noche la torre está vacía. Alguien tiene que cuidar la puerta.</p>
+      </div>
+      <div id="torre-portada" class="torre-portada" aria-hidden="true"></div>
+      <div class="portada-abajo">
+        <button id="empezar" class="boton principal" type="button"><span class="hora">00:00 · El peaje</span><span>Tomar la guardia</span></button>
+        <button id="reto" class="boton" type="button"><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle"></span></button>
+        <p id="racha" class="racha" hidden></p>
+        <details class="ajustes">
+          <summary>Ajustes</summary>
+          <label><input type="checkbox" id="aj-asistido"> <span>Modo asistido</span> <small>El juego va más lento. Las estrellas cuentan igual.</small></label>
+          <label><input type="checkbox" id="aj-sonido" checked> <span>Sonido</span></label>
+          <label><input type="checkbox" id="aj-vibracion" checked> <span>Vibración</span></label>
+          <label><input type="checkbox" id="aj-movimiento"> <span>Menos movimiento</span></label>
+        </details>
+        <p class="pie"><a href="https://github.com/neracosu/atalaya-game" rel="noopener">Código fuente</a> · <a href="https://neracosu.com/atalaya" rel="noopener">Qué es Atalaya</a></p>
+      </div>
     </div>
-    <div id="torre-portada" class="torre-portada" aria-hidden="true"></div>
-    <div class="portada-abajo">
-      <button id="empezar" class="boton principal" type="button"><span class="hora">00:00 · El peaje</span><span>Tomar la guardia</span></button>
-      <button id="reto" class="boton" type="button"><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle"></span></button>
-      <p id="racha" class="racha" hidden></p>
-      <details class="ajustes">
-        <summary>Ajustes</summary>
-        <label><input type="checkbox" id="aj-asistido"> <span>Modo asistido</span> <small>El juego va más lento. Las estrellas cuentan igual.</small></label>
-        <label><input type="checkbox" id="aj-sonido" checked> <span>Sonido</span></label>
-        <label><input type="checkbox" id="aj-vibracion" checked> <span>Vibración</span></label>
-        <label><input type="checkbox" id="aj-movimiento"> <span>Menos movimiento</span></label>
-      </details>
-      <p class="pie"><a href="https://github.com/neracosu/atalaya-game" rel="noopener">Código fuente</a> · <a href="https://neracosu.com/atalaya" rel="noopener">Qué es Atalaya</a></p>
-    </div>
+    <div id="landing" class="landing"></div>
   </section>
 
   <section id="juego" class="pantalla" aria-label="Partida">
@@ -80,11 +102,11 @@
       <article class="su-sitio">
         <h3>¿Y su sitio?</h3>
         <p>Escriba su dominio y le decimos cómo está su puerta. Solo miramos lo que cualquiera puede ver.</p>
-        <form id="form-sitio" novalidate>
-          <input id="dominio" name="dominio" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="susitio.com" aria-label="Su dominio">
+        <form class="form-sitio" novalidate>
+          <input class="dominio" name="dominio" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="susitio.com" aria-label="Su dominio">
           <button class="boton principal" type="submit">Revisar mi puerta</button>
         </form>
-        <div id="informe" class="informe" aria-live="polite"></div>
+        <div class="informe" aria-live="polite"></div>
       </article>
 
       <button id="volver" class="boton enlace" type="button">Volver a la torre</button>

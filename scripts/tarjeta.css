@@ -1,0 +1,5 @@
+@font-face { font-family: 'Silkscreen'; src: url('../public/fuentes/silkscreen.woff2') format('woff2'); }
+@font-face { font-family: 'Space Grotesk'; src: url('../public/fuentes/space-grotesk.woff2') format('woff2'); font-weight: 300 700; }
+body { margin: 0; padding: 16px; background: #060a14; color: #e6edf7; font-family: 'Space Grotesk', system-ui, sans-serif; }
+#postales { display: grid; gap: 16px; justify-items: start; }
+canvas { max-width: 100%; height: auto; image-rendering: pixelated; }

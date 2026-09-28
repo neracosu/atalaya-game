@@ -1,0 +1,62 @@
+name: Error
+description: Algo no funciona o se ve mal.
+title: "[Error] "
+labels: ["error"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. Si es un problema de seguridad (por ejemplo, sumar puntos sin jugar o usar el juego
+        contra otros sitios), no lo publique aquí: use el aviso privado de la pestaña Security.
+  - type: textarea
+    id: que-paso
+    attributes:
+      label: Qué pasó
+      description: Lo que vio. Si puede, adjunte una captura.
+    validations:
+      required: true
+  - type: textarea
+    id: que-esperaba
+    attributes:
+      label: Qué esperaba que pasara
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Cómo repetirlo
+      placeholder: |
+        1. Abrir el juego
+        2. Tocar «Tomar la guardia»
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: donde
+    attributes:
+      label: Dónde jugaba
+      options:
+        - Teléfono Android
+        - iPhone o iPad
+        - Computadora
+        - Otro
+    validations:
+      required: true
+  - type: input
+    id: navegador
+    attributes:
+      label: Navegador y versión
+      placeholder: Chrome 140, Safari 18, Firefox 143...
+    validations:
+      required: true
+  - type: dropdown
+    id: ajustes
+    attributes:
+      label: ¿Tenía algún ajuste encendido?
+      multiple: true
+      options:
+        - Ninguno
+        - Modo asistido
+        - Sonido apagado
+        - Vibración apagada
+        - Menos movimiento
