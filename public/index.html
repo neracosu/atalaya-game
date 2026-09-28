@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atalaya: la guardia</title>
+<meta name="description" content="Cuide la puerta de una ciudad que es un servidor. Un juego de 60 segundos en el universo de Atalaya.">
+<meta name="theme-color" content="#060a14">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="estilo.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<main id="app">
+
+  <section id="portada" class="pantalla activa" aria-labelledby="titulo">
+    <div class="portada-arriba">
+      <p class="rotulo">Atalaya</p>
+      <h1 id="titulo">La guardia</h1>
+      <p class="lema">Esta noche la torre está vacía. Alguien tiene que cuidar la puerta.</p>
+    </div>
+    <div id="torre-portada" class="torre-portada" aria-hidden="true"></div>
+    <div class="portada-abajo">
+      <button id="empezar" class="boton principal" type="button"><span class="hora">00:00 · El peaje</span><span>Tomar la guardia</span></button>
+      <button id="reto" class="boton" type="button"><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle"></span></button>
+      <p id="racha" class="racha" hidden></p>
+      <details class="ajustes">
+        <summary>Ajustes</summary>
+        <label><input type="checkbox" id="aj-asistido"> <span>Modo asistido</span> <small>El juego va más lento. Las estrellas cuentan igual.</small></label>
+        <label><input type="checkbox" id="aj-sonido" checked> <span>Sonido</span></label>
+        <label><input type="checkbox" id="aj-vibracion" checked> <span>Vibración</span></label>
+        <label><input type="checkbox" id="aj-movimiento"> <span>Menos movimiento</span></label>
+      </details>
+      <p class="pie"><a href="https://github.com/neracosu/atalaya-game" rel="noopener">Código fuente</a> · <a href="https://neracosu.com/atalaya" rel="noopener">Qué es Atalaya</a></p>
+    </div>
+  </section>
+
+  <section id="juego" class="pantalla" aria-label="Partida">
+    <canvas id="mundo"></canvas>
+    <header class="hud">
+      <div class="tiempo"><div id="tiempo-barra"></div></div>
+      <div class="hud-fila">
+        <div id="integridad" class="integridad" aria-label="Integridad de la puerta"></div>
+        <div class="marcador"><span id="puntos">0</span><span id="combo" class="combo">x1</span></div>
+      </div>
+      <div id="reglas" class="reglas" aria-live="polite"></div>
+    </header>
+    <div id="aviso" class="aviso" aria-live="assertive"></div>
+    <div id="ayuda" class="ayuda" hidden></div>
+    <div id="tarjeta-regla" class="tarjeta-regla" hidden></div>
+    <div class="mando" aria-hidden="true">
+      <div class="lado izq"><span class="flecha">&larr;</span><span>Bloquear</span></div>
+      <div class="lado der"><span>Pasar</span><span class="flecha">&rarr;</span></div>
+    </div>
+  </section>
+
+  <section id="fin" class="pantalla" aria-labelledby="fin-titulo">
+    <div class="fin-caja">
+      <p id="fin-rotulo" class="rotulo">El peaje</p>
+      <h2 id="fin-titulo">Amaneció en el peaje</h2>
+      <div id="fin-estrellas" class="fin-estrellas" aria-live="polite"></div>
+      <p class="fin-puntos"><span id="fin-puntos">0</span> puntos</p>
+      <p id="fin-faltan" class="fin-faltan"></p>
+      <dl id="fin-datos" class="fin-datos"></dl>
+      <div class="fin-botones">
+        <button id="otra-vez" class="boton principal" type="button">Otra vez</button>
+        <button id="compartir" class="boton" type="button">Compartir</button>
+      </div>
+      <p id="compartido" class="compartido" hidden></p>
+
+      <article class="ficha">
+        <h3>Esto pasa de verdad</h3>
+        <p id="ficha-texto"></p>
+      </article>
+      <article id="anoche" class="ficha anoche" hidden>
+        <h3>Esto pasó anoche</h3>
+        <p id="anoche-texto"></p>
+      </article>
+
+      <article class="su-sitio">
+        <h3>¿Y su sitio?</h3>
+        <p>Escriba su dominio y le decimos cómo está su puerta. Solo miramos lo que cualquiera puede ver.</p>
+        <form id="form-sitio" novalidate>
+          <input id="dominio" name="dominio" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="susitio.com" aria-label="Su dominio">
+          <button class="boton principal" type="submit">Revisar mi puerta</button>
+        </form>
+        <div id="informe" class="informe" aria-live="polite"></div>
+      </article>
+
+      <button id="volver" class="boton enlace" type="button">Volver a la torre</button>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
