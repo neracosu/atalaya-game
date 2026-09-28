@@ -9,6 +9,7 @@ import { conectarRevision } from './puerta.js';
 import { compartir, aArchivo } from './compartir.js';
 import { T } from './textos.js';
 import * as S from './sonido.js';
+import { medir } from './medir.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
 
 const REPO = 'https://github.com/neracosu/atalaya-game';
 const ATALAYA = 'https://neracosu.com/atalaya';
@@ -18,9 +19,6 @@ let datos = leer();
 datos.ajustes = { sonido: true, vibracion: true, asistido: false, movimiento: false, ...(datos.ajustes || {}) };
 
 const escena = crearEscena($('mundo'), { menosMovimiento: () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches });
-
-// ---------- analítica de Atalaya, sin cookies (si el script está cargado) ----------
-function medir(evento) { try { if (window.atalaya) window.atalaya('event', evento); } catch { } }
 
 function vibrar(ms) { if (datos.ajustes.vibracion && navigator.vibrate) try { navigator.vibrate(ms); } catch { } }
 
@@ -351,7 +349,7 @@ function terminar() {
   }
   guardar(datos);
   partida = null;
-  medir('fin-peaje');
+  medir('fin-peaje', estrellas);
   S.sonarFin(estrellas > 0);
 
   $('fin-rotulo').textContent = modo === 'reto' ? `${T.reto(retoActual.numero)}${contado ? '' : ' · sin contar'}` : T.hora;
