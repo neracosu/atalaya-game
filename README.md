@@ -27,4 +27,6 @@ pantalla de inicio y la cinemática «La torre vacía».
 ## Licencia
 
 El código es AGPL-3.0, la misma de Atalaya (ver `LICENSE`). Los niveles de la
-comunidad van bajo CC BY-SA 4.0.
+comunidad van bajo CC BY-SA 4.0. Quien aporte código o niveles firma una vez un
+acuerdo de licencia de colaborador (CLA): sigue siendo el autor, y permite que el
+juego se distribuya también en tiendas de apps.

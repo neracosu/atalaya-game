@@ -515,7 +515,8 @@ Pesa poco, cada escena es un guion en datos y puede usar datos del jugador: su a
 
 ### Dónde vive
 
-- **Un lugar propio, fuera de la carpeta del sitio de neracosu.com.** El sitio de Atalaya lo publica un exportador que reemplaza su carpeta entera, y la cuenta del sitio no debe poder tocar los archivos del juego. El juego tiene su propio subdominio o su propia carpeta del sistema, con archivos del usuario del juego y de solo lectura para el servidor web.
+- **La dirección que se comparte es `atalaya.neracosu.com/juego`**, y lleva al instante a **`juego.atalaya.neracosu.com`**, donde corre el juego. Es un sitio aparte para el navegador: `atalaya.neracosu.com` es un monitor con sesión de dueño, y el juego nunca debe compartir origen con él.
+- **Los archivos del juego viven fuera de cualquier carpeta pública de una cuenta de sitios**, son del usuario del juego y el servidor web solo los lee. El sitio de Atalaya lo publica un exportador que reemplaza su carpeta entera, y nada de eso toca al juego.
 - Política de seguridad de contenido estricta, sin código en línea.
 - Nunca se clona el repositorio en una carpeta pública: se publica solo lo construido. Los secretos viven fuera, en la configuración del sistema.
 - Enlace «Código fuente» en el juego, al commit que corre (AGPL).
@@ -601,7 +602,7 @@ Un archivo JSON por nivel, validado contra el esquema: `formato`, `id`, `titulo`
 
 - Pruebas en cada cambio: el esquema, cada motor, la repetición en varios navegadores y una partida sin pantalla de cada nivel.
 - `AGENTS.md`, `CONTRIBUTING.md` en español y formularios de GitHub.
-- Toda contribución lleva la firma de quien la hace, con el acuerdo que se decida antes del primer aporte externo.
+- **Toda contribución, de código o de niveles, se hace con un acuerdo de licencia de colaborador (CLA).** Quien aporta sigue siendo el autor y su aporte se publica con la licencia del repositorio, pero da permiso para distribuirlo también con otras condiciones, por ejemplo en una tienda de apps, cuyas reglas chocan con la AGPL. El acuerdo se firma una vez, antes del primer aporte.
 
 ### Medición
 
