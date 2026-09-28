@@ -1,18 +1,21 @@
 # Atalaya: la guardia — documento de diseño
 
-Documento vivo. Se escribe parte por parte y cada parte queda cerrada cuando se acuerda.
+Documento vivo. Se escribió parte por parte el 2026-09-28 y ese mismo día pasó por una revisión crítica desde cinco ángulos: diversión, alcance, crecimiento, seguridad y precisión técnica. Lo que cambió con esa revisión está al final, en «Cambios de la revisión crítica».
 
 | Parte | Estado |
 |---|---|
-| 1. Visión | Cerrada (2026-09-28) |
-| 2. Historia y mundo | Cerrada (2026-09-28) |
-| 3. Niveles y mecánicas | Cerrada (2026-09-28) |
-| 4. Lo que hace volver | Cerrada (2026-09-28) |
-| 5. Tablas, perfiles, reto del día y temporadas | Cerrada (2026-09-28) |
-| 6. Cinemáticas y perspectiva | Cerrada (2026-09-28) |
-| 7. Arte y sonido | Borrador (2026-09-28) |
-| 8. Técnica | Borrador (2026-09-28) |
-| 9. Etapas | Borrador (2026-09-28) |
+| 1. Visión | Cerrada, revisada |
+| 2. Historia y mundo | Cerrada, revisada |
+| 3. Niveles y mecánicas | Cerrada, revisada |
+| 4. Lo que hace volver | Cerrada, revisada |
+| 5. Tablas, perfiles, reto del día y temporadas | Cerrada, revisada |
+| 6. Cinemáticas y perspectiva | Cerrada, revisada |
+| 7. Arte y sonido | Borrador revisado |
+| 8. Técnica y seguridad | Borrador revisado |
+| 9. Etapas | Borrador revisado |
+| 10. Lanzamiento | Borrador |
+
+Una regla vale para todo el documento: **nada se da por bueno hasta que se juega.** Los números son el punto de partida y cada etapa tiene su prueba de «seguir, cambiar o parar».
 
 La investigación que respalda cada decisión, con sus fuentes, está en [`investigacion/`](investigacion/).
 
@@ -22,13 +25,18 @@ La investigación que respalda cada decisión, con sus fuentes, está en [`inves
 
 ### Qué es
 
-Un juego web gratis en el universo de [Atalaya](https://neracosu.com/atalaya), el monitor que muestra un servidor como una ciudad pixel art. El jugador cuida esa ciudad durante una noche en la que todo sale mal. Cada problema del juego es uno que pasa de verdad en un servidor, y al final se revela que la ciudad siempre fue uno.
+Un juego web gratis en el universo de [Atalaya](https://neracosu.com/atalaya), el monitor que muestra un servidor como una ciudad pixel art. El jugador cuida esa ciudad durante una noche en la que todo sale mal. Cada problema del juego es uno que pasa de verdad en un servidor.
 
 Solo en español.
 
+### Para qué existe
+
+Es la puerta de entrada a Atalaya. Tiene que ser un buen juego por sí mismo, porque nadie comparte publicidad, pero su medida de éxito es una: **cuántos jugadores terminan mirando su propio sitio con Atalaya.** Por eso el puente hacia el producto está desde el primer nivel y no al final de la noche.
+
 ### Para quién
 
-Desarrolladores y programadores, con o sin experiencia, y en especial la nueva generación que programa con ayuda de la IA. Se entiende sin saber de servidores; quien sabe reconoce cada situación.
+- **Quien juega:** desarrolladores y programadores, con o sin experiencia, y en especial la nueva generación que programa con IA. Se entiende sin saber de servidores; quien sabe reconoce cada situación.
+- **Quien da el salto a Atalaya:** alguien que ya tiene algo publicado. Por ejemplo, Ana, freelancer de WordPress con ocho sitios de clientes, o Luis, que acaba de publicar su primer proyecto hecho con IA. Los niveles hablan de lo que ellos viven: `/wp-login.php`, `xmlrpc.php`, el `.env`, el certificado que vence.
 
 ### Dónde se juega
 
@@ -36,33 +44,31 @@ Desarrolladores y programadores, con o sin experiencia, y en especial la nueva g
 
 ### Pilares
 
-Cuando haya una duda de diseño, se decide con estos cuatro:
-
-1. **Se entiende en cinco segundos.** Si hay que explicarlo, se rediseña.
+1. **Se entiende en cinco segundos.** Si hay que explicarlo, se rediseña. Lo importante se lee por la forma, no por el texto.
 2. **Cada acierto se siente.** Sonido, número y efecto al instante, en proporción a lo que se logró.
-3. **Todo lo que pasa en el juego pasa de verdad en un servidor.** Nada de metáforas ajenas; los ataques, las defensas y los códigos son reales.
+3. **Todo lo que pasa en el juego pasa de verdad en un servidor.** Si un sysadmin se ríe de un error técnico, se corrige.
 4. **Perder cuesta poco.** El reintento tarda menos de un segundo y nunca se pierde lo ganado.
 
 ### Lo que se toma de cada éxito
 
 | De | Qué se toma |
 |---|---|
-| Juegos .io (Agar.io, Slither.io) | Entrar en un segundo, sin registro, y la tabla en vivo en una esquina. |
-| Celeste | Reintento instantáneo y un modo asistido digno, sin burlas. |
-| Balatro | El efecto en proporción al acierto: un combo grande se ve y se oye grande. |
-| Candy Crush | Decir cuándo se perdió por poco: «le faltaron 3 para la tercera estrella». |
-| Papers, Please | Reglas nuevas que llegan en un boletín, rapidez contra exactitud y un sello que se siente. |
-| Mini Metro | Perder por desborde gradual, elegir una mejora entre dos, de la calma al caos. |
-| Zachtronics | Al terminar, comparar el resultado con el de todos en varias medidas, no solo un puntaje. |
-| Wordle | Un reto diario igual para todos y un resultado para compartir que no revela nada. |
+| Juegos .io | Entrar en un segundo, sin registro. |
+| Celeste | Reintento instantáneo y un modo asistido digno. |
+| Balatro | El efecto en proporción al acierto. |
+| Candy Crush | Decir cuándo se perdió por poco. |
+| Papers, Please | Reglas que llegan en un boletín, rapidez contra exactitud, un sello que se siente. |
+| Reigns | Decidir con un gesto: deslizar a un lado o al otro. |
+| Mini Metro | Perder por desborde gradual; elegir una mejora entre dos. |
+| Zachtronics | Compararse con todos en varias medidas, no solo un puntaje. |
+| Wordle | Un reto diario igual para todos y un resultado para compartir que no revela nada. Sin tabla. |
 | Duolingo | Racha que perdona un día. |
-| Tibia | Tablas por categoría, para que cada tipo de jugador tenga su podio; API pública de datos. |
-| Old School RuneScape | Modo de una sola vida; la comunidad vota el contenido nuevo. |
-| Geometry Dash | Niveles hechos por la comunidad, con escalera de reconocimiento. |
-| Trackmania, Path of Exile | Temporadas de tres meses donde solo se reinicia la tabla. |
-| Club Penguin | Eventos de fecha: la ciudad se redecora. |
-| Kingdom Rush, League of Legends | La defensa de la torre: carriles, oleadas, mejoras con ramas y botón de pánico. |
-| Link's Awakening, Paper Mario | Cambiar de perspectiva por sorpresa, en el mismo mundo reconocible. |
+| Tibia | Tablas por categoría; API pública de datos. |
+| Kingdom Rush, Plants vs. Zombies | Cada nivel da una defensa nueva que luego se usa en el jefe final. |
+| Vampire Survivors | Una partida larga hecha de elecciones que se acumulan. |
+| Geometry Dash | Niveles de la comunidad, con escalera de reconocimiento. |
+| Screeps, Zachtronics | Programar un bot también es jugar. |
+| Link's Awakening, Paper Mario | Cambiar de perspectiva por sorpresa, en el mismo mundo. |
 
 ### Lo que no se usa
 
@@ -71,21 +77,19 @@ Cuando haya una duda de diseño, se decide con estos cuatro:
 - Nada de perder lo ganado al fallar.
 - Nada de progreso que tarde años ni de juego pesado a propósito.
 - Nada de escasez falsa ni de rachas que castigan.
-- Nada de bots tolerados: la tabla se valida en el servidor desde el primer día.
 
 ### Decisiones tomadas en esta parte
 
-- **La defensa de la torre existe**, como jefe final de cada temporada y como modo sin fin, «Guardia sin fin». Se juega con la ciudad vista desde la torre, no desde el aire. Se detalla en las partes 3 y 6.
-- **Temporadas de tres meses.** Se reinicia solo la tabla de la temporada; estrellas, insignias y récords por nivel se conservan, y las temporadas pasadas quedan jugables en un archivo. Se detalla en la parte 5.
+- **La defensa de la torre existe**, como jefe final de la noche y como modo sin fin, «Guardia sin fin». Partes 3 y 6.
+- **Temporadas**, cuando haya comunidad que las sostenga. Parte 5.
 - **Los niveles de la comunidad son parte del juego**, como en Geometry Dash:
   - Cada nivel es un archivo de datos, sin código, bajo licencia **CC BY-SA 4.0**. El código del juego es **AGPL-3.0**.
-  - Tres vías para enviar uno: una idea escrita en un formulario, el editor dentro del juego o un pull request.
-  - Para enviarlo hay que superarlo uno mismo. Lo firma una persona.
-  - Escalera de reconocimiento: Aceptado, Destacado (entra al reto del día) y De temporada (entra a la campaña oficial). El crédito se ve dentro del juego.
-  - La comunidad vota el próximo contenido. Se aprueba con 70 % y votan solo quienes han jugado.
-- **Lo hecho con IA es bienvenido.** El repo trae instrucciones para el agente de cada quien, un esquema que se valida solo y una prueba que juega el nivel sin pantalla. A nadie se le pide confesar nada: se pide lo mismo que a todos, que funcione, que se haya superado y que una persona lo firme. Quien quiera decir que lo hizo con IA lo muestra con orgullo, junto al robot de Atalaya.
-- **Cuenta sin registro.** Se juega con un apodo. El correo es opcional y aparece cuando ya hay algo que conservar: sirve para guardar el avance y entrar desde otro teléfono con un código, sin contraseña. Las noticias son un permiso aparte, sin marcar, con baja en un clic.
-- **Dónde vive.** En `neracosu.com/atalaya/juego`. Los avances y las tablas se guardan en una base de datos propia en el mismo servidor, detrás de un servicio pequeño en `neracosu.com/atalaya/juego/api`, aparte del monitor.
+  - Para enviarlo hay que superarlo uno mismo, y lo firma una persona.
+  - Escalera de reconocimiento: Aceptado, Destacado (entra al reto del día) y De temporada (entra a la campaña oficial).
+- **Lo hecho con IA es bienvenido.** El repo trae instrucciones para el agente de cada quien, un esquema que se valida solo y una prueba que juega el nivel sin pantalla. A nadie se le pide confesar nada: se pide lo mismo que a todos. Quien quiera decir que lo hizo con IA lo muestra con orgullo, junto al robot de Atalaya.
+- **Los bots también juegan, a la vista.** El público programa y el código es abierto: habrá bots. En lugar de fingir que no, hay una **Liga de bots** oficial con su propia tabla. El bot que se declara no se castiga; el que se hace pasar por persona, sí.
+- **Cuenta sin registro.** Se juega con un apodo. El correo, opcional, llega más adelante (parte 8).
+- **Dónde vive.** En un lugar propio, aparte del sitio y del monitor (parte 8).
 
 ---
 
@@ -93,199 +97,233 @@ Cuando haya una duda de diseño, se decide con estos cuatro:
 
 ### La premisa
 
-Una noche, la torre de la ciudad amanece vacía. Quien la cuidaba, la vigía, se fue sin avisar, y la ciudad se queda sin nadie que la mire justo cuando empieza a llegar el Enjambre. El jugador sube, enciende la luz y toma la guardia.
+Una noche, la torre de la ciudad amanece vacía. Quien la cuidaba, la vigía, se fue sin avisar, y la ciudad se queda sin nadie que la mire justo cuando llega el Enjambre. El jugador sube, enciende la luz y toma la guardia.
 
-Desde la torre se ve la ciudad a través de un catalejo con varias lentes. Cada lente muestra la misma ciudad con otro disfraz: como castillo, como villa, como oficina. Cambiar de nivel es cambiar de lente. Al amanecer las lentes se caen y queda la verdad.
+Desde la torre se ve la ciudad a través de un catalejo con varias lentes. Cada lente muestra un barrio de la ciudad a su manera: el castillo, la villa, la oficina. Cambiar de nivel es cambiar de lente.
 
-### Las lentes
+### Las lentes se agrietan
 
-Son los temas que ya existen en Atalaya, ahora con una razón dentro de la historia. El problema de fondo es siempre el mismo (una visita, un intruso, un archivo malicioso, una cola que se desborda); lo que cambia es el disfraz. Cada lente trae su propio elenco, el mismo que usa el monitor:
+A medianoche, las lentes muestran un mundo de fantasía y los peligros se ven por su forma: el ladrón encapuchado, la araña, el auto sospechoso. Con cada hora las lentes se agrietan y por las grietas se asoma lo que hay detrás: primero algún rótulo, luego placas con direcciones, al final registros y códigos. A las 05:00 ya casi todo es texto técnico.
+
+Chispa, el robot, es el único que ve a través de las lentes desde el principio. Por eso es él quien lee en voz alta lo que dicen los rótulos y explica qué significa.
+
+Así el juego se entiende sin saber de servidores al empezar, y enseña de a poco a leer lo técnico.
+
+### Las lentes y su elenco
+
+Son los temas que ya existen en Atalaya, con el mismo elenco que usa el monitor:
 
 | Lente | Quien vigila | Quien sondea | El archivo malicioso | La fila de espera |
 |---|---|---|---|---|
-| Ciudad | Patrulla y patrulla voladora | Auto que sondea | Bicho | Autos en fila |
+| Ciudad | Patrulla y patrulla voladora | Auto sospechoso | Escarabajo | Autos en fila |
 | Villa | Guardia y búho guardián | Ladrón encapuchado | Rata | Aldeanos en fila |
 | Castillo | Centinela y gárgola | Espectro | Araña | Murciélagos |
-| Oficina | Guardia de seguridad y dron | Intruso de capucha | Cucaracha | Aviones de papel |
+| Oficina | Guardia de seguridad y dron de seguridad | Intruso de capucha | Cucaracha | Aviones de papel |
 | Planta | Montacargas y dron de la planta | Dron hostil | Bicho oxidado | Cajas en fila |
 | Ops | Blindado y dron | Marcador hostil | Virus | Contactos en espera |
 | Raid | Paladín y dragoncito | Esbirro | Slime | Héroes en fila |
 | Acuario | Caballito de mar y tortuga | Tiburón | Erizo | Peces en espera |
 | **Terminal** | — | — | — | — |
 
-La **Terminal** es la última lente, y no es un disfraz: es la verdad. Solo texto, como en el monitor.
-
-La temporada 1 usa seis lentes más la Terminal. Las demás quedan para temporadas siguientes y para lentes que haga la comunidad, igual que los temas de Atalaya.
+La **Terminal** es la última lente y no es un disfraz: es lo que hay detrás de todas. Solo texto, como en el monitor.
 
 ### La noche
 
-Cada nivel es una hora de la noche, de medianoche al amanecer, y en cada hora cambia la lente. Qué nivel va en qué hora y con qué lente se cierra en la parte 3. La forma de la noche es esta:
+Cada nivel es una hora de la noche, de medianoche al amanecer. La forma de la noche es esta:
 
-1. **Medianoche.** Todo tranquilo. El robot compañero enseña lo básico con el primer problema, el más simple.
-2. **La madrugada.** Los problemas se suman y se cruzan, y el Enjambre prueba cada puerta de la ciudad.
-3. **La caída.** Antes del amanecer, varias cosas fallan a la vez. Es el momento más tenso.
-4. **El amanecer.** La defensa de la torre: el Enjambre ataca la torre por todas las calles y el jugador la defiende, con la ciudad vista desde la torre y no desde el aire. Es el jefe final.
-5. **La verdad.** Si la torre resiste, las lentes se caen una por una y queda la Terminal: `root@atalaya`. La ciudad nunca fue una ciudad.
-6. **Esto pasó anoche.** Justo después, las cifras de la noche anterior en un servidor real: cuántos intentos de entrar hubo, cuántos robots se frenaron, cuántas visitas pasaron. Salen del modo público de Atalaya, solo como totales, sin ningún dato privado. El jugador descubre que lo que acaba de jugar ocurre cada noche, y ahí llega la invitación a probar Atalaya.
+1. **Medianoche.** Todo tranquilo. Chispa enseña lo básico con el primer problema, el más simple.
+2. **La madrugada.** Los problemas se suman, y el Enjambre prueba cada puerta. Cada hora que se supera deja una defensa nueva en la torre.
+3. **La caída.** Antes del amanecer, algo falla y arrastra a todo lo demás.
+4. **El amanecer.** La defensa de la torre: el Enjambre ataca por todas las calles y el jugador la defiende con las defensas que ganó en la noche, con la ciudad vista desde la torre.
+5. **La verdad.** Si la torre resiste, las lentes se caen una a una. Cada una deja ver su equivalente real, igual que en el monitor: la cárcel se vuelve `iptables -L ATALAYA`, el palomar se vuelve `mailq`, el tanque de datos se vuelve `mysqladmin processlist`. Queda la Terminal, en la máquina `alba@atalaya`. Chispa escribe `last`, y aparece la última vez que entró la vigía: la primera pista.
+6. **Esto pasó anoche.** Las cifras de la noche anterior en un servidor real: cuántos intentos de entrar hubo, cuántos robots se frenaron, cuántas visitas pasaron. Redondeadas y sin nombrar el servidor (parte 8).
+
+El remate no es descubrir que la ciudad es un servidor, porque quien llega desde Atalaya ya lo sabe. El remate es **que todo lo que acaba de jugar pasó de verdad anoche.**
 
 ### Los personajes
 
-- **El guardia** es el jugador, con su apodo. No hay que elegir personaje ni leer una presentación para empezar.
-- **El robot** es el compañero de la torre: el mismo robot pixel que en el monitor representa a una sesión de Claude Code trabajando. Enseña, avisa lo que viene y comenta entre niveles. Para quien programa con IA es un guiño directo: su herramienta está ahí, ayudando a cuidar la ciudad. Nunca juega por el jugador.
-- **La vigía** cuidaba la torre antes. Nunca aparece; solo quedan rastros: notas en la torre, ajustes que dejó hechos, una lente que nadie sabe para qué sirve. Por qué se fue es el hilo que atraviesa las temporadas: cada una deja una pista más.
-- **El Enjambre** es el atacante: miles de robots sin cara que prueban todas las puertas, como una red de bots real. En la temporada 1 no tiene rostro. Si alguien lo dirige es una pregunta que queda abierta.
+- **El guardia** es el jugador, con su apodo.
+- **Chispa** es el robot compañero: el mismo robot pixel que en el monitor representa a una sesión de Claude Code trabajando. Enseña, lee los rótulos, avisa lo que viene. Nunca juega por el jugador. Para quien programa con IA es un guiño directo: su herramienta está ahí, ayudando a cuidar la ciudad.
+- **Alba** es la vigía. Nunca aparece; solo quedan rastros: su cuaderno, su taza, su abrigo en el perchero, su usuario en la Terminal. Por qué se fue es el hilo de las temporadas.
+- **El Enjambre** es el atacante: miles de robots sin cara que prueban todas las puertas, como una red de bots real. Si alguien lo dirige es una pregunta abierta.
 
-Los nombres del robot y de la vigía se deciden en la parte 7, con su diseño.
+Los nombres de Chispa y Alba son de trabajo hasta que se vean dibujados.
 
 ### El tono
 
-Ambiente serio y humor en los mensajes. La noche, la torre y el Enjambre se toman en serio; los textos de lo que falla tienen el humor de quien ya lo vivió.
+Ambiente serio y humor en los mensajes. La noche y el Enjambre se toman en serio; los textos de lo que falla tienen el humor de quien ya lo vivió.
 
-- «Su base de datos pidió vacaciones.»
-- «429: demasiadas peticiones. El robot también se cansa.»
 - «Ese no era un robot. Era su cliente.»
+- «Acaba de poner en cuarentena la portada del sitio.»
+- «Alguien dejó un servidor de pruebas abierto en el 3000.»
+- «429: demasiadas peticiones. Retry-After: 60. El robot no leyó el encabezado.»
+- «ERROR 1040: Too many connections. La base no atiende sin cita.»
+- «Hay copia de seguridad. ¿La probó alguna vez?»
+- «No era el servidor. Era el DNS. Siempre es el DNS.»
+- «Viernes, 18:00. Alguien desplegó.»
+- «El disco está lleno: el registro de errores se llenó de errores sobre el registro de errores.»
 
 Reglas del humor:
 
-- Se ríe de las fallas que un programador vive de verdad, nunca del jugador.
+- Se ríe de fallas que un programador vive de verdad, nunca del jugador.
+- Cada chiste técnico tiene que ser correcto. Si un experto lo corrige, no sirve.
 - Nada de nombres reales de empresas, proyectos ni personas.
 - Los textos del juego tratan al jugador de usted.
 
 ### Las temporadas en la historia
 
-Cada temporada es una noche nueva: una amenaza nueva, al menos una lente nueva y una pista más sobre la vigía. Todas terminan igual, con la verdad y con lo que pasó anoche de verdad, porque eso no cambia: cada noche es real.
-
-La temporada 1 se llama **«La primera guardia»**.
+Cada temporada es una noche nueva: una amenaza nueva, al menos una lente nueva y una pista más sobre Alba. La temporada 1 se llama **«La primera guardia»**.
 
 ---
 
 ## 3. Niveles y mecánicas
 
-Los números de esta parte (duraciones, velocidades, umbrales) son el punto de partida. Se afinan jugando.
+Los números de esta parte son el punto de partida. Se afinan jugando, y cada nivel se prueba con gente que llega de un video antes de construir el siguiente.
+
+### La columna de la noche
+
+Cada hora que se supera le da a la torre **una defensa nueva**, que después se usa en el amanecer. Así la noche no es una lista de minijuegos: es el camino que arma la defensa final.
+
+| Hora | Nivel | Lente | Defensa que gana |
+|---|---|---|---|
+| 00:00 | El peaje | Ciudad | Límite de peticiones |
+| 01:00 | La patrulla | Ops | Cortafuegos |
+| 02:00 | La cuarentena | Castillo | Cuarentena |
+| 03:00 | Las agujas | Planta | Caché |
+| 04:00 | El correo | Villa | Tope de envíos |
+| 05:00 | La caída | Oficina | Alarmas |
+| 06:00 | El amanecer | Vista desde la torre | Se usan todas |
 
 ### Reglas para todos los niveles
 
-- **Una acción nueva por nivel**, que se entiende en cinco segundos. El robot la muestra una vez, sin texto largo.
-- **Un dedo.** Tocar es la acción principal en seis de los siete niveles; solo La patrulla pide arrastrar. En la computadora: ratón o teclado.
-- **De la calma al caos.** Cada nivel empieza lento y termina lleno. La música y los efectos suben con la carga.
-- **Siempre se filtra, no se destruye.** Lo bueno y lo malo pasan por el mismo lugar. Bloquear algo bueno (un falso positivo) cuesta tanto como dejar pasar algo malo.
-- **Eventos sorpresa** que no se anuncian: una ráfaga, una visita dorada que vale el doble, un combo que se duplica.
-- **Integridad de la torre.** En los niveles cortos, tres fallas graves terminan la partida antes de tiempo. Lo ganado hasta ahí se cuenta.
-- **Al terminar**: estrellas, cuánto faltó para la siguiente, la comparación con todos los jugadores en tres medidas y el botón de reintentar, que tarda menos de un segundo.
-- **«Esto pasa de verdad»**: una ficha opcional de dos líneas con lo real detrás del nivel.
+- **Una acción nueva por nivel**, que se entiende en cinco segundos. El primer toque llega antes del segundo 3.
+- **Un dedo.** Tocar o deslizar. Lo que se toca mide al menos 48 puntos de pantalla y está en los dos tercios de abajo, donde llega el pulgar.
+- **Lo malo se ve por la forma.** El ladrón lleva capucha y palanca; el robot, antena; la araña, patas. El rótulo técnico solo confirma, con un máximo de ocho caracteres, y crece a medida que las lentes se agrietan.
+- **Las reglas nuevas se muestran como un ícono fijo arriba**, con un segundo de pausa al llegar. Nunca como texto en medio de la acción.
+- **De la calma al caos.** Cada nivel empieza lento y termina lleno.
+- **Los errores cuestan distinto, y el juego lo dice:** dejar pasar algo malo quita integridad a la torre; bloquear algo bueno quita puntos y rompe el combo. Cada error se explica al instante con la regla que rompió: «Llevaba placa del buscador: regla 1».
+- **Nada de trampas visuales.** Lo que cambia, cambia a la vista y con aviso.
+- **Eventos sorpresa buenos**: una ráfaga que multiplica, una visita dorada que vale el doble.
+- **Integridad de la torre.** En los niveles cortos, tres fallas graves terminan la partida. Lo ganado hasta ahí se cuenta.
+- **Al terminar**: estrellas, cuánto faltó para la siguiente, la comparación con todos en tres medidas, la ficha «Esto pasa de verdad» y el botón de reintentar.
 
 ### Puntaje y estrellas
 
-- Cada acierto suma puntos base, multiplicados por el **combo**.
-- El combo sube un escalón cada 5 aciertos seguidos: x1, x2, x3, x4, x6 y x8. Cualquier error lo devuelve a x1.
-- Tres estrellas por nivel, por umbral de puntaje. La primera se gana en el primer intento de casi cualquiera; la tercera pide dominar el nivel.
-- **Modo asistido**: el juego va más lento. Se ganan las estrellas igual, pero ese puntaje no entra a la tabla competitiva. El texto lo ofrece con respeto, nunca como burla.
+- Cada acierto suma puntos base, multiplicados por el **combo**: x1, x2, x3, x4, x6 y x8. Sube un escalón cada 5 aciertos seguidos y cualquier error lo devuelve a x1.
+- Tres estrellas por nivel. La primera se gana en el primer intento de casi cualquiera; la tercera pide dominar el nivel.
+- **Modo asistido**: el juego va más lento. Se ganan las estrellas igual, pero no se entra a las tablas. El texto lo ofrece con respeto.
 
 ### Los siete niveles de «La primera guardia»
 
 #### 00:00 · El peaje · lente Ciudad · 60 s
 
-- **Qué hace el jugador.** Por la calle llegan autos hacia la puerta de la ciudad. Cada auto lleva su rótulo: `Mozilla`, `Googlebot`, `curl`, `sqlmap`, o lo que pide, como `/wp-admin` o `/.env`. Si no se toca, pasa. Tocarlo lo sella con BLOQUEAR.
-- **El boletín.** A los 20 y a los 40 segundos el robot trae una regla nueva, como en Papers, Please:
-  - «Los robots de buscadores pasan.»
-  - «Nadie pide `/wp-admin`: quien lo pide, se bloquea.»
-  - «Más de tres autos seguidos con la misma placa son un robot.»
-- **Falla.** Si un robot pasa, la torre pierde integridad. Si se bloquea a una visita, se rompe el combo y sale el texto «Ese no era un robot. Era su cliente.»
-- **Sorpresa.** Un auto dorado es un cliente que compra y vale el doble. Una ráfaga trae diez robots seguidos.
-- **Esto pasa de verdad.** Cada minuto llegan robots buscando `/wp-admin` y `.env` a cualquier servidor. Así se frenan con reglas y con límite de peticiones.
+- **Qué hace el jugador.** Los autos llegan de a uno a la barrera, bajando hacia el pulgar. Se desliza a la derecha para dejar pasar y a la izquierda para bloquear. Si tarda, la fila crece detrás. En el primer prototipo se prueba también la variante de tocar solo para bloquear, y se queda la que enganche más.
+- **Cómo se reconoce.** A medianoche, por la forma: el auto sospechoso es oscuro y lleva sirena apagada; el cliente, colores y pasajeros. Con las horas, la placa muestra lo que pide y de dónde viene.
+- **El boletín.** Llegan dos reglas en la partida, de una lista cerrada. Por ejemplo:
+  - «Este sitio no es WordPress: quien pide `/wp-login.php` o `/wp-admin`, se bloquea.»
+  - «Los robots de buscadores pasan, si su placa dice de dónde vienen. Un robot del buscador que no viene del buscador es un impostor.» (La placa muestra de dónde viene de verdad, como el DNS inverso.)
+  - «Más de diez autos por segundo con la misma placa: límite de peticiones.»
+- **Sorpresa.** El auto dorado es un cliente que compra y vale el doble.
+- **Esto pasa de verdad.** «Un servidor recién encendido recibe robots buscando `/.env` y `/wp-login.php` en cuestión de minutos.»
+- **Gana:** el límite de peticiones.
 
 #### 01:00 · La patrulla · lente Ops · 75 s
 
-- **Qué hace el jugador.** Maneja un dron de seguridad arrastrando el dedo. El dron sigue el dedo con inercia: acelera, derrapa y deja estela. El control se inspira en DATA WING.
-- **El objetivo.** En el borde del radar están las puertas de la ciudad, con su número: 22, 80, 443, 3306. Un marcador hostil recorre las puertas buscando una abierta. El jugador tiene que alcanzarlo antes; al tocarlo, el blindado se lo lleva a la zona de detención.
-- **Combo.** Se encadenan capturas sin chocar con los bordes. Derrapar cerca de un obstáculo da puntos extra.
-- **Falla.** Si el escáner encuentra una puerta abierta, entra.
-- **Sorpresa.** Se abre sola una puerta que no estaba: «Alguien dejó un servidor de pruebas abierto en el 3000.»
-- **Esto pasa de verdad.** Los escáneres de puertos recorren internet sin parar. Lo que no se usa se cierra con el cortafuegos.
-- **Riesgo conocido.** Es el control más difícil de afinar. Tiene su propia etapa de pruebas antes de darlo por bueno.
+- **Qué hace el jugador.** Maneja el dron con toques: tocar a la izquierda de la pantalla gira a un lado, a la derecha gira al otro, y el dron avanza solo con inercia, derrapando. Es el control real de DATA WING, y el dedo nunca tapa el dron.
+- **El objetivo.** En el borde del radar están las puertas: 22, 80 y 443 abiertas a propósito, porque se usan; 3306 y 3000, que no deberían estarlo. El marcador hostil las recorre. Hay que alcanzarlo antes de que encuentre una puerta que no debía estar abierta; al tocarlo, el blindado se lo lleva.
+- **Falla.** «El escáner encontró el 3306 expuesto. Lo anotó, y detrás viene el ataque.»
+- **Sorpresa.** «Alguien dejó un servidor de pruebas abierto en el 3000.»
+- **Esto pasa de verdad.** «Solo quedan abiertas las puertas que se usan. La base de datos escucha en 127.0.0.1, y el cortafuegos bloquea a quien barre muchos puertos en segundos.»
+- **Gana:** el cortafuegos.
+- **Riesgo conocido.** Es el control más difícil de afinar. Tiene una semana de prototipo en gris; si no divierte, se reemplaza.
 
 #### 02:00 · La cuarentena · lente Castillo · 60 s
 
-- **Qué hace el jugador.** Por la estantería pasan grimorios, que son los archivos del sitio. Entre ellos se esconden arañas. Tocar una araña la encierra en un ataúd: la cuarentena. Tocar un grimorio bueno lo encierra también, y eso cuesta.
-- **Escalada.** Al principio las arañas se ven a simple vista. Después se disfrazan de grimorio, y solo las delata la etiqueta:
-  - un nombre al azar, como `x7Qk2.php`;
-  - una doble extensión, como `foto.jpg.php`;
-  - un `.php` dentro de la carpeta de fotos subidas.
-- **Falla.** Si una araña se escapa, infecta un estante. Encerrar un archivo bueno saca el texto «Acaba de poner en cuarentena la portada del sitio.»
-- **Sorpresa.** Un grimorio bueno que cambia de etiqueta a la vista del jugador.
+- **Qué hace el jugador.** Por la estantería pasan pergaminos, los archivos del sitio. Entre ellos se esconden arañas. Tocar una araña la encierra en un ataúd. Encerrar un pergamino bueno cuesta.
+- **Escalada.** Al principio la araña se ve entera. Después se esconde en un pergamino y la delata la etiqueta: un nombre al azar como `x7Qk2.php`, una doble extensión como `foto.jpg.php`, o un `.php` en la carpeta de fotos subidas.
+- **Falla.** Una araña que se escapa infecta un estante. Encerrar uno bueno: «Acaba de poner en cuarentena la portada del sitio.»
 - **Esto pasa de verdad.** Así se esconde el código malicioso en un sitio. La cuarentena es mejor que borrar: si hubo un error, se devuelve.
+- **Gana:** la cuarentena.
+- **Nota de construcción.** Comparte motor con El peaje: tocar lo malo dentro de un flujo.
 
-#### 03:00 · Las tuberías · lente Planta · 90 s
+#### 03:00 · Las agujas · lente Planta · 90 s
 
-- **Qué hace el jugador.** Las consultas llegan como cajas por tuberías hacia el silo, que es la base de datos. Tocar un tramo lo gira y cambia el camino, como en Pipe Mania.
-- **La saturación.** Las consultas lentas atascan su tubo. El medidor del silo sube poco a poco, como las estaciones de Mini Metro.
-- **Entre oleadas.** Cada 30 segundos se elige una mejora entre dos:
+- **Qué hace el jugador.** Las consultas llegan como cajas por un riel hacia el tanque de datos. Hay tres o cuatro agujas grandes; tocarlas cambia el camino. Las cajas de lectura pueden ir a la réplica; las de escritura, solo al tanque principal. Es Train Conductor, no un rompecabezas de tubos chicos.
+- **La saturación.** Las consultas lentas atascan su riel y el medidor del tanque sube poco a poco, como en Mini Metro.
+- **Entre oleadas**, cada 30 segundos, se elige una mejora entre dos:
   - **Índice:** las consultas lentas se aceleran.
-  - **Caché:** las consultas repetidas ya no llegan al silo.
-  - **Réplica:** un segundo silo para las lecturas.
-  - **Más conexiones:** entran más cajas a la vez.
-- **Falla.** El silo se desborda.
-- **Sorpresa.** Una consulta gigante («`SELECT *` sin `WHERE`») que tapa todo si no se desvía a tiempo.
-- **Esto pasa de verdad.** Así se satura una base de datos. Estas cuatro mejoras son las que se usan en la vida real.
+  - **Caché:** las repetidas ya no llegan al tanque.
+  - **Réplica:** un segundo tanque para las lecturas.
+  - **Pool de conexiones:** entran más cajas a la vez sin ahogar al tanque. Subir las conexiones sin pool, en cambio, llena el tanque más rápido.
+- **Sorpresa.** «La réplica va atrasada»: las lecturas que van a ella llegan viejas.
+- **Esto pasa de verdad.** Así se satura una base de datos, y estas son las mejoras que se usan en la vida real.
+- **Gana:** la caché.
 
 #### 04:00 · El correo · lente Villa · 60 s
 
-- **Qué hace el jugador.** Las palomas salen del palomar con cartas, al ritmo de la música. Cada carta necesita sus sellos, y hay tres carriles, uno por sello: **SPF**, **DKIM** y **DMARC**. Se toca el carril justo cuando la paloma pasa, como en un juego de ritmo.
-- **Falla.** Un sello a destiempo hace rebotar la carta, y se ve el motivo: «550: no pasó SPF.»
-- **El spam.** Entre las cartas buenas vienen cartas de spam, de un formulario que alguien abusó. Esas no se sellan: si una sale, baja la reputación de la villa.
-- **Sorpresa.** Un envío masivo, el boletín de noticias de la ciudad, con el doble de palomas y el doble de puntos.
-- **Esto pasa de verdad.** Sin SPF, DKIM y DMARC, los correos de un sitio terminan en spam o rebotan.
+- **Qué hace el jugador.** Las palomas salen del palomar al ritmo de la música. Tres carriles, uno por cada cosa que un correo necesita para llegar:
+  - **SPF:** la paloma sale por la ventana autorizada.
+  - **DKIM:** se le pone el lacre del palomar, al pasar.
+  - **DMARC:** el nombre del sobre coincide con el de la carta.
+- **El ritmo se juega con la vista**, con márgenes generosos, porque el sonido en el navegador del teléfono llega con retraso. La música acompaña; no manda.
+- **Falla.** Una paloma que no pasa rebota con su motivo: «550 5.7.23: no pasó SPF.»
+- **El spam.** Entre las cartas buenas vienen las de un formulario abusado. Esas salen firmadas igual, porque son del propio palomar: no se sellan, se retienen en la cola. Si una sale, baja la reputación de la villa.
+- **Esto pasa de verdad.** Sin SPF, DKIM y DMARC, los correos de un sitio terminan en spam o rebotan. Y el spam que sale del propio servidor pasa todas las firmas: hay que frenarlo antes.
+- **Gana:** el tope de envíos.
+- **Riesgo conocido.** Si el ritmo no funciona en teléfonos baratos, el nivel se rehace sin ritmo.
 
 #### 05:00 · La caída · lente Oficina · 90 s
 
-- **Antes del nivel.** La cinemática «La caída»: se apagan tres salas a la vez.
-- **Qué hace el jugador.** Tres salas fallan al mismo tiempo: recepción (visitas y robots), seguridad (intrusos) y mensajería (cartas). Tocar una sala la agranda y ahí se resuelve una versión corta de su problema. Mientras tanto, el medidor de las otras dos sube.
-- **La decisión.** No hay un orden correcto único. El histograma del final muestra qué atendió primero cada jugador y cómo le fue.
-- **Falla.** Una sala que llega al tope se cae, y las otras se aceleran.
-- **Sorpresa.** Una cuarta alarma falsa que no hace falta atender, y que distrae.
-- **Esto pasa de verdad.** Así son las malas noches en un servidor: todo a la vez, y hay que decidir qué va primero.
+- **Antes del nivel.** La escena «La caída»: se apagan tres salas a la vez.
+- **Qué hace el jugador.** Recepción, seguridad y mensajería fallan al mismo tiempo, pero la causa es una sola y está escondida. Cada sala muestra un síntoma; el jugador toca las pistas hasta dar con la raíz, y al resolverla se apagan las tres alarmas. Las causas posibles, una por partida:
+  - el disco lleno de registros, que tumba la base, que atasca el correo;
+  - el certificado vencido, que espanta a las visitas;
+  - un cron que se encima con el anterior;
+  - la memoria que se acaba y el sistema que mata procesos;
+  - el despliegue del viernes a las 18:00.
+- **La decisión.** Apagar síntomas da tiempo; encontrar la raíz gana el nivel. El histograma del final muestra cuánto tardó cada jugador en dar con ella.
+- **Esto pasa de verdad.** Las peores noches de un servidor casi nunca las causa un ataque: las causa algo propio, en cascada.
+- **Gana:** las alarmas, que en el amanecer avisan antes de cada oleada.
 
-#### 06:00 · El amanecer · vista desde la torre · 90 s
+#### 06:00 · El amanecer · vista desde la torre · 150 a 180 s
 
-La defensa de la torre, el jefe final. La ciudad se ve desde la torre y no desde el aire: la transición «bajar del cielo» lleva la cámara hasta ella.
+La defensa de la torre, el jefe final. La transición «bajar del cielo» lleva la cámara hasta la torre.
 
-- **El mapa.** Vertical, con la torre abajo, a la altura del pulgar. Tres calles bajan hacia ella: la puerta SSH, la puerta web y el correo. Junto a cada calle hay dos o tres huecos fijos donde construir.
-- **Qué hace el jugador.** Toca un hueco y elige entre tres defensas. Toca una defensa para mejorarla; la tercera mejora se elige entre dos ramas.
-- **Botones.** Abajo hay dos: **modo bajo ataque**, el botón de pánico que frena todo por 5 segundos y se carga con el combo, y **llamar oleada**, que adelanta la siguiente a cambio de un premio.
-- **Seis oleadas de unos 12 segundos.** Un aviso al borde de cada calle anuncia lo que viene.
-- **Los invasores y lo que los frena:**
+- **El mapa.** Vertical, con la torre abajo. Cuatro calles bajan hacia ella: la puerta SSH, la puerta web, el correo y la puerta de la base de datos, el 3306, que debe quedar cerrada. Los huecos para construir están solo en los dos tercios de abajo.
+- **Qué hace el jugador.** Toca un hueco y elige entre las defensas que ganó en la noche. Toca una defensa para mejorarla; la tercera mejora se elige entre dos ramas.
+- **Botones.** **Modo bajo ataque**, que frena la ráfaga 5 segundos pero hace esperar también a las visitas, y **llamar oleada**, que adelanta la siguiente a cambio de un premio.
+- **Seis oleadas.** Las alarmas avisan qué viene y por qué calle.
+- **En la temporada 1, cuatro invasores.** Cada uno tiene una defensa que lo frena mejor, pero ninguno obliga a acertar una sola respuesta: las contras exactas dan bonificación, no la vida.
 
-| Invasor | Cómo se mueve | Qué lo frena |
+| Invasor | Cómo se mueve | Qué lo frena mejor |
 |---|---|---|
-| Fuerza bruta | En fila, lento e insistente, por la puerta SSH | Bloqueo de IP: tras varios intentos, lo saca |
-| Escáner | Rápido, prueba todas las calles | Cortafuegos: cierra una calle entera |
-| Robots de `/wp-admin` | En grupo, por la puerta web | Captcha y límite de peticiones |
-| Inyección SQL | Disfrazada de visita por la puerta web; el cortafuegos no la ve | Solo el filtro de aplicaciones (WAF) |
-| Ráfaga | Un enjambre de muchos pequeños | Límite de peticiones y el modo bajo ataque |
-| Archivo malicioso | Lento y resistente; si llega, infecta un distrito | Cuarentena |
-| **Jefe: ransomware** | Cifra un distrito tras otro | Solo la copia de seguridad devuelve lo cifrado |
+| Fuerza bruta | En fila, lento e insistente, por SSH | Bloqueo de IP: tras 5 intentos en 10 minutos, fuera por 10 minutos, como fail2ban por defecto |
+| Robots de `/wp-login.php` | En grupo, por la puerta web | Límite de peticiones |
+| Escáner | Rápido, barre todas las calles | Cortafuegos: cierra las calles que no se usan y bloquea a quien las barre |
+| Buzón robado | Por el correo, miles de cartas de golpe | Tope de envíos por hora |
 
-- **Las visitas.** Por las mismas calles pasan visitas de verdad, y cada una que llega a la torre da recursos. Las defensas que frenan a una visita (el captcha, un bloqueo mal puesto) cuestan combo.
-- **Estrellas.** Según la integridad de la torre al final: 20 puntos de vida, como las vidas de Kingdom Rush.
-- **Después.** Si la torre resiste, caen las lentes, queda la Terminal y llega «Esto pasó anoche» (parte 2).
+- **Las visitas.** Por las mismas calles pasan visitas de verdad, y cada una que llega a la torre da recursos. Las defensas mal puestas también las frenan, y eso cuesta.
+- **Estrellas.** Según la integridad de la torre al final, sobre 20.
+- **Para temporadas siguientes**, invasores que ya se tienen pensados:
+  - la inyección SQL, que el WAF frena y solo el código cura, con consultas preparadas;
+  - el ransomware, que solo se revierte con una copia fuera de la ciudad, porque una copia dentro de un distrito infectado se cifra con él;
+  - la fuerza bruta distribuida, mil placas con dos intentos cada una, que el bloqueo de IP no ve y solo frenan las llaves en vez de contraseñas;
+  - el plugin viejo;
+  - el que conoce la dirección de origen y se salta el proxy;
+  - el `.git` expuesto.
+
+### La noche como partida
+
+Además de jugar cada nivel suelto, la noche entera se puede jugar de corrido. Entre hora y hora se elige una mejora entre dos, y las mejoras se acumulan hasta el amanecer, como en Vampire Survivors. Cada noche corrida es distinta por las mejoras que se eligieron.
 
 ### Fuera de la noche
 
-- **Guardia sin fin.** La defensa de la torre sin final, con una semilla distinta cada día, récord de oleadas y su propia tabla. Es el modo que sostiene las temporadas.
-- **Reto del día.** Uno de los siete tipos de nivel, con la misma semilla y los mismos cambios para todos. Se juega una vez para la tabla del día; después, las veces que se quiera sin puntuar.
+- **Guardia sin fin.** La defensa de la torre sin final, con récord de oleadas. Es lo que da profundidad cuando la noche ya se terminó.
+- **Reto del día.** Un nivel con los mismos cambios para todos: «solo cortafuegos», «el doble de ráfagas», «hoy todos son impostores». Se juega una vez para contar.
 
 ### Cómo se hace un nivel nuevo
 
-Cada uno de los siete niveles es un **motor**: la mecánica, escrita en código. Un nivel es un archivo de datos que elige un motor y le pone parámetros:
-
-- la lente;
-- la duración y la semilla;
-- las oleadas;
-- las reglas del boletín;
-- los eventos sorpresa;
-- los umbrales de las estrellas.
-
-Así la comunidad crea niveles nuevos sin escribir código, con los siete motores que ya existen. Un motor nuevo, es decir una mecánica nueva, sí es código, y entra por pull request con más revisión. El formato exacto del archivo se define en la parte 8.
+Cada nivel es un **motor** (la mecánica, en código) y un **archivo de datos** que elige el motor y le pone parámetros: la lente, la duración, las oleadas, las reglas del boletín (de una lista cerrada), las sorpresas y los umbrales de las estrellas. La comunidad crea niveles nuevos sin escribir código. Un motor nuevo sí es código, y entra por pull request con más revisión.
 
 ---
 
@@ -295,158 +333,99 @@ Un juego con un solo ciclo se agota. Este tiene tres, uno dentro de otro.
 
 ### Cada segundo: la partida
 
-- Sonido, número y efecto en cada acierto; el combo que estalla al subir de escalón.
-- Eventos sorpresa: la visita dorada, la ráfaga, el combo que se duplica.
+- Sonido, número y efecto en cada acierto; el combo que estalla al subir.
 - Reintento en menos de un segundo.
 - Al perder, cuánto faltó: «Le faltaron 40 puntos para la tercera estrella.»
 
 ### Cada día: el progreso
 
-- **Estrellas.** Tres por nivel, 21 en la noche. El siguiente nivel se abre con una estrella; el amanecer pide 15.
-- **Reto del día**, igual para todos (parte 5).
-- **Racha del reto del día**, visible. Perdona un día sin jugar, y ese perdón se gana con estrellas. Nunca se compra ni castiga.
-- **Tarjeta para compartir** el resultado del reto: bloques pixel con las oleadas contenidas y las que se escaparon, el número del día, las estrellas y el enlace. Sin emojis y sin revelar nada del reto.
-- **Retar a un amigo** con un enlace a la misma partida, con la misma semilla.
+- **Estrellas.** Tres por nivel. El siguiente nivel se abre con una; el amanecer se abre con 8.
+- **Reto del día**, igual para todos, con racha que perdona un día. El perdón se gana con estrellas, nunca se compra.
+- **Tarjeta para compartir** el resultado: bloques pixel, el número del día, las estrellas y el enlace. Sin emojis y sin revelar nada.
+- **Retar a un amigo** con un enlace a la misma partida.
 
-### Cada semana y cada temporada: la competencia
+### Cada semana: la competencia
 
-- Tablas semanales que se reinician, históricas y por categoría (parte 5).
-- Eventos del mes: la ciudad se redecora.
-- Temporadas de tres meses (parte 5).
+- Tablas y récords (parte 5), cuando haya jugadores para llenarlas.
 
-### El cuaderno de la vigía
+### El cuaderno de Alba
 
-Es la colección del juego. Cada ficha de «Esto pasa de verdad» que el jugador descubre se vuelve una página del cuaderno que la vigía dejó en la torre, y queda para siempre.
+Es la colección del juego. Cada ficha de «Esto pasa de verdad» se vuelve una página del cuaderno que la vigía dejó en la torre.
 
-- Las páginas técnicas explican, en el tono de alguien que cuidó la torre muchos años, lo real detrás de cada nivel: fail2ban, un WAF, SPF, una réplica.
-- Entre ellas hay notas personales de la vigía, que se ganan con hitos (estrellas, noches completas, insignias) y cuentan de a poco por qué se fue. Es el hilo de las temporadas.
-- Completar el cuaderno de una temporada es, de verdad, aprender cómo se cuida un servidor.
-
-Es el recurso del manual «de época» de TIS-100.
+- Las páginas técnicas explican, con la voz de alguien que cuidó la torre muchos años, lo real detrás de cada nivel, con los valores de verdad: «fail2ban: 5 intentos en 10 minutos, y fuera por 10.»
+- Entre ellas hay notas personales de Alba, que se ganan con hitos y cuentan de a poco por qué se fue.
+- Completar el cuaderno es, de verdad, aprender cómo se cuida un servidor.
 
 ### Las mejoras de la torre
 
-La regla es simple: **en la campaña ayudan; en la competencia, todos juegan igual.**
+**En la campaña ayudan; en la competencia, todos juegan igual.**
 
-- **En la campaña**, las mejoras dan progreso que se siente. Se abren con hitos de estrellas totales, sin moneda ni tienda. Ejemplos:
-  - **Integridad extra:** la torre aguanta una falla más.
-  - **Sello de guardia:** el primer error de cada partida no rompe el combo.
-  - **Boletín anticipado:** la regla nueva llega con unos segundos de aviso.
-  - **Dron más ágil:** en La patrulla, menos inercia.
-- **En la competencia** (el reto del día, las tablas y Guardia sin fin) todos juegan con la misma torre. Ahí gana la habilidad, no las horas jugadas.
-- **Lo que se luce es cosmético:** colores de la torre, la placa del guardia, los accesorios del robot y las insignias. Todo se gana jugando.
+- **En la campaña** se abren con hitos de estrellas, sin moneda ni tienda: integridad extra, el sello de guardia (el primer error no rompe el combo), el boletín anticipado.
+- **En la competencia** (reto del día, tablas, Guardia sin fin) todos juegan con la misma torre.
+- **Lo que se luce es cosmético** y se gana jugando: colores de la torre, la placa del guardia, los accesorios de Chispa, las insignias.
 
 ### Insignias
 
-Premian estilos distintos de jugar, para que no todo sea el puntaje. Por ejemplo:
-
-- **Noche sin fallas:** los siete niveles sin perder integridad.
-- **Cazador de arañas:** cien arañas en cuarentena.
-- **Cero falsos positivos:** una noche entera sin bloquear a nadie bueno.
-- **Guardia de la Temporada 1:** los primeros de la tabla de la temporada.
+Premian estilos distintos, en tres grados: bronce, plata y oro. Por ejemplo: noche sin fallas, cien arañas en cuarentena, una noche entera sin bloquear a nadie bueno, encontrar la raíz de La caída en menos de 20 segundos.
 
 ---
 
 ## 5. Tablas, perfiles, reto del día y temporadas
 
+Todo esto se construye por partes y solo cuando hace falta. Una tabla vacía desanima más que no tener tabla: el reto del día sale primero sin tabla, como Wordle.
+
 ### El día del juego
 
-El día cambia a la **medianoche de Venezuela** (UTC-4, sin horario de verano). A esa hora sale el reto nuevo, se cuentan las rachas y cierran las tablas del día.
+El día cambia a la **medianoche de Venezuela** (UTC-4). A esa hora sale el reto nuevo y se cuentan las rachas.
 
-### Las tablas
+### Las tablas, en el orden en que llegan
 
-- **Por nivel**, semanal e histórica.
-- **General:** la suma del mejor puntaje de cada nivel.
-- **Del reto del día.**
-- **Guardia sin fin:** récord de oleadas.
-- **Por categoría:** combo máximo, noches sin fallas, cero falsos positivos.
-- **De amigos:** quienes jugaron el mismo enlace de reto.
-- **Por país** (abajo).
+1. **Reto del día e histórica de cada nivel**, con el top 10 y, además, los cinco que el jugador tiene arriba y los cinco de abajo.
+2. **Guardia sin fin**, récord de oleadas.
+3. **Por categoría:** combo máximo, noches sin fallas, cero falsos positivos.
+4. **Por país**, cuando haya jugadores de varios. Cada jugador elige su bandera en pixel, sin ubicarlo por su conexión. Los países se comparan por el promedio de sus diez mejores de la semana, y solo cuentan cuentas con historial.
+5. **Liga de bots**: la tabla de los bots declarados, con su autor.
 
-Además del top 10, cada jugador ve a los cinco que tiene arriba y a los cinco que tiene abajo. Ver que falta poco para pasar al de arriba motiva más que un primer lugar imposible.
-
-### Los países
-
-- Cada jugador elige su bandera, en pixel. No se le ubica por la conexión y puede no elegir ninguna.
-- En cada tabla se puede filtrar por país: «los mejores de Venezuela».
-- **La tabla de países** compara a los países entre sí con el promedio de sus diez mejores jugadores de la semana, para que no gane siempre el país con más gente sino el que juega mejor. Un país necesita al menos diez jugadores esa semana para entrar.
+Retar a un amigo nunca da puntos ni entra a las tablas generales.
 
 ### Los perfiles públicos
 
-Cada guardia tiene su página: `neracosu.com/atalaya/juego/guardia/<apodo>`. Muestra:
-
-- el apodo, la bandera, el rango y la placa;
-- la torre con sus colores;
-- la vitrina: tres insignias que el propio jugador elige destacar, y debajo todas las demás;
-- los mejores puntajes por nivel y su posición;
-- el récord de Guardia sin fin y la racha del reto;
-- las temporadas jugadas, con sus placas;
-- los niveles que creó, con su escalón (Aceptado, Destacado, De temporada);
-- las páginas del cuaderno que lleva.
-
-Nunca muestra el correo ni ningún otro dato de la persona. Se entra desde cualquier tabla tocando un apodo.
+Cada guardia tiene su página en `/guardia/<apodo>`: el apodo, la bandera, el rango, su torre, una vitrina de tres insignias elegidas, sus mejores puntajes, sus temporadas y los niveles que creó. Sin texto libre y nunca el correo. Se entra tocando un apodo en cualquier tabla.
 
 ### Los rangos
 
-Como en los foros de antes: un rango que se gana con el tiempo y el esfuerzo, y que **nunca se pierde**. Sale de los **puntos de guardia**, que se ganan con:
-
-- estrellas;
-- insignias;
-- retos del día jugados;
-- noches completas;
-- niveles creados que entran al juego.
+Como en los foros de antes: se ganan con el tiempo y el esfuerzo, y nunca se pierden. Salen de los puntos de guardia (estrellas, insignias, retos, noches completas, niveles creados).
 
 | Rango | Qué pide (a afinar) |
 |---|---|
 | Aprendiz | Empezar |
-| Vigía | Terminar el primer nivel con una estrella |
+| Sereno | Terminar el primer nivel con una estrella |
 | Centinela | Terminar la noche |
-| Guardián | Buena parte de las estrellas y de los retos |
+| Guardián | Buena parte de las estrellas y los retos |
 | Guardián mayor | Casi todo, durante más de una temporada |
 | Atalaya | El más alto. Muy pocos |
 
-El rango se ve junto al apodo en todas las tablas y en el perfil.
-
-**Los creadores tienen su propio rango**, aparte, que sale de sus niveles: cuántos entraron al juego y a qué escalón llegaron. Como los puntos de creador de Geometry Dash.
-
-### Las insignias
-
-- Tres grados, **bronce, plata y oro**, como en Stack Overflow. Las de bronce se ganan jugando; las de oro son raras y se notan.
-- Premian estilos distintos: puntaje, precisión, constancia, creación.
-- Algunas son de temporada o de evento, y quedan en el perfil para siempre como recuerdo.
+El sereno era el vigilante nocturno de las ciudades de habla hispana. Los creadores de niveles tienen su propio rango, aparte.
 
 ### El reto del día
 
-- El mismo nivel, la misma semilla y los mismos cambios para todos.
-- Solo el primer intento cuenta para la tabla del día. Después se juega las veces que se quiera, sin puntuar.
-- Racha que perdona un día, y tarjeta para compartir (parte 4).
-
-### Cómo se cuida la tabla
-
-- El servidor vuelve a jugar cada partida con su semilla y sus jugadas, y calcula el puntaje él mismo.
-- Compara el tiempo real con la duración de la partida, porque ralentizar el juego es la trampa típica.
-- Tope de envíos por conexión.
-- Un puntaje sospechoso se oculta de la tabla en lugar de convivir con los demás.
-- **Apodos:** de 3 a 12 caracteres, con una lista de palabras vetadas y un botón para reportar un apodo o un perfil.
-
-### API pública
-
-Las tablas, los perfiles públicos y el reto del día se publican también en JSON, para que la comunidad arme bots, sitios y estadísticas, como TibiaData con Tibia.
+- El mismo nivel y los mismos cambios para todos, elegidos por el servidor. El reto de cada día no se conoce hasta que empieza.
+- Cuenta solo el primer intento, y solo con conexión. Después se juega sin puntuar.
+- Al cerrar el día se publican las mejores partidas, para que la comunidad las vea y detecte trampas.
 
 ### Las temporadas
 
-- **Tres meses**, con la fecha de cierre anunciada desde el primer día.
-- **Cada una trae** una noche nueva, una amenaza nueva, al menos una lente nueva, una pista más sobre la vigía, y niveles oficiales y de la comunidad.
-- **Al cerrar:**
-  - se corona a los primeros y reciben la placa de la temporada;
-  - se conservan las estrellas, las insignias, el rango, el cuaderno y los récords por nivel;
-  - las temporadas pasadas quedan jugables en el archivo.
-- **Cada temporada abre con un llamado a enviar niveles**, y la comunidad vota en qué se enfoca la siguiente: un nivel, un invasor o una lente. Se aprueba con 70 % y votan quienes han jugado.
-- **Eventos del mes:** la ciudad se redecora (Navidad, Carnaval) con un invasor especial y una insignia de la fecha.
+Llegan cuando la comunidad las pueda sostener, no antes. Mientras tanto, lo vivo es el reto del día.
+
+- **Tres meses**, con fecha de cierre anunciada.
+- **Cada una trae** una noche nueva, una amenaza nueva, al menos una lente nueva, una pista sobre Alba y niveles oficiales y de la comunidad.
+- **Al cerrar:** placa para los primeros; se conservan estrellas, insignias, rango, cuaderno y récords; las temporadas pasadas quedan jugables.
+- **Cada una abre con un llamado a enviar niveles.**
 
 ### Pendiente
 
-- Premios reales para los ganadores de temporada: por decidir más adelante.
+- Premios reales para los ganadores: por decidir más adelante.
+- Votaciones de la comunidad y eventos del mes: cuando haya comunidad.
 
 ---
 
@@ -454,48 +433,41 @@ Las tablas, los perfiles públicos y el reto del día se publican también en JS
 
 ### Cinco vistas del mismo mundo
 
-El monitor siempre muestra la ciudad desde el aire. El juego la muestra desde cinco lados, para que el jugador piense «así se ve desde aquí». Cada lugar conserva sus señas en todas las vistas: la antena y la baliza de la torre, el color de cada distrito, su edificio más reconocible.
+Cada lugar conserva sus señas en todas las vistas: la antena y la baliza de la torre, el color de cada distrito, su edificio más reconocible.
 
 | Vista | Dónde aparece | Qué tiene de nuevo |
 |---|---|---|
 | **Desde el aire** | Los niveles | La que ya conocen del monitor. |
-| **De frente, en panorámica** | La apertura y el amanecer | La ciudad de costado, con capas que se mueven a distinta velocidad. |
 | **Desde la torre** | El amanecer | Las calles bajando hacia uno. |
+| **De frente, en panorámica** | Al terminar el primer nivel y en el amanecer | La ciudad de costado, con capas que se mueven a distinta velocidad. |
 | **Desde adentro** | El menú | La ciudad por la ventana de la torre. |
 | **En retrato** | La selfie del distrito | Los habitantes de la lente posando de frente. |
 
-El patrón que se toma de Link's Awakening, Mario Odyssey y Paper Mario: el cambio de vista es corto, llega por sorpresa, cambia la regla del juego y no solo el dibujo, y pasa en el mismo mundo reconocible.
-
 ### El menú: el interior de la torre
 
-El menú no es una lista: es la sala de la torre vista desde adentro.
-
-- Por la ventana se ve la ciudad, con la luz de la hora real del jugador.
-- Sobre el escritorio están el **catalejo** (tocarlo es elegir nivel y lente), el **cuaderno de la vigía** y la **tabla**.
-- En la pared, la placa y las insignias del guardia.
-- El robot anda por la sala y comenta.
+La sala de la torre vista desde adentro. Por la ventana, la ciudad con la luz de la hora real. Sobre el escritorio, el catalejo (elegir nivel), el cuaderno de Alba y la tabla. En la pared, la placa y las insignias. Chispa anda por la sala. Mientras no esté dibujado, el menú es una pantalla simple.
 
 ### Las escenas
 
+**Nadie espera una escena antes de jugar.** El juego arranca en el primer nivel; la historia llega después.
+
 | Escena | Cuándo | Duración | Qué cuenta |
 |---|---|---|---|
-| **La torre vacía** | Al empezar | 25 s | Panorámica de frente de la ciudad de noche, la torre apagada. El guardia sube, enciende la luz y el robot despierta. |
-| **Entre horas** | Tras cada nivel | 10 s | El catalejo gira y la ciudad cambia de lente ante los ojos del jugador, con un volteo de tarjeta. El robot comenta; lo que dice cambia según las estrellas. |
-| **La caída** | Antes de las 05:00 | 15 s | Se apagan tres salas a la vez. |
-| **Bajar del cielo** | Entrada al amanecer | 5 s | La cámara baja hacia la torre, la imagen se cierra en un círculo y se abre la vista desde la torre. |
-| **La verdad** | Tras el amanecer | 20 s | Las lentes caen una a una hasta dejar la Terminal. Luego, «Esto pasó anoche». |
+| **La torre vacía** | Mientras se juega la primera partida, de fondo, y completa al terminarla | 20 s | La ciudad de noche, la torre apagada. El guardia enciende la luz; Chispa despierta. |
+| **Entre horas** | Tras cada nivel | 8 s | El catalejo gira, la lente se agrieta un poco más y cambia. Chispa comenta según las estrellas. |
+| **La caída** | Antes de las 05:00 | 12 s | Se apagan tres salas a la vez. |
+| **Bajar del cielo** | Entrada al amanecer | 5 s | La cámara baja hacia la torre y se abre la vista desde ella. |
+| **La verdad** | Tras el amanecer | 20 s | Las lentes caen, cada una deja ver su comando real, y queda `alba@atalaya`. |
 
 ### La selfie del distrito
 
-Al sacar tres estrellas en un nivel, los habitantes de esa lente posan de frente, con un flash, en una foto con el apodo, el rango y la fecha del guardia. Se guarda como imagen vertical, lista para TikTok o Instagram.
+Al sacar tres estrellas, los habitantes de la lente posan de frente, con flash, con el apodo, el rango y la fecha del guardia. Se guarda como imagen vertical.
 
 ### Reglas de las escenas
 
-- Siempre se pueden saltar, y no se repiten si ya se vieron. Se pueden volver a ver desde el cuaderno.
-- Texto letra por letra, entre 5 y 20 caracteres por segundo. Un toque completa la línea y otro avanza.
-- Entre 10 y 40 segundos.
-- Verticales, así que sirven también como video para redes.
-- Sin voces: imagen, texto y sonido.
+- Siempre se pueden saltar y no se repiten; se vuelven a ver desde el cuaderno.
+- Texto letra por letra, de 5 a 20 caracteres por segundo. Un toque completa, otro avanza.
+- Verticales, para servir también como video. Sin voces.
 
 ---
 
@@ -503,144 +475,230 @@ Al sacar tres estrellas en un nivel, los habitantes de esa lente posan de frente
 
 ### La mezcla
 
-La misma regla de los temas de Atalaya: **pixel art como acento, texto y formas nítidos.** Personajes, íconos, carteles y efectos en pixel; los textos siempre a resolución completa y en una fuente legible. La letra pixel solo en títulos y números grandes. Nunca se baja la resolución de la pantalla para que «se vea pixel». Nunca emojis.
-
-### Qué se reutiliza y qué es nuevo
-
-- **Se reutiliza de Atalaya** (misma licencia AGPL): el elenco de cada lente, los sprites, las paletas y los dibujos de la ciudad, la villa, el castillo, la oficina, la planta y Ops.
-- **Es nuevo:**
-  - las capas de la panorámica de frente (cielo, distritos lejanos, calle, primer plano);
-  - la vista desde la torre;
-  - el interior de la torre;
-  - los retratos de la selfie;
-  - el robot en tamaño grande, con sus gestos;
-  - la interfaz del juego.
-
-Lo nuevo es lo que más cuesta. Por eso las vistas nuevas se diseñan para reutilizarse: las capas de la apertura son las mismas del amanecer.
+La regla de los temas de Atalaya: **pixel art como acento, texto y formas nítidos.** Personajes, íconos, carteles y efectos en pixel; los textos siempre a resolución completa y en una fuente legible. La letra pixel solo en títulos y números grandes. Nunca se baja la resolución. Nunca emojis.
 
 ### Pixel y código juntos
 
-Las escenas y los efectos combinan dos capas:
+- **La capa pixel**: personajes, edificios, fondos. En la cuadrícula, a escala entera, con paleta limitada. Los personajes se animan a 8 o 12 cuadros por segundo.
+- **La capa de código**: luz, niebla, lluvia, estrellas, reflejos, partículas, bandadas, cámara, temblores, texto letra por letra, el brillo de la Terminal. Se genera en el momento.
 
-- **La capa pixel**: personajes, edificios, fondos. Dibujada en la cuadrícula, a escala entera, con paleta limitada. Los personajes se animan a pocos cuadros por segundo (8 a 12), como en los juegos de antes.
-- **La capa de código**: luz, niebla, lluvia, estrellas, reflejos, partículas, bandadas, la cámara, los temblores, el texto letra por letra, el brillo de la Terminal. Se genera en el momento, sin dibujar cuadro por cuadro.
+Así lo hacen Celeste, Hyper Light Drifter y los juegos HD-2D. Para no perder la esencia:
 
-Así lo hacen Celeste, Hyper Light Drifter y los juegos HD-2D: el pixel pone la nostalgia y el código pone la vida.
+- lo que es pixel se mueve de píxel en píxel;
+- los sprites no se rotan en ángulos raros ni se suavizan;
+- nada de desenfoques que emborronen el pixel;
+- los efectos usan la paleta de la lente.
 
-Reglas para no perder la esencia:
+Pesa poco, cada escena es un guion en datos y puede usar datos del jugador: su apodo en la placa, la hora real en la ventana. Se prueba en un Android barato y se limitan las partículas.
 
-- Todo lo que es pixel se mueve de píxel en píxel, nunca a medio píxel.
-- Los sprites no se rotan en ángulos raros ni se suavizan al escalar.
-- Nada de desenfoques que emborronen el pixel. La luz ilumina, no borra.
-- Los efectos de código usan la misma paleta de la lente.
+### Qué se reutiliza y qué es nuevo
 
-Ventajas de hacerlo en código:
-
-- Pesa muy poco.
-- Cada escena es un guion en datos que se reescribe sin tocar el motor.
-- Puede usar datos del jugador: su apodo en la placa de la torre, la hora real en la ventana, las cifras reales de «Esto pasó anoche». Un video no puede.
-
-Cuidado con el rendimiento: se prueba en un teléfono Android barato y se limita la cantidad de partículas.
-
-### Los personajes
-
-- **El robot** se llama **Chispa**. Es el robot de Atalaya, más grande y con gestos: sorpresa, alegría, preocupación, cansancio.
-- **La vigía** se llama **Alba**, como el amanecer. Nunca se ve su cara: su letra en el cuaderno, su silla, su taza, su abrigo en el perchero.
-
-Los dos nombres son de trabajo hasta que se vean dibujados.
+- **Se reutiliza de Atalaya** (misma licencia): el elenco de cada lente, los sprites, las paletas y los dibujos de los temas. Antes de reutilizar, se revisa el origen de cada pieza.
+- **Es nuevo, y es lo que más cuesta:** la vista desde la torre, la panorámica, el interior, los retratos, Chispa en grande, la interfaz. Por eso llega por etapas: la primera usa solo la vista desde el aire y el elenco que ya existe.
 
 ### Legibilidad
 
-- Lo bueno y lo malo nunca se distinguen solo por el color: también por la forma, el rótulo o el movimiento, para quien no distingue colores.
-- Rótulos cortos y grandes; en el teléfono se leen sin acercarse.
-- Opción de reducir el movimiento y los destellos.
+- Lo bueno y lo malo nunca se distinguen solo por el color: también por la forma y el movimiento.
+- Rótulos de ocho caracteres como máximo en lo que se mueve.
+- Opción de reducir movimiento y destellos.
 
 ### Sonido
 
-- **Efectos generados por código**, sin archivos: cada acierto, cada escalón del combo, cada sello tiene su sonido, y el combo sube de tono.
-- **Música que sigue la carga**: pocos instrumentos en calma y más capas a medida que la noche aprieta, como en Mini Metro. En El correo, la música es el ritmo del nivel.
-- Vibración corta en el teléfono en los aciertos grandes y en las fallas, que se puede apagar.
+- **Efectos generados por código**, sin archivos. El combo sube de tono.
+- **Música que sigue la carga**, más adelante: pocos instrumentos en calma y más capas cuando aprieta.
+- Vibración corta en aciertos grandes y fallas, que se puede apagar.
 - Todo el juego se entiende sin sonido.
 
 ---
 
-## 8. Técnica
+## 8. Técnica y seguridad
 
-Borrador. Se cierra cuando empiece la construcción.
+### Dónde vive
+
+- **Un lugar propio, fuera de la carpeta del sitio de neracosu.com.** El sitio de Atalaya lo publica un exportador que reemplaza su carpeta entera, y la cuenta del sitio no debe poder tocar los archivos del juego. El juego tiene su propio subdominio o su propia carpeta del sistema, con archivos del usuario del juego y de solo lectura para el servidor web.
+- Política de seguridad de contenido estricta, sin código en línea.
+- Nunca se clona el repositorio en una carpeta pública: se publica solo lo construido. Los secretos viven fuera, en la configuración del sistema.
+- Enlace «Código fuente» en el juego, al commit que corre (AGPL).
 
 ### En el navegador
 
-- **JavaScript sin librerías ni compilación**, como el resto de Atalaya. Canvas 2D.
+- **JavaScript sin librerías ni compilación.** Canvas 2D.
 - **Carga inicial de menos de 300 KB.** Cada lente se carga al entrar a su nivel.
-- Funciona sin conexión una vez cargado. Los puntajes se guardan y se envían al volver la conexión.
+- Se puede jugar sin conexión, pero **sin conexión no se compite**: solo estrellas y progreso propio.
+- Todos los textos del juego en un solo archivo, por si un día llega otro idioma.
 
 ### El núcleo que se puede verificar
 
-La lógica de cada motor está separada del dibujo y es **determinista**: con la misma semilla y las mismas jugadas, da siempre el mismo resultado, en el navegador y en el servidor.
+La lógica de cada motor está separada del dibujo y es **determinista**: con la misma semilla y las mismas jugadas, da siempre el mismo resultado en cualquier navegador y en el servidor.
 
-- Paso de tiempo fijo, 30 veces por segundo.
-- Números enteros en la lógica, sin trigonometría ni `Math.random`.
-- Generador de azar propio con semilla (PCG).
-- Cada partida registra sus jugadas: en qué paso, dónde y qué.
+- Paso de tiempo fijo, 30 veces por segundo. Nada de `Date.now` ni del tiempo entre cuadros dentro de la lógica.
+- Enteros explícitos: `Math.imul`, `>>> 0` y divisiones enteras. Nada de trigonometría ni de `Math.random`, vigilado por el linter.
+- Generador de azar propio de 32 bits (PCG32 o Mulberry32).
+- Nada que dependa del orden de un `sort` inestable.
+- Cada partida guarda sus jugadas y la huella del motor y del nivel. Los motores tienen versión; los viejos se congelan y los récords son por nivel y versión.
+- Pruebas de repetición en cada cambio: el mismo lote de partidas en Chrome, Firefox, Safari y Node tiene que dar lo mismo.
 
-El servidor vuelve a jugar la partida con el mismo código y calcula el puntaje él mismo. Es lo que hace confiable la tabla.
+### Lo que el servidor sí y no puede probar
+
+Volver a jugar la partida prueba que las jugadas son legales, no que las hizo una persona. Con el código abierto, un bot puede calcular la partida perfecta. Por eso:
+
+- **Lo que compite usa semillas del servidor**, entregadas al empezar y registradas. La semilla fija queda solo para las estrellas.
+- **Las mejores partidas se publican**, para que la comunidad las revise.
+- **Los primeros de cada tabla se revisan a mano.**
+- **Heurísticas** de tiempo de reacción y variación, sabiendo que serán públicas.
+- **La Liga de bots**: una puerta oficial, con su API de jugadas, para quien prefiera programar su guardia. El bot declarado tiene su tabla; el que se hace pasar por persona pierde la cuenta.
 
 ### El servidor
 
-- Un **servicio pequeño en Node**, con su propio usuario del sistema, escuchando solo en el servidor. Se llega a él por `neracosu.com/atalaya/juego/api`, igual que el monitor se sirve por neracosu.com.
-- **Base de datos MariaDB** propia del juego, con un usuario que solo entra a esa base.
-- Guarda: guardias (apodo, bandera, rango, correo opcional), partidas con sus jugadas, tablas, retos del día, insignias, temporadas y niveles de la comunidad.
-- **Cuenta:** al entrar se crea una llave al azar que queda en el teléfono; en la base solo se guarda su huella. Con el correo opcional se entra desde otro teléfono con un código de un solo uso.
-- **Topes:** envíos por conexión, códigos de correo por hora, tamaño de cada partida.
-- **Borrar mi guardia:** un botón que borra el perfil, las partidas y el correo.
-- **Esto pasó anoche** lee una vez al día los totales públicos de un Atalaya real (intentos de entrar, robots frenados, visitas). Solo totales, nunca direcciones ni nombres.
+- Un **servicio pequeño en Node**, con su propio usuario del sistema, escuchando solo en el servidor, detrás del proxy.
+- **Base MariaDB** propia, con un usuario que solo entra a esa base. Consultas siempre parametrizadas.
+- **Límites:** cada partida pesa como máximo unos 64 KB; tope de pasos por motor y de jugadas por paso; la validación corre aparte, en una cola, y el puntaje queda «pendiente» hasta validarse; tope de CPU y memoria del servicio para que nunca le quite recursos a los sitios del servidor.
+- **La dirección de quien juega** se toma del proxy de confianza, nunca de un encabezado cualquiera.
+- **Cuentas:** una llave al azar que queda en el teléfono; en la base solo su huella. Tope de cuentas nuevas por conexión y una pequeña prueba de trabajo al crearlas.
+- **Apodos:** letras minúsculas, números, guion y guion bajo, de 3 a 12; únicos sin importar mayúsculas; nombres reservados. Siempre se muestran como texto, nunca como HTML.
+- **Borrar mi guardia:** borra el perfil, las partidas, el correo y su rastro en las tablas.
+
+### El correo, más adelante
+
+La primera tabla sale sin correo. Cuando llegue:
+
+- con un proveedor de envío externo, en un subdominio propio, para no arriesgar la reputación de los sitios del servidor;
+- códigos de 8 dígitos que vencen a los 10 minutos y se anulan tras 5 intentos; máximo 3 por correo al día;
+- la misma respuesta exista o no el correo;
+- las noticias, con doble confirmación y baja en un clic;
+- solo para mayores de 14 años.
+
+### Esto pasó anoche
+
+- Atalaya escribe una vez al día un archivo con los totales de la noche anterior. El juego lee ese archivo; nunca consulta al monitor.
+- Totales redondeados, sin desglose por servicio y sin nombrar el servidor: «un servidor real». El nombre de la máquina en la Terminal es ficticio.
+
+### Los niveles de terceros
+
+- Esquema estricto: ninguna propiedad fuera de las conocidas, límites en cada número y en la profundidad.
+- Nunca se ejecuta nada del archivo: el boletín se arma con reglas de una lista cerrada.
+- Moderación antes de publicar cualquier nivel.
+- Campo `basado_en` para los niveles que remezclan otros, porque CC BY-SA pide conservar la cadena de autores.
+- El autor figura con su apodo o su usuario de GitHub, no con su nombre real. Se le avisa que la licencia no se puede retirar.
+
+### Moderación
+
+Hace falta alguien que modere y un panel mínimo: renombrar un apodo a «Guardia-1234», ocultar un perfil o un puntaje, vetar una llave, con registro de cada acción. Reportes con tope por cuenta.
+
+### Privacidad
+
+- Política de privacidad en español: quién responde, para qué se usa cada dato, cuánto se guarda (la dirección de conexión, 30 días) y cómo se borra.
+- Edad mínima de 14 años para dar correo o recibir noticias.
+- Sin texto libre en los perfiles y sin mensajes entre jugadores.
+- La API pública no muestra horas exactas de juego.
+- Se diseña con el estándar europeo, que cubre también las leyes de Brasil, Colombia, México y Chile.
 
 ### El formato de un nivel
 
-Un archivo JSON por nivel, validado contra un esquema:
-
-- `formato`: la versión del esquema;
-- `id`, `titulo`, `autor` (nombre y usuario de GitHub), `hecho_con` (opcional);
-- `motor`: cuál de los siete;
-- `lente`, `duracion_s`, `semilla`;
-- `oleadas`, `boletin`, `sorpresas`: lo que el motor necesita;
-- `estrellas`: los tres umbrales;
-- `verificacion`: la partida con que el autor lo superó;
-- `licencia`: CC BY-SA 4.0.
+Un archivo JSON por nivel, validado contra el esquema: `formato`, `id`, `titulo`, `autor`, `hecho_con` (opcional), `basado_en` (opcional), `motor`, `lente`, `duracion_s`, `oleadas`, `boletin`, `sorpresas`, `estrellas`, `verificacion` (la partida con que el autor lo superó) y `licencia`.
 
 ### En el repositorio
 
-- Pruebas automáticas en cada cambio: el esquema, cada motor y una partida sin pantalla de cada nivel para comprobar que se puede superar.
-- `AGENTS.md`: las instrucciones para el agente de IA de quien quiera aportar.
-- Formularios de GitHub en español: «Idea de nivel», «Error», «Propuesta».
-- `CONTRIBUTING.md` en español, que da la bienvenida a lo hecho con IA.
+- Pruebas en cada cambio: el esquema, cada motor, la repetición en varios navegadores y una partida sin pantalla de cada nivel.
+- `AGENTS.md`, `CONTRIBUTING.md` en español y formularios de GitHub.
+- Toda contribución lleva la firma de quien la hace, con el acuerdo que se decida antes del primer aporte externo.
 
 ### Medición
 
-Con el mismo contador de Atalaya, sin cookies:
-
-- cuántos terminan el nivel 1;
-- cuántos vuelven al día siguiente;
-- cuántos llegan al amanecer;
-- cuántos tocan «probar Atalaya».
-
-### A resolver antes de publicar
-
-El sitio de Atalaya en `neracosu.com/atalaya` lo genera un exportador que reemplaza la carpeta entera. Hay que decidir cómo convive el juego con él antes de la primera publicación.
+Con el mismo contador de Atalaya, sin cookies, y calculado en el servidor: cuántos terminan el primer nivel, cuántos reintentan, cuántos vuelven al día siguiente, cuántos comparten, cuántos escriben su dominio y cuántos llegan a Atalaya.
 
 ---
 
 ## 9. Etapas
 
-Borrador.
+Cada etapa termina con algo que se puede jugar y publicar, y con una prueba: **seguir, cambiar o parar.** La siguiente etapa solo empieza si la anterior la pasó.
 
-Cada etapa termina con algo que se puede jugar y publicar. La primera decide todo: si el nivel 1 no engancha, el resto no importa.
-
-| Etapa | Qué trae | Qué se mide |
+| Etapa | Qué trae | Seguir si |
 |---|---|---|
-| **1. El núcleo** | Núcleo determinista, dibujo, sonido, El peaje completo con estrellas, el interior de la torre como menú y la escena «La torre vacía». | Si engancha en el primer minuto. |
-| **2. El recorrido** | La patrulla y La cuarentena, «Entre horas», el cuaderno y el progreso guardado en el teléfono. | Si vuelven a jugar. |
-| **3. La competencia** | El servidor y la base, el apodo, la tabla validada, el reto del día, los países y la tarjeta para compartir. | Si vuelven al día siguiente. |
-| **4. La noche completa** | Las tuberías, El correo y La caída, las mejoras de la torre, las insignias y la selfie. | Cuántos llegan lejos. |
-| **5. El amanecer** | La defensa de la torre, «Bajar del cielo», «La verdad», «Esto pasó anoche» y la invitación. Estreno de la temporada 1. | Cuántos tocan «probar Atalaya». |
-| **6. La comunidad** | Perfiles, rangos, formato de niveles, pruebas, `AGENTS.md`, formularios, editor de niveles y Guardia sin fin. | Cuántos niveles llegan. |
+| **0. El peaje** | El núcleo determinista, El peaje completo con la lente Ciudad y el elenco que ya existe, efectos de sonido, estrellas, reintento, «le faltaron». Al terminar: la ficha, «Esto pasó anoche» corto y **«El peaje de su sitio»** (parte 10). El reto del día sin tabla, con su tarjeta para compartir y la racha en el teléfono. | Más del 70 % termina la primera partida, el reintento mediano es de 3 o más, el 20 % vuelve al día siguiente, el 5 % comparte y el 2 % escribe su dominio. |
+| **1. La noche corta** | La cuarentena (mismo motor) y Las agujas. Una noche de tres horas que cierra con «La verdad» en texto. Progreso en el teléfono. El reto del día rota entre los tres. | El 30 % completa la noche y la llegada a Atalaya no baja. |
+| **2. La torre, en gris** | Un prototipo de una semana de la defensa de la torre: tres invasores, tres defensas, sin arte nuevo. | Divierte. Si no, el jefe final pasa a ser La caída. |
+| **3. La competencia** | El servidor con todo lo de la parte 8, el apodo, la tabla del reto y la histórica, Guardia sin fin, la noche como partida. | Hay al menos 100 jugadores por semana, sostenidos. |
+| **4. La noche completa** | La patrulla, El correo y La caída, el amanecer con arte, las escenas, el interior de la torre, la selfie, el cuaderno, las insignias, los rangos, los perfiles, la música. El correo opcional. | Hay al menos 300 jugadores por semana durante cuatro semanas. |
+| **5. La comunidad y las temporadas** | El formato de niveles con sus pruebas, `AGENTS.md`, los formularios, la Liga de bots, la tabla por país, la API pública y la temporada 1 oficial. | La comunidad envía niveles. |
+
+**Parar** no es fracasar: si la etapa 0 no engancha, El peaje queda publicado como la puerta de entrada a Atalaya y el esfuerzo vuelve al producto.
+
+---
+
+## 10. Lanzamiento
+
+### El puente hacia Atalaya: «El peaje de su sitio»
+
+Al terminar el primer nivel, el juego pregunta: «¿Y su sitio? Escriba su dominio.»
+
+- **Sin verificar que el sitio es suyo**, solo se revisa lo que es público para cualquiera: si tiene SPF y DMARC, si el certificado está vigente y cuándo vence, si manda los encabezados de seguridad, si responde. Nunca se prueban rutas como `/.env` en un sitio ajeno, para que el juego no sirva de escáner contra terceros.
+- El resultado es un informe en pixel: «Su puerta: 2 fallas», que se puede compartir sin mostrar el dominio.
+- **Para ver más** (qué robots tocaron su puerta anoche, si su `.env` está expuesto), hay que probar que el sitio es suyo, y ese paso es entrar a Atalaya.
+- El cierre: «Esto lo revisamos una vez. Atalaya lo mira cada cinco minutos.»
+
+Y el círculo al revés: quien ya usa Atalaya, cuando su monitor frena un ataque, puede jugar esa oleada.
+
+### El embudo y sus metas
+
+| Paso | Meta | Revisar si |
+|---|---|---|
+| Ve un video | — | — |
+| Toca el enlace | 1,5 % de las vistas | menos de 0,5 % |
+| Empieza a jugar | 80 % | menos de 60 %: falla la carga o el gancho |
+| Termina El peaje | 65 % | menos de 40 % |
+| Reintenta | 30 % | menos de 10 % |
+| Comparte | 5 % | — |
+| Escribe su dominio | 12 % de quienes terminan | menos de 4 % |
+| Entra a Atalaya | 35 % de quienes escriben su dominio | casi nadie |
+
+Las metas son estimaciones y se corrigen con los primeros datos.
+
+### Dónde se publica
+
+- **Videos verticales** en TikTok e Instagram, con el juego como gancho: «Anoche un servidor recibió miles de ataques. ¿Puede frenarlos en 60 segundos?». Los mejores son las derrotas graciosas: «Ese no era un robot. Era su cliente.»
+- **itch.io**, con un diario de desarrollo en español.
+- **Comunidades de programadores en español**, siempre con el juego y no con el producto como gancho, respetando las reglas de cada una.
+- **Creadores de contenido de programación en español**, con un reto que lleve su nombre.
+- **No** en portales de juegos casuales (su público no tiene sitios y algunos no permiten enlaces externos), ni en Product Hunt (en inglés, y el juego no es el producto).
+
+### El reto del día como contenido
+
+El reto de cada día toma el tono de la noche real anterior: si anoche hubo una ráfaga fuerte, hoy el reto la tiene. Cada día hay un video posible: «Hoy fueron 1.800 robots. ¿Cuántos frena usted?».
+
+---
+
+## Cambios de la revisión crítica
+
+El 2026-09-28 el documento pasó por cinco revisiones, cada una con un ángulo. Lo que cambió:
+
+**Diversión**
+- El peaje se lee por la forma, no por el texto; una visita a la vez; deslizar para decidir; reglas como íconos; el primer toque antes del segundo 3.
+- Los errores cuestan distinto y se explican al instante; fuera las trampas visuales.
+- La noche tiene columna: cada nivel da una defensa para el amanecer.
+- La patrulla usa el control real de DATA WING, con toques; las tuberías pasan a ser agujas grandes; La caída es una cascada con una sola causa.
+- El amanecer dura de 150 a 180 s, con cuatro invasores y contras que dan bonificación, no la vida.
+- El amanecer se abre con 8 estrellas; nadie espera una escena antes de jugar.
+- La noche como partida con mejoras que se acumulan, para la segunda semana.
+
+**Alcance**
+- Las etapas se reordenaron: la etapa 0 es El peaje con el reto del día y el puente a Atalaya; cada etapa tiene su prueba de seguir, cambiar o parar.
+- El arte nuevo, las escenas, la música y la comunidad llegan cuando hay jugadores que los justifiquen.
+- Tablas, correo, países, perfiles, votaciones y temporadas llegan por partes, cuando hace falta.
+
+**Crecimiento**
+- El juego existe para llevar a Atalaya, y el puente está en el primer nivel: «El peaje de su sitio».
+- Se definió quién da el salto a Atalaya y se agregó la parte 10, con el embudo y sus metas.
+
+**Seguridad**
+- El juego vive fuera de la carpeta del sitio de neracosu.com.
+- La tabla no promete lo imposible: semillas del servidor, partidas públicas, revisión del top y la Liga de bots.
+- Límites contra abuso, determinismo con reglas exactas, correo por un proveedor externo, privacidad, edad mínima y moderación.
+- «Esto pasó anoche» no nombra el servidor ni da detalles que sirvan a un atacante.
+
+**Precisión técnica**
+- Corregidos: los robots de buscadores (se verifica de dónde vienen), `/wp-login.php`, el límite de peticiones, las puertas que se usan, el cortafuegos, el modo bajo ataque, la inyección SQL, el ransomware, SPF, DKIM y DMARC, el pool de conexiones y los valores de fail2ban.
+- El elenco coincide con el del monitor; la base de la Planta es el tanque de datos y los archivos del Castillo son pergaminos.
+- El rango «Vigía» pasó a ser «Sereno», para no confundirlo con Alba.
+- El final ya no es un giro: es «esto pasó anoche», con las lentes que se agrietan a lo largo de la noche y `alba@atalaya` como primera pista.
+- Los textos de humor se corrigieron para que un experto no los corrija.
