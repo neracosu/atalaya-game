@@ -518,6 +518,30 @@ La misma regla de los temas de Atalaya: **pixel art como acento, texto y formas 
 
 Lo nuevo es lo que más cuesta. Por eso las vistas nuevas se diseñan para reutilizarse: las capas de la apertura son las mismas del amanecer.
 
+### Pixel y código juntos
+
+Las escenas y los efectos combinan dos capas:
+
+- **La capa pixel**: personajes, edificios, fondos. Dibujada en la cuadrícula, a escala entera, con paleta limitada. Los personajes se animan a pocos cuadros por segundo (8 a 12), como en los juegos de antes.
+- **La capa de código**: luz, niebla, lluvia, estrellas, reflejos, partículas, bandadas, la cámara, los temblores, el texto letra por letra, el brillo de la Terminal. Se genera en el momento, sin dibujar cuadro por cuadro.
+
+Así lo hacen Celeste, Hyper Light Drifter y los juegos HD-2D: el pixel pone la nostalgia y el código pone la vida.
+
+Reglas para no perder la esencia:
+
+- Todo lo que es pixel se mueve de píxel en píxel, nunca a medio píxel.
+- Los sprites no se rotan en ángulos raros ni se suavizan al escalar.
+- Nada de desenfoques que emborronen el pixel. La luz ilumina, no borra.
+- Los efectos de código usan la misma paleta de la lente.
+
+Ventajas de hacerlo en código:
+
+- Pesa muy poco.
+- Cada escena es un guion en datos que se reescribe sin tocar el motor.
+- Puede usar datos del jugador: su apodo en la placa de la torre, la hora real en la ventana, las cifras reales de «Esto pasó anoche». Un video no puede.
+
+Cuidado con el rendimiento: se prueba en un teléfono Android barato y se limita la cantidad de partículas.
+
 ### Los personajes
 
 - **El robot** se llama **Chispa**. Es el robot de Atalaya, más grande y con gestos: sorpresa, alegría, preocupación, cansancio.
