@@ -19,12 +19,12 @@ test('una visita: primera partida, reintentos por hitos, estrellas y lo que cuen
   for (let i = 0; i < 5; i++) { medir('otra-vez'); medir('partida'); medir('fin-peaje', 9); }
   medir('reto');
   medir('compartir'); medir('compartir');
-  medir('dominio'); medir('dominio');
+  medir('dominio'); medir('dominio'); medir('compartir-puerta'); medir('compartir-puerta');
   medir('ir-atalaya');
   assert.deepEqual(salidos, [
     'landing-empezar', 'empieza', 'fin-primera-2',
     'reintento-1', 'fin-otra-3', 'reintento-2', 'fin-otra-3', 'reintento-3', 'fin-otra-3', 'fin-otra-3', 'reintento-5', 'fin-otra-3',
-    'reto', 'comparte', 'dominio', 'vigilar',
+    'reto', 'comparte', 'dominio', 'comparte-puerta', 'vigilar',
   ]);
   for (const n of salidos) assert.ok(EVENTOS.includes(n), n);
 });

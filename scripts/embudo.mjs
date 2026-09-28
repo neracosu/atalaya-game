@@ -52,12 +52,13 @@ export function embudo(porDia) {
     { paso: 'Llega a 3 reintentos (mediano de 3 o más si es 50 %)', valor: razon(n('reintento-3'), termina), meta: 0.5, prueba: true },
     { paso: 'Vuelve al día siguiente', valor: razon(vuelven, nuevosAyer), meta: 0.2, prueba: true },
     { paso: 'Comparte (de quienes juegan)', valor: razon(comparte, empieza), meta: 0.05, prueba: true },
+    { paso: 'Comparte el informe de su puerta (de quienes escriben su dominio)', valor: razon(n('comparte-puerta'), dominio), meta: 0.05 },
     { paso: 'Escribe su dominio (de quienes juegan)', valor: razon(dominio, empieza), meta: 0.02, prueba: true },
     { paso: 'Escribe su dominio (de quienes terminan)', valor: razon(dominio, termina), meta: 0.12, revisar: 0.04 },
     { paso: 'Toca «vigilar» (de quienes escriben su dominio)', valor: razon(vigilar, dominio), meta: 0.35 },
   ];
   const estrellas = [0, 1, 2, 3].map(e => n(['fin-primera-' + e, 'fin-otra-' + e]));
-  return { conteos: { portada, empieza, termina, nuevos: n('nuevo'), vuelven, nuevosAyer, comparte, dominio, vigilar, reto: n('reto') }, hitos, mediano, estrellas, pasos };
+  return { conteos: { portada, empieza, termina, nuevos: n('nuevo'), vuelven, nuevosAyer, comparte, compartePuerta: n('comparte-puerta'), dominio, vigilar, reto: n('reto') }, hitos, mediano, estrellas, pasos };
 }
 
 function leerDias(archivos, desde, hasta) {

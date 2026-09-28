@@ -34,10 +34,11 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
 
 - **Qué se cuenta**, siempre como un nombre fijo y sumado por día: que se vio la portada, que empezó la primera
   partida, que la terminó y con cuántas estrellas (0 a 3), que llegó a 1, 2, 3, 5 o 10 reintentos, que empezó el
-  reto del día, que compartió, que revisó un dominio (solo el hecho), que tocó «vigilar» y si es la primera
-  visita, vuelve al día siguiente o vuelve otro día, y cuando llega a 3 y a 7 días distintos. El script de Atalaya suma además el tiempo con la página a la
-  vista, cuánto bajó en la portada, la página de donde llegó (sin lo que va después del `?`), que envió un
-  formulario y los clics a otros sitios (solo el nombre del sitio).
+  reto del día, que compartió su resultado o el informe de su puerta, que revisó un dominio (solo el hecho), que
+  tocó «vigilar» y si es la primera visita, vuelve al día siguiente o vuelve otro día, y cuando llega a 3 y a 7
+  días distintos. El script de Atalaya suma además el tiempo con la página a la vista, cuánto bajó en la portada,
+  la página de donde llegó (sin lo que va después del `?`), que envió un formulario y los clics a otros sitios
+  (solo el nombre del sitio).
 - **Qué no**: ni el dominio que escribe, ni los puntos exactos, ni la partida, ni un identificador suyo. Sin
   cookies y sin nada que lo siga de un sitio a otro. Estos conteos no guardan su dirección de conexión: el script
   la usa solo como tope contra abusos. Aparte, como todo sitio web, el servidor lleva sus registros de acceso.

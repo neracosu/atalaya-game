@@ -20,11 +20,11 @@ export const EVENTOS = [
   'empieza', 'reto', 'fin-primera-0', 'fin-primera-1', 'fin-primera-2', 'fin-primera-3',
   'fin-otra-0', 'fin-otra-1', 'fin-otra-2', 'fin-otra-3',
   'reintento-1', 'reintento-2', 'reintento-3', 'reintento-5', 'reintento-10',
-  'comparte', 'dominio', 'vigilar', 'landing-atalaya', 'landing-empezar',
+  'comparte', 'comparte-puerta', 'dominio', 'vigilar', 'landing-atalaya', 'landing-empezar',
 ];
 const PERMITIDOS = new Set(EVENTOS);
 const HITOS_REINTENTO = new Set([1, 2, 3, 5, 10]);
-const UNA_VEZ = { compartir: 'comparte', dominio: 'dominio', 'ir-atalaya': 'vigilar', 'landing-atalaya': 'landing-atalaya', 'landing-empezar': 'landing-empezar' };
+const UNA_VEZ = { compartir: 'comparte', 'compartir-puerta': 'comparte-puerta', dominio: 'dominio', 'ir-atalaya': 'vigilar', 'landing-atalaya': 'landing-atalaya', 'landing-empezar': 'landing-empezar' };
 
 // La visita de hoy frente a la última que quedó guardada en el teléfono. Devuelve los eventos y lo nuevo a guardar.
 export function visitaDelDia(guardado, hoy) {
