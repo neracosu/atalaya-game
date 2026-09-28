@@ -6,8 +6,8 @@ Documento vivo. Se escribe parte por parte y cada parte queda cerrada cuando se 
 |---|---|
 | 1. Visión | Cerrada (2026-09-28) |
 | 2. Historia y mundo | Cerrada (2026-09-28) |
-| 3. Niveles y mecánicas | En discusión |
-| 4. Lo que hace volver | Pendiente |
+| 3. Niveles y mecánicas | Cerrada (2026-09-28) |
+| 4. Lo que hace volver | En discusión |
 | 5. Tablas, reto del día y temporadas | Pendiente |
 | 6. Cinemáticas y perspectiva | Pendiente |
 | 7. Arte y sonido | Pendiente |
@@ -161,8 +161,138 @@ La temporada 1 se llama **«La primera guardia»**.
 
 ## 3. Niveles y mecánicas
 
+Los números de esta parte (duraciones, velocidades, umbrales) son el punto de partida. Se afinan jugando.
+
+### Reglas para todos los niveles
+
+- **Una acción nueva por nivel**, que se entiende en cinco segundos. El robot la muestra una vez, sin texto largo.
+- **Un dedo.** Tocar es la acción principal en seis de los siete niveles; solo La patrulla pide arrastrar. En la computadora: ratón o teclado.
+- **De la calma al caos.** Cada nivel empieza lento y termina lleno. La música y los efectos suben con la carga.
+- **Siempre se filtra, no se destruye.** Lo bueno y lo malo pasan por el mismo lugar. Bloquear algo bueno (un falso positivo) cuesta tanto como dejar pasar algo malo.
+- **Eventos sorpresa** que no se anuncian: una ráfaga, una visita dorada que vale el doble, un combo que se duplica.
+- **Integridad de la torre.** En los niveles cortos, tres fallas graves terminan la partida antes de tiempo. Lo ganado hasta ahí se cuenta.
+- **Al terminar**: estrellas, cuánto faltó para la siguiente, la comparación con todos los jugadores en tres medidas y el botón de reintentar, que tarda menos de un segundo.
+- **«Esto pasa de verdad»**: una ficha opcional de dos líneas con lo real detrás del nivel.
+
+### Puntaje y estrellas
+
+- Cada acierto suma puntos base, multiplicados por el **combo**.
+- El combo sube un escalón cada 5 aciertos seguidos: x1, x2, x3, x4, x6 y x8. Cualquier error lo devuelve a x1.
+- Tres estrellas por nivel, por umbral de puntaje. La primera se gana en el primer intento de casi cualquiera; la tercera pide dominar el nivel.
+- **Modo asistido**: el juego va más lento. Se ganan las estrellas igual, pero ese puntaje no entra a la tabla competitiva. El texto lo ofrece con respeto, nunca como burla.
+
+### Los siete niveles de «La primera guardia»
+
+#### 00:00 · El peaje · lente Ciudad · 60 s
+
+- **Qué hace el jugador.** Por la calle llegan autos hacia la puerta de la ciudad. Cada auto lleva su rótulo: `Mozilla`, `Googlebot`, `curl`, `sqlmap`, o lo que pide, como `/wp-admin` o `/.env`. Si no se toca, pasa. Tocarlo lo sella con BLOQUEAR.
+- **El boletín.** A los 20 y a los 40 segundos el robot trae una regla nueva, como en Papers, Please:
+  - «Los robots de buscadores pasan.»
+  - «Nadie pide `/wp-admin`: quien lo pide, se bloquea.»
+  - «Más de tres autos seguidos con la misma placa son un robot.»
+- **Falla.** Si un robot pasa, la torre pierde integridad. Si se bloquea a una visita, se rompe el combo y sale el texto «Ese no era un robot. Era su cliente.»
+- **Sorpresa.** Un auto dorado es un cliente que compra y vale el doble. Una ráfaga trae diez robots seguidos.
+- **Esto pasa de verdad.** Cada minuto llegan robots buscando `/wp-admin` y `.env` a cualquier servidor. Así se frenan con reglas y con límite de peticiones.
+
+#### 01:00 · La patrulla · lente Ops · 75 s
+
+- **Qué hace el jugador.** Maneja un dron de seguridad arrastrando el dedo. El dron sigue el dedo con inercia: acelera, derrapa y deja estela. El control se inspira en DATA WING.
+- **El objetivo.** En el borde del radar están las puertas de la ciudad, con su número: 22, 80, 443, 3306. Un marcador hostil recorre las puertas buscando una abierta. El jugador tiene que alcanzarlo antes; al tocarlo, el blindado se lo lleva a la zona de detención.
+- **Combo.** Se encadenan capturas sin chocar con los bordes. Derrapar cerca de un obstáculo da puntos extra.
+- **Falla.** Si el escáner encuentra una puerta abierta, entra.
+- **Sorpresa.** Se abre sola una puerta que no estaba: «Alguien dejó un servidor de pruebas abierto en el 3000.»
+- **Esto pasa de verdad.** Los escáneres de puertos recorren internet sin parar. Lo que no se usa se cierra con el cortafuegos.
+- **Riesgo conocido.** Es el control más difícil de afinar. Tiene su propia etapa de pruebas antes de darlo por bueno.
+
+#### 02:00 · La cuarentena · lente Castillo · 60 s
+
+- **Qué hace el jugador.** Por la estantería pasan grimorios, que son los archivos del sitio. Entre ellos se esconden arañas. Tocar una araña la encierra en un ataúd: la cuarentena. Tocar un grimorio bueno lo encierra también, y eso cuesta.
+- **Escalada.** Al principio las arañas se ven a simple vista. Después se disfrazan de grimorio, y solo las delata la etiqueta:
+  - un nombre al azar, como `x7Qk2.php`;
+  - una doble extensión, como `foto.jpg.php`;
+  - un `.php` dentro de la carpeta de fotos subidas.
+- **Falla.** Si una araña se escapa, infecta un estante. Encerrar un archivo bueno saca el texto «Acaba de poner en cuarentena la portada del sitio.»
+- **Sorpresa.** Un grimorio bueno que cambia de etiqueta a la vista del jugador.
+- **Esto pasa de verdad.** Así se esconde el código malicioso en un sitio. La cuarentena es mejor que borrar: si hubo un error, se devuelve.
+
+#### 03:00 · Las tuberías · lente Planta · 90 s
+
+- **Qué hace el jugador.** Las consultas llegan como cajas por tuberías hacia el silo, que es la base de datos. Tocar un tramo lo gira y cambia el camino, como en Pipe Mania.
+- **La saturación.** Las consultas lentas atascan su tubo. El medidor del silo sube poco a poco, como las estaciones de Mini Metro.
+- **Entre oleadas.** Cada 30 segundos se elige una mejora entre dos:
+  - **Índice:** las consultas lentas se aceleran.
+  - **Caché:** las consultas repetidas ya no llegan al silo.
+  - **Réplica:** un segundo silo para las lecturas.
+  - **Más conexiones:** entran más cajas a la vez.
+- **Falla.** El silo se desborda.
+- **Sorpresa.** Una consulta gigante («`SELECT *` sin `WHERE`») que tapa todo si no se desvía a tiempo.
+- **Esto pasa de verdad.** Así se satura una base de datos. Estas cuatro mejoras son las que se usan en la vida real.
+
+#### 04:00 · El correo · lente Villa · 60 s
+
+- **Qué hace el jugador.** Las palomas salen del palomar con cartas, al ritmo de la música. Cada carta necesita sus sellos, y hay tres carriles, uno por sello: **SPF**, **DKIM** y **DMARC**. Se toca el carril justo cuando la paloma pasa, como en un juego de ritmo.
+- **Falla.** Un sello a destiempo hace rebotar la carta, y se ve el motivo: «550: no pasó SPF.»
+- **El spam.** Entre las cartas buenas vienen cartas de spam, de un formulario que alguien abusó. Esas no se sellan: si una sale, baja la reputación de la villa.
+- **Sorpresa.** Un envío masivo, el boletín de noticias de la ciudad, con el doble de palomas y el doble de puntos.
+- **Esto pasa de verdad.** Sin SPF, DKIM y DMARC, los correos de un sitio terminan en spam o rebotan.
+
+#### 05:00 · La caída · lente Oficina · 90 s
+
+- **Antes del nivel.** La cinemática «La caída»: se apagan tres salas a la vez.
+- **Qué hace el jugador.** Tres salas fallan al mismo tiempo: recepción (visitas y robots), seguridad (intrusos) y mensajería (cartas). Tocar una sala la agranda y ahí se resuelve una versión corta de su problema. Mientras tanto, el medidor de las otras dos sube.
+- **La decisión.** No hay un orden correcto único. El histograma del final muestra qué atendió primero cada jugador y cómo le fue.
+- **Falla.** Una sala que llega al tope se cae, y las otras se aceleran.
+- **Sorpresa.** Una cuarta alarma falsa que no hace falta atender, y que distrae.
+- **Esto pasa de verdad.** Así son las malas noches en un servidor: todo a la vez, y hay que decidir qué va primero.
+
+#### 06:00 · El amanecer · vista desde la torre · 90 s
+
+La defensa de la torre, el jefe final. La ciudad se ve desde la torre y no desde el aire: la transición «bajar del cielo» lleva la cámara hasta ella.
+
+- **El mapa.** Vertical, con la torre abajo, a la altura del pulgar. Tres calles bajan hacia ella: la puerta SSH, la puerta web y el correo. Junto a cada calle hay dos o tres huecos fijos donde construir.
+- **Qué hace el jugador.** Toca un hueco y elige entre tres defensas. Toca una defensa para mejorarla; la tercera mejora se elige entre dos ramas.
+- **Botones.** Abajo hay dos: **modo bajo ataque**, el botón de pánico que frena todo por 5 segundos y se carga con el combo, y **llamar oleada**, que adelanta la siguiente a cambio de un premio.
+- **Seis oleadas de unos 12 segundos.** Un aviso al borde de cada calle anuncia lo que viene.
+- **Los invasores y lo que los frena:**
+
+| Invasor | Cómo se mueve | Qué lo frena |
+|---|---|---|
+| Fuerza bruta | En fila, lento e insistente, por la puerta SSH | Bloqueo de IP: tras varios intentos, lo saca |
+| Escáner | Rápido, prueba todas las calles | Cortafuegos: cierra una calle entera |
+| Robots de `/wp-admin` | En grupo, por la puerta web | Captcha y límite de peticiones |
+| Inyección SQL | Disfrazada de visita por la puerta web; el cortafuegos no la ve | Solo el filtro de aplicaciones (WAF) |
+| Ráfaga | Un enjambre de muchos pequeños | Límite de peticiones y el modo bajo ataque |
+| Archivo malicioso | Lento y resistente; si llega, infecta un distrito | Cuarentena |
+| **Jefe: ransomware** | Cifra un distrito tras otro | Solo la copia de seguridad devuelve lo cifrado |
+
+- **Las visitas.** Por las mismas calles pasan visitas de verdad, y cada una que llega a la torre da recursos. Las defensas que frenan a una visita (el captcha, un bloqueo mal puesto) cuestan combo.
+- **Estrellas.** Según la integridad de la torre al final: 20 puntos de vida, como las vidas de Kingdom Rush.
+- **Después.** Si la torre resiste, caen las lentes, queda la Terminal y llega «Esto pasó anoche» (parte 2).
+
+### Fuera de la noche
+
+- **Guardia sin fin.** La defensa de la torre sin final, con una semilla distinta cada día, récord de oleadas y su propia tabla. Es el modo que sostiene las temporadas.
+- **Reto del día.** Uno de los siete tipos de nivel, con la misma semilla y los mismos cambios para todos. Se juega una vez para la tabla del día; después, las veces que se quiera sin puntuar.
+
+### Cómo se hace un nivel nuevo
+
+Cada uno de los siete niveles es un **motor**: la mecánica, escrita en código. Un nivel es un archivo de datos que elige un motor y le pone parámetros:
+
+- la lente;
+- la duración y la semilla;
+- las oleadas;
+- las reglas del boletín;
+- los eventos sorpresa;
+- los umbrales de las estrellas.
+
+Así la comunidad crea niveles nuevos sin escribir código, con los siete motores que ya existen. Un motor nuevo, es decir una mecánica nueva, sí es código, y entra por pull request con más revisión. El formato exacto del archivo se define en la parte 8.
+
+---
+
+## 4. Lo que hace volver
+
 En discusión.
 
-## 4. a 9.
+## 5. a 9.
 
 Pendientes.
