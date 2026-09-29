@@ -147,11 +147,13 @@ export const T = {
   reloj: ms => `${Math.max(0, Math.round(ms))} ms`,
 
   proxima: {
-    rotulo: 'La noche sigue · Hora 2',
+    // la hora 3 (02:00) llega antes que la 2 (01:00, La patrulla): se dice en pocas palabras. La pregunta es la
+    // que deja el giro del peaje (GDD, parte 2)
+    rotulo: 'La noche sigue · 02:00 · Hora 3',
     titulo: 'La cuarentena',
-    lente: 'Lente Castillo',
     pronto: 'Llega pronto',
-    texto: 'Entre los pergaminos del sitio se esconden arañas. Usted tendrá que encerrarlas antes de que infecten un estante.',
+    pregunta: 'Si la puerta principal no les abre, ¿por dónde van a probar?',
+    orden: 'Es la primera en llegar. La de la 01:00, La patrulla, viene después.',
     mientras: 'Mientras tanto',
     retoHoy: n => `Reto de hoy #${n}`,
     retoHoyTexto: (cambio, racha) => racha ? `${cambio}. Juéguelo y su racha de ${racha} ${racha === 1 ? 'día' : 'días'} sigue.` : `${cambio}. Juéguelo y empiece su racha.`,

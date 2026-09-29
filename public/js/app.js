@@ -684,7 +684,8 @@ addEventListener('keydown', e => {
   if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Spacebar') { e.preventDefault(); giro.saltar(); }
 }, true);
 
-// La hora que sigue todavía no está: se dice claro, sin fecha, y se ofrece lo que sí se puede hacer ya:
+// La hora que sigue todavía no está: se dice claro, sin fecha, con la pregunta que dejó el peaje, y se ofrece lo
+// que sí se puede hacer ya:
 // el reto (el de hoy si falta, o el de mañana con su racha) y mejorar las estrellas.
 function pintarProxima() {
   const P = T.proxima;
@@ -696,7 +697,7 @@ function pintarProxima() {
   const h = el('h3', '', P.titulo);
   h.id = 'proxima-titulo';
   const sub = el('p', 'proxima-sub');
-  sub.append(el('span', '', P.lente), el('span', 'pronto', P.pronto));
+  sub.append(el('span', 'pronto', P.pronto));
   titulos.append(el('p', 'rotulo', P.rotulo), h, sub);
   cabeza.append(lente, titulos);
 
@@ -732,7 +733,7 @@ function pintarProxima() {
   ya.append(fila('button', mini, P.estrellas(e), P.estrellasTexto(datos.mejor || 0, ESTRELLAS[e] || 0, e), P.mejorar,
     () => empezar('partida')));
 
-  caja.replaceChildren(cabeza, el('p', 'proxima-texto', P.texto), ya);
+  caja.replaceChildren(cabeza, el('p', 'proxima-pregunta', P.pregunta), el('p', 'proxima-texto', P.orden), ya);
 }
 // tocar la tarjeta cuenta una vez por visita: así se sabe si la hora que sigue despierta interés
 $('proxima').addEventListener('click', () => medir('proxima'));

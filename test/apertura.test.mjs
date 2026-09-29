@@ -7,6 +7,7 @@ import { debeVerse, marcarVista, crearControl, letrasVisibles, altura, niebla, G
   CLAVE, _olvidar, HISTORIA, esDeNoche, lineasDeHistoria, crearHistoria, avanzarHistoria, verHistoria, historiaEn } from '../public/js/apertura.js';
 import { nivelPeaje, crearPartida, avanzar, PASOS_POR_SEGUNDO } from '../public/js/motor/peaje.js';
 import { T } from '../public/js/textos.js';
+import { numeroDeReto } from '../public/js/reto.js';
 
 function almacen() {
   const m = new Map();
@@ -258,11 +259,21 @@ test('app.js: la primera partida pasa por la apertura corta, y su toque llega a 
   for (const k of ["' '", "'Enter'", "'Escape'"]) assert.ok(app.includes(`e.key === ${k}`), k);
 });
 
-test('la tarjeta de la hora 2: dice que llega pronto, sin fecha, y ofrece el reto y las estrellas', () => {
+test('la tarjeta de la hora 3: dice que llega pronto, sin fecha, y ofrece el reto y las estrellas', () => {
   const P = T.proxima;
-  assert.match(`${P.rotulo} ${P.titulo}`, /Hora 2/);
+  assert.match(P.rotulo, /02:00 · Hora 3/);
   assert.match(P.titulo, /La cuarentena/);
   assert.equal(P.pronto, 'Llega pronto');
+  // la pregunta que deja el giro del peaje, y el orden: la de las 02:00 llega antes que La patrulla (01:00)
+  assert.equal(P.pregunta, 'Si la puerta principal no les abre, ¿por dónde van a probar?');
+  assert.match(P.orden, /primera/);
+  assert.match(P.orden, /01:00.*La patrulla.*después/);
+  // sin jerga de lentes que un jugador nuevo no entiende
+  assert.doesNotMatch(Object.values(P).filter(v => typeof v === 'string').join(' '), /Lente|Castillo/);
+  // la numeración del reto de mañana: el de hoy más uno, igual que lo que dirá el reto al día siguiente
+  const hoy = Date.UTC(2026, 8, 29, 19), manana = hoy + 86400000;
+  assert.equal(P.retoManana(numeroDeReto(hoy) + 1), `Reto de mañana #${numeroDeReto(manana)}`);
+  assert.equal(P.retoManana(numeroDeReto(hoy) + 1), 'Reto de mañana #3');
   assert.doesNotMatch(Object.values(P).filter(v => typeof v === 'string').join(' '), /\d{1,2} de [a-z]+|octubre|noviembre|semana/i, 'sin prometer fecha');
   assert.equal(P.retoMananaTexto('00:00', 3, false), 'Sale a medianoche. Lleva 3 días de racha: vuelva y súmele uno.');
   assert.equal(P.retoMananaTexto('21:00', 1, true), 'Sale hoy a las 21:00. Vuelva y su racha llega a 2 días.');
