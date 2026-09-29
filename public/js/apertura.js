@@ -215,7 +215,7 @@ export function crearControl({ guion = GUION, lineas = [], alEmpezarPartida = ()
 export const HISTORIA = {
   letrasPorSegundo: 20,  // el GDD pide de 5 a 20
   primera: 150,          // la primera línea empieza con la bajada, desde el toque
-  respiro: 1200,         // entre que una línea se completa y empieza la siguiente, como mínimo
+  respiro: 900,          // entre que una línea se completa y empieza la siguiente, como mínimo
   ultimaDesde: 12000,    // la pregunta del cuaderno, hacia los 12 a 15 s
   queda: 3500,           // lo que una línea completa queda a la vista si la siguiente no llega antes
   sale: 400,             // lo que tarda en irse
