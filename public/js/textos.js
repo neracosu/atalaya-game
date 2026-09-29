@@ -9,7 +9,7 @@ export const T = {
   retoHecho: 'Reto de hoy jugado',
   racha: n => n === 1 ? '1 día de racha' : `${n} días de racha`,
   asistido: 'Modo asistido',
-  asistidoAyuda: 'El juego va más lento. Las estrellas cuentan igual.',
+  asistidoAyuda: 'Los autos llegan más espaciados y la noche dura un poco más. Las estrellas cuentan igual.',
   musica: 'Música',
   volumenMusica: 'Volumen de la música',
   efectos: 'Efectos',

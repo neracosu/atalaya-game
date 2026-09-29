@@ -7,7 +7,7 @@
 
 import { crearAzar } from './azar.js';
 
-export const VERSION = 1;
+export const VERSION = 2; // 2: bloquear a un cliente cuesta 200 y el modo asistido dura un 40 % más
 export const PASOS_POR_SEGUNDO = 30;
 
 // Qué es cada visita y qué hay que hacer con ella
@@ -28,7 +28,9 @@ const MULTIPLICADOR = [1, 2, 3, 4, 6, 8];
 const PUNTOS = 100;
 const PUNTOS_DORADO = 200;
 const PUNTOS_RAFAGA = 50;
-const CASTIGO_BLOQUEO = 50;
+// Bloquear a alguien bueno cuesta dos aciertos: con 50, tocar siempre «bloquear» sin mirar daba la primera
+// estrella en nueve de cada diez partidas.
+const CASTIGO_BLOQUEO = 200;
 
 // Cuánto tarda el auto en llegar a la barrera: el primero viene desde lejos, los demás solo avanzan un lugar
 const LLEGADA_PRIMERO = 10;
@@ -60,9 +62,18 @@ export function nivelPeaje(semilla, cambios = {}) {
   };
 }
 
-export function crearPartida(nivel) {
+// El modo asistido estira los intervalos un 40 %. Para que lleguen los mismos autos (y las estrellas cuenten
+// igual), la noche, las reglas del boletín y las ráfagas se estiran lo mismo.
+const LENTO = 10, LENTO_ASISTIDO = 14;
+function conAsistido(nivel) {
+  const estirar = paso => (paso * LENTO_ASISTIDO / LENTO) | 0;
+  return { ...nivel, duracion: estirar(nivel.duracion), reglas: nivel.reglas.map(r => ({ ...r, paso: estirar(r.paso) })) };
+}
+
+export function crearPartida(nivelPedido) {
+  const nivel = nivelPedido.asistido ? conAsistido(nivelPedido) : nivelPedido;
   const azar = crearAzar(nivel.semilla);
-  const lento = nivel.asistido ? 14 : 10; // el modo asistido estira los intervalos un 40 %
+  const lento = nivel.asistido ? LENTO_ASISTIDO : LENTO;
   // las ráfagas caen en momentos elegidos por la semilla, en la segunda mitad
   const rafagas = [];
   for (let i = 0; i < nivel.rafagas; i++) {
@@ -104,7 +115,7 @@ function intervalo(p) {
   const avance = Math.min(p.paso, n.duracion);
   const base = n.intervaloInicio - (((n.intervaloInicio - n.intervaloFin) * avance) / n.duracion | 0);
   const jitter = p.azar.entre(-(base / 4 | 0), base / 4 | 0);
-  return ((base + jitter) * p.lento / 10) | 0;
+  return ((base + jitter) * p.lento + LENTO / 2) / LENTO | 0; // redondeado: sin asistido queda igual
 }
 
 function elegirTipo(p) {
@@ -230,7 +241,7 @@ export function avanzar(p) {
     p.fila.push(auto);
     eventos.push({ e: 'llega', id: auto.id, tipo: auto.tipo, rafaga: auto.rafaga });
     if (p.fila.length === 1) alFrente(p, eventos, true);
-    p.proximoAuto = p.paso + (auto.rafaga ? 8 : intervalo(p));
+    p.proximoAuto = p.paso + (auto.rafaga ? (8 * p.lento / LENTO | 0) : intervalo(p));
   }
 
   p.paso++;

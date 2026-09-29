@@ -21,3 +21,16 @@ export function jugarCon(nivel, { reaccionMin = 0, reaccionMax = 0, error = 0, s
   }
   return { resumen: resumen(p), jugadas: p.jugadas };
 }
+
+// Una estrategia fija, sin tiempo de reacción ni errores: decide con el tipo del auto apenas puede.
+// Sirve para lo tonto (tocar siempre lo mismo) y para lo perfecto.
+export function jugarSiempre(nivel, decide) {
+  const p = crearPartida(nivel);
+  while (!p.terminada) {
+    const frente = p.fila[0];
+    if (frente && p.paso >= frente.listoEn) jugar(p, decide(frente.tipo));
+    avanzar(p);
+  }
+  return { resumen: resumen(p), jugadas: p.jugadas, nivel: p.nivel };
+}
+export const perfecto = tipo => (TIPOS[tipo].bueno ? 'P' : 'B');
