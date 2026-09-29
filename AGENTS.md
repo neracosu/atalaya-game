@@ -16,12 +16,15 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
 - `public/js/app.js`: la interfaz. Pantallas, entrada (deslizar, tocar, flechas), resultado y compartir.
 - `public/js/textos.js`: **todos** los textos que ve el jugador.
 - `public/js/motor/`: el núcleo determinista. `peaje.js` es la lógica del nivel; `azar.js`, el azar con semilla.
-- `public/js/apertura.js`: la apertura («La torre vacía» en corto, solo la primera vez): el guion como datos,
-  si toca verla y el control del tiempo, sin pantalla para poder probarlo en Node. Termina dentro de la partida.
+- `public/js/apertura.js`: la apertura («La torre vacía»), una cinemática que sale solo la primera vez (clave
+  `guardia-apertura`) y vuelve a verse desde los ajustes. Lleva toda la historia: las líneas, el guion armado con lo
+  que tarda leer cada una (al compás de la música), si toca verla y el control del tiempo, sin pantalla para poder
+  probarlo en Node. Se salta con un toque que no cuenta como jugada, y termina fundida en la partida. Durante la
+  partida no sale texto de historia (solo la ayuda de Chispa del tutorial).
 - `public/js/giro.js`: el giro de El peaje, solo en la primera victoria (clave `guardia-giro-peaje`): si toca verlo,
   el guion como datos y dónde va el auto en cada instante. Pasa después del final y no toca el motor.
 - `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida en canvas), `apertura.js`
-  (el dibujo de la apertura) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
+  (el dibujo de la cinemática, con su texto y el cuaderno) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
 - `public/js/reto.js`: el reto del día, la racha y lo que se guarda en el teléfono. Si existe
   `datos/anoche.json` de la noche de ayer, el reto toma su tono (`tonoDeAnoche`): la misma semilla con más
   ráfagas, un final más apretado o más clientes, según las cifras. Es determinista: igual para todos ese día.

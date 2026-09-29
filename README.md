@@ -10,6 +10,11 @@ Solo en español.
 
 ## Cómo se juega
 
+La primera vez, antes de jugar, una cinemática de unos 15 segundos cuenta la noche: la torre se enciende, la luz
+barre la ciudad y la cámara baja del cielo hasta la barrera. Si en su teléfono es de noche, le dice también qué hora
+es donde está usted (se calcula en el teléfono y no se envía). Se salta con un toque, con Espacio o con «Saltar», y
+se vuelve a ver en los ajustes. Durante la partida no hay texto de historia.
+
 El primer nivel es **El peaje**: 60 segundos en la barrera de la ciudad, un auto a la vez.
 
 1. **El cliente pasa.** Trae gente en las ventanas: deslice a la derecha o toque la mitad derecha.
@@ -36,8 +41,8 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
   partida, que la terminó y con cuántas estrellas (0 a 3), que llegó a 1, 2, 3, 5 o 10 reintentos, que empezó el
   reto del día, que compartió su resultado o el informe de su puerta, que revisó un dominio (solo el hecho), que
   tocó «vigilar», que tocó la tarjeta de la hora que sigue («Llega pronto»), si vio la apertura entera o en qué
-  tramo la saltó, cuánto tardó en su primera jugada (solo el tramo: menos de 2 s, de 2 a 3, de 3 a 5, de 5 a 10 o
-  más) y si es la primera visita, vuelve
+  tramo de tres segundos la saltó, cuánto tardó en su primera jugada desde que empezó la partida (solo el tramo:
+  menos de 2 s, de 2 a 3, de 3 a 5, de 5 a 10 o más) y si es la primera visita, vuelve
   al día siguiente o vuelve otro día, y cuando llega a 3 y a 7 días distintos. El script de Atalaya suma además el tiempo con la página a la vista, cuánto bajó en la portada,
   la página de donde llegó (sin lo que va después del `?`), que envió un formulario y los clics a otros sitios
   (solo el nombre del sitio).
@@ -103,9 +108,10 @@ public/                 lo que se publica, tal cual
   js/sonido.js          efectos generados por código, sin archivos
   js/medir.js           qué se mide del embudo y cómo (ver «Qué se mide y qué no»)
   js/motor/             el núcleo determinista: la lógica de cada nivel, sin dibujo
-  js/apertura.js        la apertura: el guion en datos, si toca verla y el control del tiempo (sin pantalla)
+  js/apertura.js        la apertura, una cinemática con la historia: el guion en datos, si toca verla y el control
+                        del tiempo (sin pantalla)
   js/giro.js            el giro de la primera victoria: si toca verlo y su guion (sin pantalla; no toca el motor)
-  js/dibujo/            sprites, la escena de la partida, la apertura y las postales (imagen del resultado y de «Su puerta»)
+  js/dibujo/            sprites, la escena de la partida, la cinemática y las postales (imagen del resultado y de «Su puerta»)
   fuentes/              Silkscreen y Space Grotesk, servidas desde el propio sitio
 scripts/                herramientas que no se publican (la tarjeta, los íconos y el embudo)
 test/                   pruebas con node --test
