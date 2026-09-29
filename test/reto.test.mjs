@@ -1,7 +1,7 @@
 // El reto del día y el tono de la noche real (datos/anoche.json). Todo debe salir igual para todos ese día.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { retoDeHoy, tonoDeAnoche, anocheDe, diaAnterior, conTono, hoyEnVenezuela, numeroDeReto } from '../public/js/reto.js';
+import { retoDeHoy, tonoDeAnoche, anocheDe, diaAnterior, conTono, hoyEnVenezuela, numeroDeReto, cargarAnoche } from '../public/js/reto.js';
 import { nivelPeaje, volverAJugar, estrellasDe } from '../public/js/motor/peaje.js';
 import { semillaDe } from '../public/js/motor/azar.js';
 import { jugarCon } from './bots.mjs';
@@ -139,4 +139,27 @@ test('con el tono más fuerte, un buen jugador todavía gana estrellas', () => {
     const prom = suma.reduce((x, y) => x + y, 0) / suma.length;
     assert.ok(prom >= 1, `${id}: ${prom}`);
   }
+});
+
+test('anoche.json se pide una vez por visita, aunque dé 404, y otra vez solo si cambia el día', async () => {
+  const antes = globalThis.fetch;
+  let pedidos = 0;
+  globalThis.fetch = async () => { pedidos++; return { ok: false, json: async () => null }; };
+  try {
+    for (let i = 0; i < 5; i++) assert.equal(await cargarAnoche(FECHA), null);
+    // diez minutos después, en otra partida, tampoco (antes se volvía a pedir cada minuto)
+    const reloj = Date.now;
+    Date.now = () => reloj() + 600000;
+    try { assert.equal(await cargarAnoche(FECHA), null); } finally { Date.now = reloj; }
+    assert.equal(pedidos, 1);
+    // pasó la medianoche con la página abierta: hace falta la noche de otro día
+    await cargarAnoche('2026-09-29');
+    await cargarAnoche('2026-09-29');
+    assert.equal(pedidos, 2);
+    // la red caída tampoco se reintenta en bucle
+    globalThis.fetch = async () => { pedidos++; throw new Error('sin red'); };
+    assert.equal(await cargarAnoche('2026-09-30'), null);
+    assert.equal(await cargarAnoche('2026-09-30'), null);
+    assert.equal(pedidos, 3);
+  } finally { globalThis.fetch = antes; }
 });

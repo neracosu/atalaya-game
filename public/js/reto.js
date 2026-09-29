@@ -92,18 +92,17 @@ export function conTono(nivel, tono) {
   return n;
 }
 
-// Lee datos/anoche.json una vez. Si el que tiene no es de la noche de ayer (pasó la medianoche con la página
-// abierta), lo vuelve a pedir, como mucho una vez por minuto. Nunca falla: sin archivo devuelve null.
-let anocheLeida = null, anocheAl = 0;
-export async function cargarAnoche(fecha = hoyEnVenezuela()) {
-  if (anocheLeida) {
-    const d = await anocheLeida;
-    if (anocheDe(fecha, d) || Date.now() - anocheAl < 60000) return d;
+// Lee datos/anoche.json una sola vez por visita: el archivo cambia una vez al día. Si no está (404) o la red falla,
+// queda en null y no se vuelve a pedir en cada partida. Solo se pide de nuevo si pasó la medianoche de Venezuela
+// con la página abierta, porque entonces el reto es el de otro día. Nunca falla: sin archivo devuelve null.
+let anocheLeida = null, anocheFecha = null;
+export function cargarAnoche(fecha = hoyEnVenezuela()) {
+  if (!anocheLeida || anocheFecha !== fecha) {
+    anocheFecha = fecha;
+    anocheLeida = fetch('datos/anoche.json', { cache: 'no-cache' })
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null);
   }
-  anocheAl = Date.now();
-  anocheLeida = fetch('datos/anoche.json', { cache: 'no-cache' })
-    .then(r => (r.ok ? r.json() : null))
-    .catch(() => null);
   return anocheLeida;
 }
 
