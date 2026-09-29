@@ -58,7 +58,7 @@ export function embudo(porDia) {
     { paso: 'Toca «vigilar» (de quienes escriben su dominio)', valor: razon(vigilar, dominio), meta: 0.35 },
   ];
   const estrellas = [0, 1, 2, 3].map(e => n(['fin-primera-' + e, 'fin-otra-' + e]));
-  return { conteos: { portada, empieza, termina, nuevos: n('nuevo'), vuelven, nuevosAyer, comparte, compartePuerta: n('comparte-puerta'), dominio, vigilar, reto: n('reto') }, hitos, mediano, estrellas, pasos };
+  return { conteos: { portada, empieza, termina, nuevos: n('nuevo'), vuelven, nuevosAyer, comparte, compartePuerta: n('comparte-puerta'), dominio, vigilar, reto: n('reto'), hora2: n('toca-hora-2') }, hitos, mediano, estrellas, pasos };
 }
 
 function leerDias(archivos, desde, hasta) {

@@ -114,6 +114,36 @@ export const T = {
     clientela: n => `Hoy el reto trae la clientela de anoche: ${n.toLocaleString('es')} visitas en un servidor real.`,
   },
 
+  // la apertura: «La torre vacía» en corto, solo la primera vez (GDD, parte 6)
+  apertura: {
+    hora: '00:00',
+    lineas: ['Esta noche, la ciudad está bajo ataque.', 'Alguien tiene que tomar la guardia.'],
+    saltar: 'Toque para saltar',
+    saltarTeclado: 'Haga clic o pulse Espacio para saltar',
+    ver: 'Ver la apertura',
+    etiqueta: 'Apertura del juego',
+  },
+
+  // al terminar: la hora que sigue todavía no está, y lo que sí se puede hacer ya
+  proxima: {
+    rotulo: 'La noche sigue · Hora 2',
+    titulo: 'La cuarentena',
+    lente: 'Lente Castillo',
+    pronto: 'Llega pronto',
+    texto: 'Entre los pergaminos del sitio se esconden arañas. Usted tendrá que encerrarlas antes de que infecten un estante.',
+    mientras: 'Mientras tanto',
+    retoHoy: n => `Reto de hoy #${n}`,
+    retoHoyTexto: (cambio, racha) => racha ? `${cambio}. Juéguelo y su racha de ${racha} ${racha === 1 ? 'día' : 'días'} sigue.` : `${cambio}. Juéguelo y empiece su racha.`,
+    retoManana: n => `Reto de mañana #${n}`,
+    retoMananaTexto: (hora, racha, hoy) => `${hora === '00:00' ? 'Sale a medianoche' : `Sale ${hoy ? 'hoy' : 'mañana'} a las ${hora}`}. ${racha > 1 ? `Lleva ${racha} días de racha: vuelva y súmele uno.` : racha === 1 ? 'Vuelva y su racha llega a 2 días.' : 'Vuelva y empiece una racha.'}`,
+    jugarReto: 'Jugar el reto',
+    estrellas: e => e === 3 ? 'Las tres estrellas' : `Sus estrellas: ${e} de 3`,
+    estrellasTexto: (mejor, umbral, e) => e === 3
+      ? `Su mejor marca es ${mejor.toLocaleString('es')}. A ver si la supera.`
+      : `Su mejor marca es ${mejor.toLocaleString('es')}. ${e === 2 ? 'La tercera estrella' : e === 1 ? 'La segunda estrella' : 'La primera estrella'} pide ${umbral.toLocaleString('es')}.`,
+    mejorar: 'Mejorar mi marca',
+  },
+
   // la sección de abajo de la portada: qué es, cómo se juega y de dónde sale
   landing: {
     rotulo: 'Qué es',

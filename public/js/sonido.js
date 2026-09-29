@@ -15,18 +15,19 @@ export function despertar() {
   } catch { ctx = null; }
 }
 
-function tono(frec, dur, { tipo = 'square', desde = 0, hasta = null, vol = 1 } = {}) {
-  if (!ctx || !activo) return;
+function tono(frec, dur, { tipo = 'square', desde = 0, hasta = null, vol = 1, ataque = 0.008 } = {}) {
+  if (!ctx || !activo) return null;
   const t = ctx.currentTime + desde;
   const o = ctx.createOscillator(), v = ctx.createGain();
   o.type = tipo;
   o.frequency.setValueAtTime(frec, t);
   if (hasta) o.frequency.exponentialRampToValueAtTime(hasta, t + dur);
   v.gain.setValueAtTime(0.0001, t);
-  v.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+  v.gain.exponentialRampToValueAtTime(vol, t + ataque);
   v.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(v); v.connect(maestro);
   o.start(t); o.stop(t + dur + 0.02);
+  return { o, v };
 }
 
 function ruido(dur, vol = 0.6) {
@@ -55,3 +56,39 @@ export function sonarFin(bien) {
   notas.forEach((f, i) => tono(f, 0.16, { tipo: 'triangle', desde: i * 0.13 }));
 }
 export function sonarEstrella(i) { tono(ESCALA[2 + i], 0.14, { tipo: 'square', vol: 0.5 }); }
+
+// ---- la apertura: sutil, por debajo de todo ----
+// un fondo grave que entra despacio; devuelve cómo apagarlo si la apertura se salta
+export function sonarAmbiente() {
+  const notas = [tono(55, 7.8, { tipo: 'sine', vol: 0.55, ataque: 1.4 }), tono(82.5, 6.6, { tipo: 'sine', vol: 0.2, ataque: 2, desde: 0.9 })];
+  return () => {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (const n of notas) {
+      if (!n) continue;
+      try {
+        if (n.v.gain.cancelAndHoldAtTime) n.v.gain.cancelAndHoldAtTime(t); else n.v.gain.cancelScheduledValues(t);
+        n.v.gain.setTargetAtTime(0.0001, t, 0.08);
+        n.o.stop(t + 0.5);
+      } catch { }
+    }
+  };
+}
+// la baliza se enciende: un chasquido y un zumbido que sube
+export function sonarEncender() {
+  ruido(0.05, 0.45);
+  tono(110, 0.9, { tipo: 'triangle', hasta: 220, vol: 0.32, ataque: 0.04 });
+  tono(660, 0.55, { tipo: 'sine', desde: 0.1, vol: 0.14, ataque: 0.03 });
+}
+// Chispa despierta: dos pitidos cortos
+export function sonarChispa() {
+  tono(1320, 0.05, { tipo: 'square', vol: 0.1 });
+  tono(1760, 0.07, { tipo: 'square', desde: 0.08, vol: 0.1 });
+}
+// cada letra, apenas un golpecito
+export function sonarLetra() { tono(1900, 0.018, { tipo: 'triangle', vol: 0.05 }); }
+// la luz llega a la cámara
+export function sonarDestello() {
+  tono(220, 0.7, { tipo: 'sine', hasta: 880, vol: 0.28, ataque: 0.25 });
+  ruido(0.45, 0.22);
+}

@@ -29,6 +29,13 @@ test('una visita: primera partida, reintentos por hitos, estrellas y lo que cuen
   for (const n of salidos) assert.ok(EVENTOS.includes(n), n);
 });
 
+test('tocar la tarjeta de la hora 2 cuenta una sola vez', () => {
+  const { salidos, medir } = grabar();
+  medir('proxima'); medir('proxima'); medir('proxima');
+  assert.deepEqual(salidos, ['toca-hora-2']);
+  assert.ok(EVENTOS.includes('toca-hora-2'));
+});
+
 test('nada que no esté en la lista sale, ni aunque se pase un dominio por error', () => {
   const { salidos, medir } = grabar();
   medir('ejemplo.com'); medir('fin-peaje-ejemplo.com'); medir('dominio:ejemplo.com'); medir(undefined); medir('fin-peaje', 'x');

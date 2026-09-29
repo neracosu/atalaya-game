@@ -3,13 +3,15 @@
 import { nivelPeaje, crearPartida, jugar, avanzar, resumen, estrellasDe, ESTRELLAS, multiplicador, PASOS_POR_SEGUNDO } from './motor/peaje.js';
 import { crearEscena } from './dibujo/escena.js';
 import { imagenResultado, fuentesListas } from './dibujo/postal.js';
-import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, aSVG } from './dibujo/sprites.js';
+import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, LENTE_CASTILLO, PALETA_LENTE, ARANA, PALETA_ARANA, CALENDARIO, PALETA_CALENDARIO, aSVG } from './dibujo/sprites.js';
 import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques, cargarAnoche, hoyEnVenezuela } from './reto.js';
 import { conectarRevision } from './puerta.js';
 import { compartir, aArchivo } from './compartir.js';
 import { T } from './textos.js';
 import * as S from './sonido.js';
-import { medir } from './medir.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
+import { medir } from './medir.js';
+import { debeVerse, marcarVista, crearControl, GUION, GUION_QUIETO } from './apertura.js';
+import { crearDibujoApertura } from './dibujo/apertura.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
 
 const REPO = 'https://github.com/neracosu/atalaya-game';
 const ATALAYA = 'https://neracosu.com/atalaya';
@@ -18,7 +20,8 @@ const $ = id => document.getElementById(id);
 let datos = leer();
 datos.ajustes = { sonido: true, vibracion: true, asistido: false, movimiento: false, ...(datos.ajustes || {}) };
 
-const escena = crearEscena($('mundo'), { menosMovimiento: () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches });
+const menosMovimiento = () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const escena = crearEscena($('mundo'), { menosMovimiento });
 
 function vibrar(ms) { if (datos.ajustes.vibracion && navigator.vibrate) try { navigator.vibrate(ms); } catch { } }
 
@@ -40,6 +43,7 @@ function el(tag, clase, texto) {
 // ---------- portada ----------
 function portada() {
   $('torre-portada').innerHTML = aSVG(TORRE, PALETA_TORRE_ENCENDIDA);
+  $('ver-apertura').textContent = T.apertura.ver;
   pintarReto();
   for (const [id, k] of [['aj-asistido', 'asistido'], ['aj-sonido', 'sonido'], ['aj-vibracion', 'vibracion'], ['aj-movimiento', 'movimiento']]) {
     $(id).checked = !!datos.ajustes[k];
@@ -136,16 +140,102 @@ function pintarLanding() {
 
   const cierre = el('button', 'boton principal cierre', L.cierre);
   cierre.type = 'button';
-  cierre.addEventListener('click', () => { medir('landing-empezar'); empezar('partida'); });
+  cierre.addEventListener('click', () => { medir('landing-empezar'); tomarGuardia('partida'); });
 
   caja.append(que, como, verdad, atalaya, abierto, ia, cierre);
   $('landing').replaceChildren(caja);
 }
 
+
+// ---------- la apertura: «La torre vacía» en corto, solo la primera vez ----------
+// Empieza con el primer toque (así el sonido puede sonar) y termina dentro de la partida: la luz de la torre llena
+// la pantalla y se abre sobre la barrera, con el primer auto llegando. Se salta con un toque, Espacio, Enter o
+// Escape. Si algo falla o tarda, se juega igual.
+const almacen = () => localStorage;
+let apertura = null;
+
+function tomarGuardia(tipo) {
+  if (debeVerse(almacen)) verApertura(tipo);
+  else if (tipo === 'reto') empezarReto();
+  else empezar(tipo);
+}
+
+function verApertura(tipo = 'partida') {
+  if (apertura) return;
+  S.despertar();
+  marcarVista(almacen);
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  const guion = menosMovimiento() ? GUION_QUIETO : GUION;
+  const capa = $('apertura'), aviso = $('apertura-saltar');
+  const jugar = () => (tipo === 'reto' ? leerAnoche().then(() => empezar('reto', { torreEncendida: true })) : empezar(tipo, { torreEncendida: true }));
+  let dibujo = null, apagarSonido = () => { }, vigia = 0, avisoT = 0, rafId = 0;
+
+  const cerrar = () => {
+    cancelAnimationFrame(rafId);
+    clearTimeout(vigia); clearTimeout(avisoT);
+    apagarSonido();
+    capa.hidden = true;
+    capa.classList.remove('sale');
+    capa.style.opacity = '';
+    aviso.classList.remove('visible');
+    apertura = null;
+  };
+  const control = crearControl({
+    guion, lineas: T.apertura.lineas,
+    alEmpezarPartida: () => { capa.classList.add('sale'); try { jugar(); } catch { } },
+    alTerminar: cerrar,
+  });
+
+  mostrar('juego');
+  $('apertura-texto').textContent = T.apertura.lineas.join(' ');
+  aviso.textContent = matchMedia('(hover: hover) and (pointer: fine)').matches ? T.apertura.saltarTeclado : T.apertura.saltar;
+  capa.setAttribute('aria-label', T.apertura.etiqueta);
+  capa.hidden = false;
+  try {
+    dibujo = crearDibujoApertura($('apertura-lienzo'), { lineas: T.apertura.lineas, nombre: T.chispa, hora: T.apertura.hora, guion });
+    dibujo.dibujar(0); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
+  } catch {
+    control.forzar();
+    return;
+  }
+  apertura = { control, dibujo, saltar: () => { control.saltar(); capa.classList.add('sale'); apagarSonido(); } };
+  apagarSonido = guion.quieto ? () => { } : (S.sonarAmbiente() || (() => { }));
+  if (guion.quieto) S.sonarEncender();
+  avisoT = setTimeout(() => aviso.classList.add('visible'), 700);
+  // el reloj de seguridad: si los cuadros no llegan, se juega igual
+  vigia = setTimeout(() => control.forzar(), guion.fin + 2500);
+
+  const inicio = performance.now();
+  const sonidos = { encender: S.sonarEncender, chispa: S.sonarChispa, letra: S.sonarLetra, destello: S.sonarDestello };
+  const cuadroApertura = ahora => {
+    if (control.terminada) return;
+    const golpes = control.avanzar(ahora - inicio);
+    for (const gp of golpes) if (!guion.quieto || gp === 'encender') sonidos[gp] && sonidos[gp]();
+    if (control.terminada) return;
+    try { dibujo.dibujar(control.t); } catch { control.forzar(); return; }
+    capa.style.opacity = String(control.opacidad);
+    rafId = requestAnimationFrame(cuadroApertura);
+  };
+  rafId = requestAnimationFrame(cuadroApertura);
+}
+
+// un toque en cualquier lado la salta; el toque no llega a la partida de abajo
+for (const tipo of ['pointerdown', 'pointerup', 'click']) {
+  $('apertura').addEventListener(tipo, e => {
+    e.stopPropagation();
+    if (tipo === 'pointerdown' && apertura) apertura.saltar();
+  });
+}
+addEventListener('keydown', e => {
+  if (!apertura) return;
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Spacebar') { e.preventDefault(); apertura.saltar(); }
+}, true);
+addEventListener('resize', () => { if (apertura) try { apertura.dibujo.redimensionar(); } catch { } });
+
 // ---------- partida ----------
 let partida = null, modo = null, retoActual = null, bucle = 0, acumulado = 0, antes = 0, ayudaPaso = 0, finalizando = false;
 
-function empezar(tipo) {
+function empezar(tipo, { torreEncendida = false } = {}) {
   S.despertar();
   modo = tipo;
   let nivel;
@@ -170,7 +260,9 @@ function empezar(tipo) {
   $('combo').classList.remove('alto');
   $('ayuda').hidden = true;
   $('tarjeta-regla').hidden = true;
-  setTimeout(() => escena.encenderTorre(performance.now()), 500);
+  // si viene de la apertura, la torre ya está encendida: la luz sigue donde quedó
+  if (torreEncendida) escena.encenderTorre(performance.now() - 1000);
+  else setTimeout(() => escena.encenderTorre(performance.now()), 500);
   medir(tipo === 'reto' ? 'reto' : 'partida');
   antes = performance.now();
   acumulado = 0;
@@ -376,9 +468,63 @@ function terminar() {
   $('compartido').hidden = true;
   ultimo.imagen = prepararImagen(ultimo);
   pintarAnoche();
+  pintarProxima();
   mostrar('fin');
   $('fin').scrollTop = 0;
 }
+
+// La hora que sigue todavía no está: se dice claro, sin fecha, y se ofrece lo que sí se puede hacer ya:
+// el reto (el de hoy si falta, o el de mañana con su racha) y mejorar las estrellas.
+function pintarProxima() {
+  const P = T.proxima;
+  const caja = $('proxima');
+  const cabeza = el('div', 'proxima-cabeza');
+  const lente = el('div', 'proxima-lente');
+  lente.innerHTML = aSVG(LENTE_CASTILLO, PALETA_LENTE) + aSVG(ARANA, PALETA_ARANA, 'arana');
+  const titulos = el('div', 'proxima-titulos');
+  const h = el('h3', '', P.titulo);
+  h.id = 'proxima-titulo';
+  const sub = el('p', 'proxima-sub');
+  sub.append(el('span', '', P.lente), el('span', 'pronto', P.pronto));
+  titulos.append(el('p', 'rotulo', P.rotulo), h, sub);
+  cabeza.append(lente, titulos);
+
+  const ya = el('div', 'proxima-ya');
+  ya.append(el('p', 'rotulo', P.mientras));
+  const fila = (etiqueta, icono, titulo, texto, accion, alTocar) => {
+    const f = el(etiqueta, 'ya');
+    if (etiqueta === 'button') { f.type = 'button'; f.addEventListener('click', alTocar); }
+    const i = el('span', 'ya-icono');
+    i.innerHTML = icono;
+    const c = el('span', 'ya-cuerpo');
+    c.append(el('b', '', titulo), el('span', '', texto));
+    if (accion) c.append(el('span', 'accion', accion));
+    f.append(i, c);
+    return f;
+  };
+  const r = retoDeHoy(Date.now(), anoche);
+  const racha = rachaActual(datos, r.fecha);
+  const calendario = aSVG(CALENDARIO, PALETA_CALENDARIO);
+  if (datos.retos && datos.retos[r.fecha]) {
+    // a qué hora de su teléfono sale el reto de mañana (cambia a la medianoche de Venezuela)
+    const sale = new Date(Date.parse(r.fecha + 'T04:00:00Z') + 86400000);
+    let hora = '00:00';
+    try { hora = sale.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false }); } catch { }
+    ya.append(fila('div', calendario, P.retoManana(r.numero + 1), P.retoMananaTexto(hora, racha, sale.toDateString() === new Date().toDateString())));
+  } else {
+    ya.append(fila('button', calendario, P.retoHoy(r.numero), P.retoHoyTexto(T.cambios[r.cambio], racha), P.jugarReto, () => empezarReto()));
+  }
+  const e = Math.max(0, Math.min(3, datos.mejorEstrellas || 0));
+  let mini = '<span class="mini">';
+  for (let k = 0; k < 3; k++) mini += aSVG(ESTRELLA, { y: '#facc15' }, k < e ? '' : 'apagada');
+  mini += '</span>';
+  ya.append(fila('button', mini, P.estrellas(e), P.estrellasTexto(datos.mejor || 0, ESTRELLAS[e] || 0, e), P.mejorar,
+    () => empezar('partida')));
+
+  caja.replaceChildren(cabeza, el('p', 'proxima-texto', P.texto), ya);
+}
+// tocar la tarjeta cuenta una vez por visita: así se sabe si la hora que sigue despierta interés
+$('proxima').addEventListener('click', () => medir('proxima'));
 
 // Esto pasó anoche: un archivo que Atalaya escribe una vez al día con totales redondeados de un servidor real
 async function pintarAnoche() {
@@ -423,8 +569,9 @@ $('compartir').addEventListener('click', async () => {
 });
 
 // ---------- botones ----------
-$('empezar').addEventListener('click', () => empezar('partida'));
-$('reto').addEventListener('click', empezarReto);
+$('empezar').addEventListener('click', () => tomarGuardia('partida'));
+$('reto').addEventListener('click', () => tomarGuardia('reto'));
+$('ver-apertura').addEventListener('click', () => verApertura('partida'));
 $('otra-vez').addEventListener('click', () => { medir('otra-vez'); if (ultimo && ultimo.modo === 'reto') empezarReto(); else empezar('partida'); });
 $('volver').addEventListener('click', portada);
 addEventListener('resize', () => { if ($('juego').classList.contains('activa')) escena.redimensionar(); });

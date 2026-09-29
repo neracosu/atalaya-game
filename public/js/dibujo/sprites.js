@@ -116,6 +116,82 @@ export const BIEN = ['.......', '......g', '.....gg', 'g...gg.', 'gg.gg..', '.gg
 export const FALLA = ['r.....r', 'rr...rr', '.rr.rr.', '..rrr..', '.rr.rr.', 'rr...rr', 'r.....r'];
 export const PALETA_MARCAS = { g: '#22c55e', r: '#ef4444' };
 
+// ---- la apertura: la ciudad vista desde el aire ----
+// Chispa, el robot compañero: el mismo robot 14x17 que en el monitor Atalaya representa a una sesión de Claude Code
+// trabajando (web/js/pixeldata.js, mismo autor y licencia). e = ojos, a = luz de la antena.
+const CHISPA_CABEZA = [
+  '......a.......',
+  '......g.......',
+  '...oooooooo...',
+  '..oBBBBBBBBo..',
+  '..oBvvvvvvBo..',
+  '..oBveevveBo..',
+  '..oBvvvvvvBo..',
+  '..obBBBBBBbo..',
+  '...oooooooo...',
+];
+const CHISPA_PARPADEO = CHISPA_CABEZA.map((r, i) => i === 5 ? '..oBvvvvvvBo..' : r);
+const CHISPA_CUERPO = ['..oBBhhhhBBo..', '.goBBhBBhBBog.', '.goBBBBBBBBog.', '..obbbbbbbbo..', '...oooooooo...'];
+const CHISPA_SALUDO = ['..oBBhhhhBBo.g', '.goBBhBBhBBog.', '..oBBBBBBBBo..', '..obbbbbbbbo..', '...oooooooo...'];
+const CHISPA_PIES = ['...og....go...', '...oo....oo...'];
+export const CHISPA = {
+  quieto: [...CHISPA_CABEZA, ...CHISPA_CUERPO, ...CHISPA_PIES],
+  parpadeo: [...CHISPA_PARPADEO, ...CHISPA_CUERPO, ...CHISPA_PIES],
+  saludo: [...CHISPA_CABEZA, ...CHISPA_SALUDO, ...CHISPA_PIES],
+};
+const CHISPA_BASE = { o: '#050814', B: '#d97757', b: '#8d4d38', h: '#efb9a3', v: '#0b1020', g: '#94a3b8' };
+// dormido: ojos apagados (del color del visor) y la antena sin luz; despierto: ojos claros y antena ámbar
+export const PALETA_CHISPA_DORMIDO = { ...CHISPA_BASE, e: '#0b1020', a: '#475569' };
+export const PALETA_CHISPA = { ...CHISPA_BASE, e: '#e0f7ff', a: '#fbbf24' };
+
+// la torre vista desde arriba, 14x14: el techo octogonal con la baliza en el centro
+export const TORRE_AIRE = [
+  '....kkkkkk....',
+  '..kkggggggkk..',
+  '.kggGGGGGGggk.',
+  '.kgGggggggGgk.',
+  'kgGgvvvvvvgGgk',
+  'kgGgvwwwwvgGgk',
+  'kgGgvwbbwvgGgk',
+  'kgGgvwbbwvgGgk',
+  'kgGgvwwwwvgGgk',
+  'kgGgvvvvvvgGgk',
+  '.kgGggggggGgk.',
+  '.kggGGGGGGggk.',
+  '..kkggggggkk..',
+  '....kkkkkk....',
+];
+export const PALETA_TORRE_AIRE = { k: '#050814', g: '#243049', G: '#2f3c58', v: '#141d30', w: '#1e293b', b: '#164e63' };
+export const PALETA_TORRE_AIRE_ENCENDIDA = { ...PALETA_TORRE_AIRE, g: '#334155', G: '#fde68a', v: '#0e7490', w: '#a5f3fc', b: '#f0fdff' };
+
+// ---- la tarjeta de la hora siguiente: la lente del Castillo (18x18) con su torre adentro, y la araña 11x9 ----
+export const LENTE_CASTILLO = [
+  '......mmmmmm......',
+  '....mmMMMMMMmm....',
+  '...mMMccccccMMm...',
+  '..mMccccccccccMm..',
+  '.mMcccck.kccccccm.',
+  '.mMccckkkkkcccccm.',
+  'mMcccckwwwkccccMMm',
+  'mMcccckkkkkccccMMm',
+  'mMcccckwkwkccccMMm',
+  'mMcccckkkkkccccMMm',
+  'mMcckkkkkkkkkccMMm',
+  'mMcckwkkkkkwkccMMm',
+  '.mMckkkkkkkkkccMm.',
+  '.mMhhhhhhhhhhhhMm.',
+  '..mMhhhhhhhhhhMm..',
+  '...mMMhhhhhhMMm...',
+  '....mmMMMMMMmm....',
+  '......mmmmmm......',
+];
+export const PALETA_LENTE = { m: '#78350f', M: '#b45309', c: '#1e1b4b', k: '#312e81', w: '#fde68a', h: '#2e1065' };
+export const ARANA = ['.k.......k.', '..k.....k..', 'k..kkkkk..k', '.k.kkkkk.k.', '..kkrkrkk..', '.k.kkkkk.k.', 'k..kkkkk..k', '..k.....k..', '.k.......k.'];
+export const PALETA_ARANA = { k: '#e2e8f0', r: '#ef4444' };
+// el calendario del reto, 11x11: la hoja con sus anillas y el día marcado
+export const CALENDARIO = ['..k.....k..', 'rrkrrrrrkrr', 'rrrrrrrrrrr', 'wwwwwwwwwww', 'wdwdwdwdwdw', 'wwwwwwwwwww', 'wdwdwyyywdw', 'wwwwwyyywww', 'wdwdwyyywdw', 'wwwwwwwwwww', 'wwwwwwwwwww'];
+export const PALETA_CALENDARIO = { k: '#94a3b8', r: '#ef4444', w: '#e2e8f0', y: '#f59e0b', d: '#94a3b8' };
+
 // Convierte un sprite en un canvas a escala entera (sin suavizado: cada pixel del dibujo es un cuadro exacto)
 export function aCanvas(filas, paleta, escala) {
   const alto = filas.length, ancho = filas[0].length;

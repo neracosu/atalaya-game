@@ -35,8 +35,8 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
 - **Qué se cuenta**, siempre como un nombre fijo y sumado por día: que se vio la portada, que empezó la primera
   partida, que la terminó y con cuántas estrellas (0 a 3), que llegó a 1, 2, 3, 5 o 10 reintentos, que empezó el
   reto del día, que compartió su resultado o el informe de su puerta, que revisó un dominio (solo el hecho), que
-  tocó «vigilar» y si es la primera visita, vuelve al día siguiente o vuelve otro día, y cuando llega a 3 y a 7
-  días distintos. El script de Atalaya suma además el tiempo con la página a la vista, cuánto bajó en la portada,
+  tocó «vigilar», que tocó la tarjeta de la hora que sigue («Llega pronto») y si es la primera visita, vuelve
+  al día siguiente o vuelve otro día, y cuando llega a 3 y a 7 días distintos. El script de Atalaya suma además el tiempo con la página a la vista, cuánto bajó en la portada,
   la página de donde llegó (sin lo que va después del `?`), que envió un formulario y los clics a otros sitios
   (solo el nombre del sitio).
 - **Qué no**: ni el dominio que escribe, ni los puntos exactos, ni la partida, ni un identificador suyo. Sin
@@ -44,7 +44,8 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
   la usa solo como tope contra abusos. Aparte, como todo sitio web, el servidor lleva sus registros de acceso.
 - **Qué queda en su teléfono**: la fecha de su última visita y cuántos días distintos jugó (la clave
   `guardia-visitas`), para saber si volvió. Eso no se envía: solo sale «volvió al día siguiente» u «otro día».
-  Puede borrarla con los datos del sitio.
+  Puede borrarla con los datos del sitio. Aparte, el juego guarda sus ajustes, su mejor marca y sus retos
+  (`guardia-v1`) y si ya vio la apertura (`guardia-apertura`); nada de eso sale del teléfono.
 - **Cuándo no se mide nada**: si su navegador pide no ser seguido (Global Privacy Control o Do Not Track), si
   bloquea el script o si el juego corre en otro sitio (su máquina, una copia). El juego funciona igual.
 
@@ -99,7 +100,8 @@ public/                 lo que se publica, tal cual
   js/sonido.js          efectos generados por código, sin archivos
   js/medir.js           qué se mide del embudo y cómo (ver «Qué se mide y qué no»)
   js/motor/             el núcleo determinista: la lógica de cada nivel, sin dibujo
-  js/dibujo/            sprites, la escena de la partida y las postales (imagen del resultado y de «Su puerta»)
+  js/apertura.js        la apertura: el guion en datos, si toca verla y el control del tiempo (sin pantalla)
+  js/dibujo/            sprites, la escena de la partida, la apertura y las postales (imagen del resultado y de «Su puerta»)
   fuentes/              Silkscreen y Space Grotesk, servidas desde el propio sitio
 scripts/                herramientas que no se publican (la tarjeta, los íconos y el embudo)
 test/                   pruebas con node --test

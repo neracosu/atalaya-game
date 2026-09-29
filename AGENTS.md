@@ -16,8 +16,10 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
 - `public/js/app.js`: la interfaz. Pantallas, entrada (deslizar, tocar, flechas), resultado y compartir.
 - `public/js/textos.js`: **todos** los textos que ve el jugador.
 - `public/js/motor/`: el núcleo determinista. `peaje.js` es la lógica del nivel; `azar.js`, el azar con semilla.
-- `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida en canvas) y
-  `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
+- `public/js/apertura.js`: la apertura («La torre vacía» en corto, solo la primera vez): el guion como datos,
+  si toca verla y el control del tiempo, sin pantalla para poder probarlo en Node. Termina dentro de la partida.
+- `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida en canvas), `apertura.js`
+  (el dibujo de la apertura) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
 - `public/js/reto.js`: el reto del día, la racha y lo que se guarda en el teléfono. Si existe
   `datos/anoche.json` de la noche de ayer, el reto toma su tono (`tonoDeAnoche`): la misma semilla con más
   ráfagas, un final más apretado o más clientes, según las cifras. Es determinista: igual para todos ese día.

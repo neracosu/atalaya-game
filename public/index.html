@@ -51,6 +51,7 @@
           <label><input type="checkbox" id="aj-sonido" checked> <span>Sonido</span></label>
           <label><input type="checkbox" id="aj-vibracion" checked> <span>Vibración</span></label>
           <label><input type="checkbox" id="aj-movimiento"> <span>Menos movimiento</span></label>
+          <button id="ver-apertura" class="boton enlace ver-apertura" type="button">Ver la apertura</button>
         </details>
         <p class="pie"><a href="https://github.com/neracosu/atalaya-game" rel="noopener">Código fuente</a> · <a href="https://neracosu.com/atalaya" rel="noopener">Qué es Atalaya</a></p>
       </div>
@@ -75,6 +76,11 @@
       <div class="lado izq"><span class="flecha">&larr;</span><span>Bloquear</span></div>
       <div class="lado der"><span>Pasar</span><span class="flecha">&rarr;</span></div>
     </div>
+    <div id="apertura" class="apertura" role="dialog" aria-label="Apertura del juego" hidden>
+      <canvas id="apertura-lienzo" aria-hidden="true"></canvas>
+      <p id="apertura-texto" class="solo-lector"></p>
+      <p id="apertura-saltar" class="apertura-saltar">Toque para saltar</p>
+    </div>
   </section>
 
   <section id="fin" class="pantalla" aria-labelledby="fin-titulo">
@@ -90,6 +96,8 @@
         <button id="compartir" class="boton" type="button">Compartir</button>
       </div>
       <p id="compartido" class="compartido" hidden></p>
+
+      <article id="proxima" class="proxima" aria-labelledby="proxima-titulo"></article>
 
       <article class="ficha">
         <h3>Esto pasa de verdad</h3>
