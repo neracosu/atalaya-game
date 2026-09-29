@@ -11,6 +11,8 @@ import { T } from './textos.js';
 import * as S from './sonido.js';
 import { medir } from './medir.js';
 import { debeVerse, marcarVista, crearControl, GUION, GUION_QUIETO } from './apertura.js';
+import { crearMusica, cargaDe } from './musica.js';
+import { ajustesDe } from './ajustes.js';
 import { crearDibujoApertura } from './dibujo/apertura.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
 
 const REPO = 'https://github.com/neracosu/atalaya-game';
@@ -18,7 +20,20 @@ const ATALAYA = 'https://neracosu.com/atalaya';
 
 const $ = id => document.getElementById(id);
 let datos = leer();
-datos.ajustes = { sonido: true, vibracion: true, asistido: false, movimiento: false, ...(datos.ajustes || {}) };
+// los ajustes, con la música y los efectos por separado (el viejo «sonido» se migra: apagado sigue apagado)
+datos.ajustes = ajustesDe(datos.ajustes);
+
+// La música (musica.js) usa el contexto de sonido.js, que solo existe después del primer toque: antes, nada suena.
+let mus = null;
+function musica() {
+  if (!mus && S.contexto() && S.salidaMusica()) try { mus = crearMusica(S.contexto(), S.salidaMusica()); mus.mudo(!datos.ajustes.musica); } catch { mus = null; }
+  return mus;
+}
+function aplicarSonido() {
+  S.activarEfectos(datos.ajustes.efectos);
+  S.ajustarMusica(datos.ajustes.musica, datos.ajustes.volumenMusica);
+  if (mus) mus.mudo(!datos.ajustes.musica);
+}
 
 const menosMovimiento = () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches;
 const escena = crearEscena($('mundo'), { menosMovimiento });
@@ -45,11 +60,16 @@ function portada() {
   $('torre-portada').innerHTML = aSVG(TORRE, PALETA_TORRE_ENCENDIDA);
   $('ver-apertura').textContent = T.apertura.ver;
   pintarReto();
-  for (const [id, k] of [['aj-asistido', 'asistido'], ['aj-sonido', 'sonido'], ['aj-vibracion', 'vibracion'], ['aj-movimiento', 'movimiento']]) {
+  for (const [id, k] of [['aj-asistido', 'asistido'], ['aj-musica', 'musica'], ['aj-efectos', 'efectos'], ['aj-vibracion', 'vibracion'], ['aj-movimiento', 'movimiento']]) {
     $(id).checked = !!datos.ajustes[k];
-    $(id).onchange = () => { datos.ajustes[k] = $(id).checked; guardar(datos); S.activarSonido(datos.ajustes.sonido); };
+    $(id).onchange = () => { datos.ajustes[k] = $(id).checked; guardar(datos); aplicarSonido(); $('aj-volumen').disabled = !datos.ajustes.musica; };
   }
-  S.activarSonido(datos.ajustes.sonido);
+  $('aj-volumen').value = String(Math.round(datos.ajustes.volumenMusica * 100));
+  $('aj-volumen').disabled = !datos.ajustes.musica;
+  $('aj-volumen').oninput = () => { datos.ajustes.volumenMusica = Number($('aj-volumen').value) / 100; aplicarSonido(); };
+  $('aj-volumen').onchange = () => guardar(datos);
+  aplicarSonido();
+  if (mus) mus.parar();
   mostrar('portada');
   $('portada').scrollTop = 0;
 }
@@ -169,6 +189,7 @@ function verApertura(tipo = 'partida') {
   const capa = $('apertura'), aviso = $('apertura-saltar');
   const jugar = () => (tipo === 'reto' ? leerAnoche().then(() => empezar('reto', { torreEncendida: true })) : empezar(tipo, { torreEncendida: true }));
   let dibujo = null, apagarSonido = () => { }, vigia = 0, avisoT = 0, rafId = 0;
+  aplicarSonido();
 
   const cerrar = () => {
     cancelAnimationFrame(rafId);
@@ -182,7 +203,8 @@ function verApertura(tipo = 'partida') {
   };
   const control = crearControl({
     guion, lineas: T.apertura.lineas,
-    alEmpezarPartida: () => { capa.classList.add('sale'); try { jugar(); } catch { } },
+    // vista entera: la partida arrancó por el guion, con la cámara ya en la barrera
+    alEmpezarPartida: motivo => { if (motivo === 'guion') medir('apertura-completa'); capa.classList.add('sale'); try { jugar(); } catch { } },
     alTerminar: cerrar,
   });
 
@@ -193,26 +215,31 @@ function verApertura(tipo = 'partida') {
   capa.hidden = false;
   try {
     dibujo = crearDibujoApertura($('apertura-lienzo'), { lineas: T.apertura.lineas, nombre: T.chispa, hora: T.apertura.hora, guion });
-    dibujo.dibujar(0); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
+    dibujo.dibujar(0, performance.now()); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
   } catch {
     control.forzar();
     return;
   }
-  apertura = { control, dibujo, saltar: () => { control.saltar(); capa.classList.add('sale'); apagarSonido(); } };
-  apagarSonido = guion.quieto ? () => { } : (S.sonarAmbiente() || (() => { }));
+  // el toque que la salta no cuenta como jugada: la capa se lo queda (ver abajo) y la partida empieza después
+  apertura = { control, dibujo, saltar: () => { const t = control.t; if (control.saltar() && t < guion.partida) medir('apertura-saltada', t); capa.classList.add('sale'); apagarSonido(); } };
+  // la música empieza grave con la apertura; con menos movimiento, directo el tema suave del peaje. Si la música
+  // está apagada, queda el fondo grave de antes entre los efectos.
+  const m = datos.ajustes.musica ? musica() : null;
+  if (m) { if (guion.quieto) m.peaje(); else m.apertura(); }
+  else if (!guion.quieto) apagarSonido = S.sonarAmbiente(guion.bajada / 1000 + 0.6) || (() => { });
   if (guion.quieto) S.sonarEncender();
   avisoT = setTimeout(() => aviso.classList.add('visible'), 700);
   // el reloj de seguridad: si los cuadros no llegan, se juega igual
   vigia = setTimeout(() => control.forzar(), guion.fin + 2500);
 
   const inicio = performance.now();
-  const sonidos = { encender: S.sonarEncender, chispa: S.sonarChispa, letra: S.sonarLetra, destello: S.sonarDestello };
+  const sonidos = { encender: S.sonarEncender, chispa: S.sonarChispa, letra: S.sonarLetra, niebla: S.sonarNiebla, aterriza: S.sonarAterriza };
   const cuadroApertura = ahora => {
     if (control.terminada) return;
     const golpes = control.avanzar(ahora - inicio);
     for (const gp of golpes) if (!guion.quieto || gp === 'encender') sonidos[gp] && sonidos[gp]();
     if (control.terminada) return;
-    try { dibujo.dibujar(control.t); } catch { control.forzar(); return; }
+    try { dibujo.dibujar(control.t, ahora); } catch (e) { console.error(e); control.forzar(); return; }
     capa.style.opacity = String(control.opacidad);
     rafId = requestAnimationFrame(cuadroApertura);
   };
@@ -264,6 +291,8 @@ function empezar(tipo, { torreEncendida = false } = {}) {
   if (torreEncendida) escena.encenderTorre(performance.now() - 1000);
   else setTimeout(() => escena.encenderTorre(performance.now()), 500);
   medir(tipo === 'reto' ? 'reto' : 'partida');
+  // la música: si venía de la apertura, sigue sin corte; si no, el tema suave empieza en el próximo tiempo
+  if (datos.ajustes.musica && musica()) mus.peaje();
   antes = performance.now();
   acumulado = 0;
   cancelAnimationFrame(bucle);
@@ -282,6 +311,8 @@ function cuadro(ahora) {
     if (evs.length) { escena.eventos(evs, partida); reaccionar(evs); }
   }
   escena.dibujar(ahora);
+  // cuánto aprieta la partida, para las capas de la música
+  if (mus) mus.carga(cargaDe({ fila: partida.fila.length, filaMax: partida.nivel.fila, enRafaga: partida.enRafaga > 0, racha: partida.racha, paso: partida.paso, duracion: partida.nivel.duracion }));
   $('tiempo-barra').style.transform = `scaleX(${Math.max(0, 1 - partida.paso / partida.nivel.duracion)})`;
   if (partida.terminada) {
     if (!finalizando) { finalizando = true; setTimeout(terminar, 900); }
@@ -443,6 +474,7 @@ function terminar() {
   partida = null;
   medir('fin-peaje', estrellas);
   S.sonarFin(estrellas > 0);
+  if (mus) mus.cerrar(estrellas);
 
   $('fin-rotulo').textContent = modo === 'reto' ? `${T.reto(retoActual.numero)}${contado ? '' : ' · sin contar'}` : T.hora;
   $('fin-titulo').textContent = T.fin[r.motivoFin];

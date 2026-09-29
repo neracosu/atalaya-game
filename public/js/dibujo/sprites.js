@@ -144,7 +144,8 @@ const CHISPA_BASE = { o: '#050814', B: '#d97757', b: '#8d4d38', h: '#efb9a3', v:
 export const PALETA_CHISPA_DORMIDO = { ...CHISPA_BASE, e: '#0b1020', a: '#475569' };
 export const PALETA_CHISPA = { ...CHISPA_BASE, e: '#e0f7ff', a: '#fbbf24' };
 
-// la torre vista desde arriba, 14x14: el techo octogonal con la baliza en el centro
+// la torre vista desde arriba y un poco de costado, 14x21: el techo con la baliza al centro y, debajo, la cara sur
+// de la sala (con sus ventanas) y del fuste. Así se lee como una torre y no como un anillo.
 export const TORRE_AIRE = [
   '....kkkkkk....',
   '..kkggggggkk..',
@@ -158,11 +159,20 @@ export const TORRE_AIRE = [
   'kgGgvvvvvvgGgk',
   '.kgGggggggGgk.',
   '.kggGGGGGGggk.',
-  '..kkggggggkk..',
-  '....kkkkkk....',
+  '.kkkggggggkkk.',
+  '.kssssssssssk.',
+  '.kslsslsslslk.',
+  '.kssssssssssk.',
+  '..kkffffffkk..',
+  '...kfLffLfk...',
+  '...kffffffk...',
+  '...kfLffLfk...',
+  '...kkkkkkkk...',
 ];
-export const PALETA_TORRE_AIRE = { k: '#050814', g: '#243049', G: '#2f3c58', v: '#141d30', w: '#1e293b', b: '#164e63' };
-export const PALETA_TORRE_AIRE_ENCENDIDA = { ...PALETA_TORRE_AIRE, g: '#334155', G: '#fde68a', v: '#0e7490', w: '#a5f3fc', b: '#f0fdff' };
+export const PALETA_TORRE_AIRE = { k: '#050814', g: '#243049', G: '#2f3c58', v: '#141d30', w: '#1e293b', b: '#164e63',
+  s: '#172238', l: '#1e293b', f: '#1c2740', L: '#27344f' };
+export const PALETA_TORRE_AIRE_ENCENDIDA = { ...PALETA_TORRE_AIRE, g: '#3b4a66', G: '#64748b', v: '#0e7490', w: '#a5f3fc', b: '#f0fdff',
+  s: '#0e5f75', l: '#fde68a', f: '#334155', L: '#fde68a' };
 
 // ---- la tarjeta de la hora siguiente: la lente del Castillo (18x18) con su torre adentro, y la araña 11x9 ----
 export const LENTE_CASTILLO = [

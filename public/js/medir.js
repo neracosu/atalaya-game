@@ -5,6 +5,7 @@
 // Si el script no carga (bloqueador, sin red, una copia del juego en otro sitio), el juego funciona igual.
 
 import { hoyEnVenezuela } from './reto.js';
+import { tramoDeSalto } from './apertura.js';
 
 const SCRIPT = 'https://atalaya.neracosu.com/a.js';
 // el identificador público del sitio del juego en la analítica: va en la página de todos modos, no es un secreto
@@ -21,6 +22,9 @@ export const EVENTOS = [
   'fin-otra-0', 'fin-otra-1', 'fin-otra-2', 'fin-otra-3',
   'reintento-1', 'reintento-2', 'reintento-3', 'reintento-5', 'reintento-10',
   'comparte', 'comparte-puerta', 'dominio', 'vigilar', 'landing-atalaya', 'landing-empezar', 'toca-hora-2',
+  // la apertura: si se vio entera o en qué tramo de tres segundos se saltó (0 el encendido, 3 el texto, 6 el
+  // final del texto y el comienzo de la bajada, 9 la niebla, 12 el aterrizaje)
+  'apertura-completa', 'apertura-saltada-0', 'apertura-saltada-3', 'apertura-saltada-6', 'apertura-saltada-9', 'apertura-saltada-12',
 ];
 const PERMITIDOS = new Set(EVENTOS);
 const HITOS_REINTENTO = new Set([1, 2, 3, 5, 10]);
@@ -45,6 +49,7 @@ export function crearMedidor(enviar) {
   let empezadas = 0, terminadas = 0;
   const hechos = new Set();
   const mandar = nombre => { if (PERMITIDOS.has(nombre)) enviar(nombre); };
+  // el segundo argumento son las estrellas al terminar, o el milisegundo en que se saltó la apertura
   return function medir(evento, estrellas) {
     if (evento === 'partida' || evento === 'reto') {
       empezadas++;
@@ -55,6 +60,11 @@ export function crearMedidor(enviar) {
       terminadas++;
       const e = Math.max(0, Math.min(3, estrellas | 0));
       mandar((terminadas === 1 ? 'fin-primera-' : 'fin-otra-') + e);
+    } else if (evento === 'apertura-saltada' || evento === 'apertura-completa') {
+      // una vez por visita, lo que haya pasado primero (se puede volver a ver desde los ajustes)
+      if (hechos.has('apertura')) return;
+      hechos.add('apertura');
+      mandar(evento === 'apertura-completa' ? evento : 'apertura-saltada-' + tramoDeSalto(estrellas));
     } else if (UNA_VEZ[evento] && !hechos.has(evento)) {
       hechos.add(evento);
       mandar(UNA_VEZ[evento]);

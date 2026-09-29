@@ -63,6 +63,9 @@ a { color: var(--cian); }
 .ajustes label { display: grid; grid-template-columns: auto 1fr; gap: .1rem .6rem; align-items: center; padding: .45rem 0; }
 .ajustes input { width: 22px; height: 22px; accent-color: var(--cian); }
 .ajustes small { grid-column: 2; color: var(--tinta-3); }
+.ajustes .volumen { grid-template-columns: 1fr; padding: 0 0 .45rem 2.2rem; font-size: .88rem; color: var(--tinta-3); }
+.ajustes .volumen input { width: 100%; height: 28px; margin: 0; }
+.ajustes .volumen input:disabled { opacity: .4; }
 .pie { text-align: center; font-size: .85rem; color: var(--tinta-3); margin: 0; }
 
 /* ---------- partida ---------- */

@@ -9,6 +9,116 @@ import { T } from '../textos.js';
 const ANCHO_AUTO = 20;
 const HUECO = 3;
 
+// ---- la vista de frente, compartida con la apertura ----
+// La apertura baja del cielo hasta este mismo cuadro: por eso la disposición, el decorado y cada capa se pintan
+// con estas funciones, que aceptan un corrimiento (dx, dy) en píxeles del dibujo. Con (0, 0) es la partida.
+
+// unos 110 píxeles del dibujo a lo ancho: un auto mide la quinta parte de la pantalla
+export function disposicion(ancho, alto) {
+  const u = Math.max(2, Math.floor(ancho / 110));
+  const W = Math.floor(ancho / u), H = Math.floor(alto / u);
+  const calle = Math.floor(H * 0.64);
+  return { u, W, H, calle, barrera: Math.floor(W * 0.62), torre: { x: W - 16 * 2 - 2, y: calle - 3 - TORRE.length * 2 } };
+}
+
+// azar solo para el decorado (estrellas, ventanas), con su propia semilla: no toca la partida
+export function decoradoCiudad(W, calle) {
+  let s = 20260928;
+  const r = () => ((s = (Math.imul(s ^ (s >>> 15), 2246822507) + 0x9e3779b9) >>> 0) / 4294967296);
+  const estrellas = Array.from({ length: 50 }, () => ({ x: (r() * W) | 0, y: (r() * calle * 0.55) | 0, f: r() * 6.28 }));
+  const edificios = [];
+  let x = -2;
+  while (x < W) {
+    const ancho = 8 + ((r() * 10) | 0), alto = 14 + ((r() * 36) | 0);
+    const ventanas = [];
+    for (let vy = 3; vy < alto - 3; vy += 4) for (let vx = 2; vx < ancho - 2; vx += 3) if (r() < 0.45) ventanas.push([vx, vy, r() * 20]);
+    edificios.push({ x, ancho, alto, ventanas, tono: r() });
+    x += ancho + 1 + ((r() * 3) | 0);
+  }
+  return { estrellas, edificios };
+}
+
+// el cielo: el degradé llega hasta la calle, que con la cámara más alta queda más abajo (dy > 0)
+export function pintarCielo(g, L, estrellas, ahora, quieto, dx = 0, dy = 0) {
+  const u = L.u, hasta = Math.max(1, (L.calle + dy) * u);
+  const grad = g.createLinearGradient(0, 0, 0, hasta);
+  grad.addColorStop(0, '#050914');
+  grad.addColorStop(1, '#0c1a33');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, g.canvas.width, Math.min(g.canvas.height, hasta));
+  for (const e of estrellas) {
+    const b = quieto ? 0.7 : 0.45 + 0.4 * Math.sin(ahora / 900 + e.f);
+    g.fillStyle = `rgba(226,232,240,${b.toFixed(2)})`;
+    g.fillRect(Math.round(e.x + dx) * u, Math.round(e.y + dy) * u, u, u);
+  }
+}
+
+export function pintarCiudad(g, L, edificios, ahora, quieto, dx = 0, dy = 0) {
+  const u = L.u, base = L.calle - 3 + dy;
+  for (const ed of edificios) {
+    const x = ed.x + dx;
+    if ((x + ed.ancho) * u < 0 || x * u > g.canvas.width) continue;
+    g.fillStyle = ed.tono > 0.5 ? '#111a2e' : '#0e1627';
+    g.fillRect(x * u, (base - ed.alto) * u, ed.ancho * u, ed.alto * u);
+    g.fillStyle = '#fde68a';
+    g.globalAlpha = 0.55;
+    for (const [vx, vy, fase] of ed.ventanas) {
+      if (!(quieto || ((ahora / 1000 + fase) % 20) > 2)) continue;
+      g.fillRect((x + vx) * u, (base - ed.alto + vy) * u, u, u);
+    }
+    g.globalAlpha = 1;
+  }
+}
+
+// la torre de frente y la luz de su baliza, que barre la ciudad (capa de código)
+export function pintarTorre(g, L, img, encendida, ahora, quieto, dx = 0, dy = 0) {
+  const u = L.u, esc = 2, tx = L.torre.x + dx, ty = L.torre.y + dy;
+  if (encendida) {
+    const bx = (tx + 8 * esc) * u, by = (ty + 1 * esc) * u;
+    const ang = quieto ? Math.PI * 1.1 : Math.PI + Math.sin(ahora / 2400) * 0.55;
+    const largo = L.W * u * 0.9, abre = 0.13;
+    const grad = g.createRadialGradient(bx, by, 0, bx, by, largo);
+    grad.addColorStop(0, 'rgba(34,211,238,0.22)');
+    grad.addColorStop(1, 'rgba(34,211,238,0)');
+    g.fillStyle = grad;
+    g.beginPath();
+    g.moveTo(bx, by);
+    g.lineTo(bx + Math.cos(ang - abre) * largo, by + Math.sin(ang - abre) * largo);
+    g.lineTo(bx + Math.cos(ang + abre) * largo, by + Math.sin(ang + abre) * largo);
+    g.closePath();
+    g.fill();
+  }
+  g.drawImage(img, tx * u, ty * u);
+}
+
+export function pintarCalzada(g, L, dx = 0, dy = 0) {
+  const u = L.u, c = L.calle + dy, ancho = g.canvas.width;
+  g.fillStyle = '#1e293b';
+  g.fillRect(0, (c - 3) * u, ancho, 3 * u);
+  g.fillStyle = '#111827';
+  g.fillRect(0, c * u, ancho, 16 * u);
+  g.fillStyle = '#1e293b';
+  g.fillRect(0, (c + 16) * u, ancho, 3 * u);
+  g.fillStyle = '#475569';
+  const x0 = ((dx % 8) + 8) % 8;
+  for (let x = 2 + x0 - 8; x < L.W + 8; x += 8) g.fillRect(x * u, (c + 12) * u, 4 * u, u);
+  // abajo de la calle: el suelo de la ciudad hasta el borde
+  g.fillStyle = '#0a1120';
+  g.fillRect(0, (c + 19) * u, ancho, Math.max(0, g.canvas.height - (c + 19) * u));
+}
+
+// la barrera: rayado rojo y blanco. Cerrada cruza la calle a la altura de los autos, delante del que espera;
+// abierta, apunta hacia arriba. Dos dibujos fijos: nunca se rota un sprite en ángulos raros.
+export function pintarBarrera(g, L, poste, abierta, dx = 0, dy = 0) {
+  const u = L.u, x = L.barrera + 1 + dx, y = L.calle - 12 + dy, c = L.calle + dy;
+  g.drawImage(poste, x * u, y * u);
+  for (let i = 0; i < 16; i++) {
+    g.fillStyle = (i >> 1) % 2 ? '#f8fafc' : '#ef4444';
+    if (abierta) g.fillRect((x + 2) * u, (y - 1 - i) * u, 2 * u, u);
+    else g.fillRect((x + 5 + i) * u, (c + 4) * u, u, 2 * u);
+  }
+}
+
 export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   const g = canvas.getContext('2d');
   let u = 3;            // píxeles del canvas por cada píxel del dibujo
@@ -21,7 +131,7 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   let temblor = 0;
   let abierta = 0;
   let torreEncendida = false, encendidaEn = 0;
-  let estrellas = [], edificios = [];
+  let estrellas = [], edificios = [], L = disposicion(300, 600);
 
   function sprite(tipo, paleta, cuadro) {
     const k = `${tipo}:${paleta}:${cuadro}:${u}`;
@@ -31,26 +141,10 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     }
     return cache.get(k);
   }
-  function fijo(nombre, filas, paleta) {
+  function fijo(nombre, filas, paleta, esc = 1) {
     const k = `${nombre}:${u}`;
-    if (!cache.has(k)) cache.set(k, aCanvas(filas, paleta, u));
+    if (!cache.has(k)) cache.set(k, aCanvas(filas, paleta, u * esc));
     return cache.get(k);
-  }
-
-  // azar solo para el decorado (estrellas, ventanas), con su propia semilla: no toca la partida
-  function decorado() {
-    let s = 20260928;
-    const r = () => ((s = (Math.imul(s ^ (s >>> 15), 2246822507) + 0x9e3779b9) >>> 0) / 4294967296);
-    estrellas = Array.from({ length: 50 }, () => ({ x: (r() * W) | 0, y: (r() * calle * 0.55) | 0, f: r() * 6.28 }));
-    edificios = [];
-    let x = -2;
-    while (x < W) {
-      const ancho = 8 + ((r() * 10) | 0), alto = 14 + ((r() * 36) | 0);
-      const ventanas = [];
-      for (let vy = 3; vy < alto - 3; vy += 4) for (let vx = 2; vx < ancho - 2; vx += 3) if (r() < 0.45) ventanas.push([vx, vy, r() * 20]);
-      edificios.push({ x, ancho, alto, ventanas, tono: r() });
-      x += ancho + 1 + ((r() * 3) | 0);
-    }
   }
 
   function redimensionar() {
@@ -58,15 +152,11 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
-    // unos 110 píxeles del dibujo a lo ancho: un auto mide la quinta parte de la pantalla
-    u = Math.max(2, Math.floor(canvas.width / 110));
-    W = Math.floor(canvas.width / u);
-    H = Math.floor(canvas.height / u);
-    calle = Math.floor(H * 0.64);
-    barrera = Math.floor(W * 0.62);
+    L = disposicion(canvas.width, canvas.height);
+    ({ u, W, H, calle, barrera } = L);
     cache = new Map();
     g.imageSmoothingEnabled = false;
-    decorado();
+    ({ estrellas, edificios } = decoradoCiudad(W, calle));
   }
 
   const lugar = i => barrera - ANCHO_AUTO - 2 - i * (ANCHO_AUTO + HUECO);
@@ -100,89 +190,10 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
 
   function px(v) { return Math.round(v) * u; }
 
-  function cielo(ahora) {
-    const grad = g.createLinearGradient(0, 0, 0, calle * u);
-    grad.addColorStop(0, '#050914');
-    grad.addColorStop(1, '#0c1a33');
-    g.fillStyle = grad;
-    g.fillRect(0, 0, canvas.width, calle * u);
-    const quieto = menosMovimiento();
-    for (const e of estrellas) {
-      const b = quieto ? 0.7 : 0.45 + 0.4 * Math.sin(ahora / 900 + e.f);
-      g.fillStyle = `rgba(226,232,240,${b.toFixed(2)})`;
-      g.fillRect(px(e.x), px(e.y), u, u);
-    }
-  }
-
-  function ciudad(ahora) {
-    const base = calle - 3;
-    for (const ed of edificios) {
-      g.fillStyle = ed.tono > 0.5 ? '#111a2e' : '#0e1627';
-      g.fillRect(px(ed.x), px(base - ed.alto), ed.ancho * u, ed.alto * u);
-      for (const [vx, vy, fase] of ed.ventanas) {
-        const encendida = menosMovimiento() || ((ahora / 1000 + fase) % 20) > 2;
-        if (!encendida) continue;
-        g.fillStyle = '#fde68a';
-        g.globalAlpha = 0.55;
-        g.fillRect(px(ed.x + vx), px(base - ed.alto + vy), u, u);
-        g.globalAlpha = 1;
-      }
-    }
-  }
-
-  function torre(ahora) {
-    const esc = 2; // la torre se dibuja al doble, para que se lea al fondo
+  const torreImg = ahora => {
     const key = torreEncendida && ahora - encendidaEn > 400 ? 'torreOn' : 'torreOff';
-    if (!cache.has(`${key}:${u}`)) cache.set(`${key}:${u}`, aCanvas(TORRE, key === 'torreOn' ? PALETA_TORRE_ENCENDIDA : PALETA_TORRE, u * esc));
-    const img = cache.get(`${key}:${u}`);
-    const tx = W - 16 * esc - 2, ty = calle - 3 - TORRE.length * esc;
-    // la luz de la baliza barre la ciudad (capa de código)
-    if (key === 'torreOn') {
-      const bx = (tx + 8 * esc) * u, by = (ty + 1 * esc) * u;
-      const ang = menosMovimiento() ? Math.PI * 1.1 : Math.PI + Math.sin(ahora / 2400) * 0.55;
-      const largo = W * u * 0.9, abre = 0.13;
-      const grad = g.createRadialGradient(bx, by, 0, bx, by, largo);
-      grad.addColorStop(0, 'rgba(34,211,238,0.22)');
-      grad.addColorStop(1, 'rgba(34,211,238,0)');
-      g.fillStyle = grad;
-      g.beginPath();
-      g.moveTo(bx, by);
-      g.lineTo(bx + Math.cos(ang - abre) * largo, by + Math.sin(ang - abre) * largo);
-      g.lineTo(bx + Math.cos(ang + abre) * largo, by + Math.sin(ang + abre) * largo);
-      g.closePath();
-      g.fill();
-    }
-    g.drawImage(img, px(tx), px(ty));
-  }
-
-  function calzada(ahora) {
-    // vereda, calle y líneas
-    g.fillStyle = '#1e293b';
-    g.fillRect(0, px(calle - 3), canvas.width, 3 * u);
-    g.fillStyle = '#111827';
-    g.fillRect(0, px(calle), canvas.width, 16 * u);
-    g.fillStyle = '#1e293b';
-    g.fillRect(0, px(calle + 16), canvas.width, 3 * u);
-    g.fillStyle = '#475569';
-    for (let x = 2; x < W; x += 8) g.fillRect(px(x), px(calle + 12), 4 * u, u);
-    // abajo de la calle: el suelo de la ciudad hasta el borde
-    g.fillStyle = '#0a1120';
-    g.fillRect(0, px(calle + 19), canvas.width, canvas.height - px(calle + 19));
-  }
-
-  function barreraDibujo() {
-    const poste = fijo('poste', BARRERA_POSTE, PALETA_BARRERA);
-    const x = barrera + 1, y = calle - 12;
-    g.drawImage(poste, px(x), px(y));
-    // el brazo: rayado rojo y blanco. Cerrado cruza la calle a la altura de los autos, delante del que espera;
-    // abierto, apunta hacia arriba. Dos dibujos fijos: nunca se rota un sprite en ángulos raros.
-    const largo = 16;
-    for (let i = 0; i < largo; i++) {
-      g.fillStyle = (i >> 1) % 2 ? '#f8fafc' : '#ef4444';
-      if (abierta > 0) g.fillRect(px(x + 2), px(y - 1 - i), 2 * u, u);
-      else g.fillRect(px(x + 5 + i), px(calle + 4), u, 2 * u);
-    }
-  }
+    return [fijo(key, TORRE, key === 'torreOn' ? PALETA_TORRE_ENCENDIDA : PALETA_TORRE, 2), key === 'torreOn'];
+  };
 
   function etiqueta(texto, x, y, fondo, tinta) {
     const tam = Math.max(10, Math.round(3.4 * u));
@@ -281,12 +292,14 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
       g.translate(((temblor % 2) ? 1 : -1) * u, 0);
       temblor--;
     }
-    cielo(ahora);
-    ciudad(ahora);
-    torre(ahora);
-    calzada(ahora);
+    const quieto = menosMovimiento();
+    pintarCielo(g, L, estrellas, ahora, quieto);
+    pintarCiudad(g, L, edificios, ahora, quieto);
+    const [img, encendida] = torreImg(ahora);
+    pintarTorre(g, L, img, encendida, ahora, quieto);
+    pintarCalzada(g, L);
     autosDibujo(ahora, dt);
-    barreraDibujo();
+    pintarBarrera(g, L, fijo('poste', BARRERA_POSTE, PALETA_BARRERA), abierta > 0);
     efectos(dt);
     g.restore();
   }
