@@ -41,6 +41,33 @@ test('index.html: sin scripts ni estilos en línea y sin recursos de afuera', ()
   }
 });
 
+test('index.html: precarga todos los módulos que importa app.js, y ninguno de más', () => {
+  const html = leer('public/index.html');
+  const precargados = [...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)].map(m => path.posix.join('public', m[1]));
+  // el árbol de imports, a partir de app.js
+  const vistos = new Set();
+  const recorrer = rel => {
+    if (vistos.has(rel)) return;
+    vistos.add(rel);
+    for (const [, a, b] of leer(rel).matchAll(/(?:import|export)[^'";]*?from\s*['"]([^'"]+)['"]|import\s*\(?\s*['"]([^'"]+)['"]/g)) {
+      recorrer(path.posix.join(path.posix.dirname(rel), a || b));
+    }
+  };
+  recorrer('public/js/app.js');
+  vistos.delete('public/js/app.js'); // app.js ya lo pide el <script>
+  assert.deepEqual([...precargados].sort(), [...vistos].sort());
+});
+
+test('index.html: los botones grandes esperan al código con «Cargando…»', () => {
+  const html = leer('public/index.html');
+  for (const id of ['empezar', 'reto']) {
+    const boton = html.match(new RegExp(`<button id="${id}"[^>]*>[\\s\\S]*?</button>`))[0];
+    assert.match(boton, /\sdisabled[\s>]/, id);
+    assert.match(boton, /Cargando…/, id);
+  }
+  assert.match(leer('public/js/app.js'), /for \(const id of \['empezar', 'reto'\]\) \$\(id\)\.disabled = false;/);
+});
+
 test('estilo.css: sin @import ni recursos de afuera', () => {
   const css = leer('public/estilo.css');
   assert.doesNotMatch(css, /@import/);

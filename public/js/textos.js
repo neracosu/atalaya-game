@@ -9,8 +9,10 @@ export const T = {
   retoHecho: 'Reto de hoy jugado',
   racha: n => n === 1 ? '1 día de racha' : `${n} días de racha`,
   asistido: 'Modo asistido',
-  asistidoAyuda: 'El juego va más lento. Las estrellas cuentan igual.',
-  sonido: 'Sonido',
+  asistidoAyuda: 'Los autos llegan más espaciados y la noche dura un poco más. Las estrellas cuentan igual.',
+  musica: 'Música',
+  volumenMusica: 'Volumen de la música',
+  efectos: 'Efectos',
   vibracion: 'Vibración',
   menosMovimiento: 'Menos movimiento',
   codigo: 'Código fuente',
@@ -114,10 +116,20 @@ export const T = {
     clientela: n => `Hoy el reto trae la clientela de anoche: ${n.toLocaleString('es')} visitas en un servidor real.`,
   },
 
-  // la apertura: «La torre vacía» en corto, solo la primera vez (GDD, parte 6)
+  // la apertura: «La torre vacía» (GDD, parte 6). La primera vez se juega: la cámara baja a la barrera y la historia
+  // se escribe en las pausas de la primera partida. La versión larga, desde los ajustes, lleva las dos primeras líneas.
   apertura: {
     hora: '00:00',
-    lineas: ['Esta noche, la ciudad está bajo ataque.', 'Alguien tiene que tomar la guardia.'],
+    lineas: ['Medianoche. La vigía se fue sin avisar.', 'El Enjambre ya está en la puerta.'],
+    historia: {
+      bajada: 'Medianoche. La vigía se fue sin avisar.',
+      amenaza: 'El Enjambre ya está en la puerta.',
+      objetivo: 'Cuídela hasta el amanecer.',
+      // la hora del teléfono, solo de noche (se calcula en el teléfono y no se envía)
+      hora: (hh, mm) => `${hh === '01' ? 'Es la' : 'Son las'} ${hh}:${mm} donde está usted. Aquí también es de noche.`,
+      pregunta: 'Ella sabía que venían. ¿Cómo?',
+    },
+    cuaderno: 'El cuaderno de la vigía',
     saltar: 'Toque para saltar',
     saltarTeclado: 'Haga clic o pulse Espacio para saltar',
     ver: 'Ver la apertura',
@@ -125,12 +137,23 @@ export const T = {
   },
 
   // al terminar: la hora que sigue todavía no está, y lo que sí se puede hacer ya
+  // el giro de El peaje: tras la primera victoria, el último auto frena y da la vuelta (GDD, parte 2)
+  giro: {
+    peaje: ['No querían entrar. Querían saber qué contesta la puerta, y cuánto tarda.', 'Ya saben que aquí hay alguien despierto.'],
+    seguir: 'Toque para seguir',
+    etiqueta: 'El último auto',
+  },
+  // el reloj chico sobre la barrera: lo que tardó cada respuesta
+  reloj: ms => `${Math.max(0, Math.round(ms))} ms`,
+
   proxima: {
-    rotulo: 'La noche sigue · Hora 2',
+    // la hora 3 (02:00) llega antes que la 2 (01:00, La patrulla): se dice en pocas palabras. La pregunta es la
+    // que deja el giro del peaje (GDD, parte 2)
+    rotulo: 'La noche sigue · 02:00 · Hora 3',
     titulo: 'La cuarentena',
-    lente: 'Lente Castillo',
     pronto: 'Llega pronto',
-    texto: 'Entre los pergaminos del sitio se esconden arañas. Usted tendrá que encerrarlas antes de que infecten un estante.',
+    pregunta: 'Si la puerta principal no les abre, ¿por dónde van a probar?',
+    orden: 'Es la primera en llegar. La de la 01:00, La patrulla, viene después.',
     mientras: 'Mientras tanto',
     retoHoy: n => `Reto de hoy #${n}`,
     retoHoyTexto: (cambio, racha) => racha ? `${cambio}. Juéguelo y su racha de ${racha} ${racha === 1 ? 'día' : 'días'} sigue.` : `${cambio}. Juéguelo y empiece su racha.`,

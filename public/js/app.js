@@ -3,14 +3,19 @@
 import { nivelPeaje, crearPartida, jugar, avanzar, resumen, estrellasDe, ESTRELLAS, multiplicador, PASOS_POR_SEGUNDO } from './motor/peaje.js';
 import { crearEscena } from './dibujo/escena.js';
 import { imagenResultado, fuentesListas } from './dibujo/postal.js';
-import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, LENTE_CASTILLO, PALETA_LENTE, ARANA, PALETA_ARANA, CALENDARIO, PALETA_CALENDARIO, aSVG } from './dibujo/sprites.js';
+import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, LENTE_CASTILLO, PALETA_LENTE, ARANA, PALETA_ARANA, CALENDARIO, PALETA_CALENDARIO,
+  CUADERNO, PALETA_CUADERNO, aSVG } from './dibujo/sprites.js';
 import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques, cargarAnoche, hoyEnVenezuela } from './reto.js';
 import { conectarRevision } from './puerta.js';
 import { compartir, aArchivo } from './compartir.js';
 import { T } from './textos.js';
 import * as S from './sonido.js';
 import { medir } from './medir.js';
-import { debeVerse, marcarVista, crearControl, GUION, GUION_QUIETO } from './apertura.js';
+import { debeVerse, marcarVista, crearControl, GUION, GUION_QUIETO, GUION_CORTO, GUION_CORTO_QUIETO, lineasDeHistoria, crearHistoria,
+  avanzarHistoria, verHistoria } from './apertura.js';
+import { tocaGiro, marcarGiro, crearGiro } from './giro.js';
+import { crearMusica, cargaDe } from './musica.js';
+import { ajustesDe } from './ajustes.js';
 import { crearDibujoApertura } from './dibujo/apertura.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
 
 const REPO = 'https://github.com/neracosu/atalaya-game';
@@ -18,7 +23,20 @@ const ATALAYA = 'https://neracosu.com/atalaya';
 
 const $ = id => document.getElementById(id);
 let datos = leer();
-datos.ajustes = { sonido: true, vibracion: true, asistido: false, movimiento: false, ...(datos.ajustes || {}) };
+// los ajustes, con la música y los efectos por separado (el viejo «sonido» se migra: apagado sigue apagado)
+datos.ajustes = ajustesDe(datos.ajustes);
+
+// La música (musica.js) usa el contexto de sonido.js, que solo existe después del primer toque: antes, nada suena.
+let mus = null;
+function musica() {
+  if (!mus && S.contexto() && S.salidaMusica()) try { mus = crearMusica(S.contexto(), S.salidaMusica()); mus.mudo(!datos.ajustes.musica); } catch { mus = null; }
+  return mus;
+}
+function aplicarSonido() {
+  S.activarEfectos(datos.ajustes.efectos);
+  S.ajustarMusica(datos.ajustes.musica, datos.ajustes.volumenMusica);
+  if (mus) mus.mudo(!datos.ajustes.musica);
+}
 
 const menosMovimiento = () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches;
 const escena = crearEscena($('mundo'), { menosMovimiento });
@@ -45,11 +63,16 @@ function portada() {
   $('torre-portada').innerHTML = aSVG(TORRE, PALETA_TORRE_ENCENDIDA);
   $('ver-apertura').textContent = T.apertura.ver;
   pintarReto();
-  for (const [id, k] of [['aj-asistido', 'asistido'], ['aj-sonido', 'sonido'], ['aj-vibracion', 'vibracion'], ['aj-movimiento', 'movimiento']]) {
+  for (const [id, k] of [['aj-asistido', 'asistido'], ['aj-musica', 'musica'], ['aj-efectos', 'efectos'], ['aj-vibracion', 'vibracion'], ['aj-movimiento', 'movimiento']]) {
     $(id).checked = !!datos.ajustes[k];
-    $(id).onchange = () => { datos.ajustes[k] = $(id).checked; guardar(datos); S.activarSonido(datos.ajustes.sonido); };
+    $(id).onchange = () => { datos.ajustes[k] = $(id).checked; guardar(datos); aplicarSonido(); $('aj-volumen').disabled = !datos.ajustes.musica; };
   }
-  S.activarSonido(datos.ajustes.sonido);
+  $('aj-volumen').value = String(Math.round(datos.ajustes.volumenMusica * 100));
+  $('aj-volumen').disabled = !datos.ajustes.musica;
+  $('aj-volumen').oninput = () => { datos.ajustes.volumenMusica = Number($('aj-volumen').value) / 100; aplicarSonido(); };
+  $('aj-volumen').onchange = () => guardar(datos);
+  aplicarSonido();
+  if (mus) mus.parar();
   mostrar('portada');
   $('portada').scrollTop = 0;
 }
@@ -147,28 +170,35 @@ function pintarLanding() {
 }
 
 
-// ---------- la apertura: «La torre vacía» en corto, solo la primera vez ----------
-// Empieza con el primer toque (así el sonido puede sonar) y termina dentro de la partida: la luz de la torre llena
-// la pantalla y se abre sobre la barrera, con el primer auto llegando. Se salta con un toque, Espacio, Enter o
-// Escape. Si algo falla o tarda, se juega igual.
+// ---------- la apertura: «La torre vacía» ----------
+// La primera vez que se toma la guardia, la corta: la cámara baja a la barrera en menos de dos segundos y la
+// partida arranca con el primer auto llegando; la historia se escribe arriba, en las pausas (ver historia, abajo).
+// Un toque durante la bajada la acorta y cuenta como jugada. La larga, de unos quince segundos, desde los ajustes:
+// ahí el toque que la salta no cuenta. Empieza con el primer toque (así el sonido puede sonar) y termina dentro de
+// la partida. Se salta con un toque, Espacio, Enter o Escape. Si algo falla o tarda, se juega igual.
 const almacen = () => localStorage;
 let apertura = null;
 
 function tomarGuardia(tipo) {
-  if (debeVerse(almacen)) verApertura(tipo);
+  if (debeVerse(almacen)) verApertura(tipo, { corta: true });
   else if (tipo === 'reto') empezarReto();
   else empezar(tipo);
 }
 
-function verApertura(tipo = 'partida') {
+function verApertura(tipo = 'partida', { corta = false } = {}) {
   if (apertura) return;
+  // el guion cuenta desde el toque, no desde que el dibujo quedó armado: así el primer auto no se atrasa
+  const inicio = performance.now();
   S.despertar();
   marcarVista(almacen);
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  const guion = menosMovimiento() ? GUION_QUIETO : GUION;
+  const guion = corta ? (menosMovimiento() ? GUION_CORTO_QUIETO : GUION_CORTO) : menosMovimiento() ? GUION_QUIETO : GUION;
+  const lineas = corta ? [] : T.apertura.lineas;
+  if (corta) { primeraJugadaDesde = inicio; empezarHistoria(inicio); }
   const capa = $('apertura'), aviso = $('apertura-saltar');
   const jugar = () => (tipo === 'reto' ? leerAnoche().then(() => empezar('reto', { torreEncendida: true })) : empezar(tipo, { torreEncendida: true }));
   let dibujo = null, apagarSonido = () => { }, vigia = 0, avisoT = 0, rafId = 0;
+  aplicarSonido();
 
   const cerrar = () => {
     cancelAnimationFrame(rafId);
@@ -181,59 +211,137 @@ function verApertura(tipo = 'partida') {
     apertura = null;
   };
   const control = crearControl({
-    guion, lineas: T.apertura.lineas,
-    alEmpezarPartida: () => { capa.classList.add('sale'); try { jugar(); } catch { } },
+    guion, lineas,
+    // vista entera: la partida arrancó por el guion, con la cámara ya en la barrera
+    alEmpezarPartida: motivo => { if (motivo === 'guion') medir('apertura-completa'); capa.classList.add('sale'); try { jugar(); } catch { } },
     alTerminar: cerrar,
   });
 
   mostrar('juego');
-  $('apertura-texto').textContent = T.apertura.lineas.join(' ');
+  $('apertura-texto').textContent = lineas.join(' ');
   aviso.textContent = matchMedia('(hover: hover) and (pointer: fine)').matches ? T.apertura.saltarTeclado : T.apertura.saltar;
   capa.setAttribute('aria-label', T.apertura.etiqueta);
   capa.hidden = false;
   try {
-    dibujo = crearDibujoApertura($('apertura-lienzo'), { lineas: T.apertura.lineas, nombre: T.chispa, hora: T.apertura.hora, guion });
-    dibujo.dibujar(0); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
+    dibujo = crearDibujoApertura($('apertura-lienzo'), { lineas, nombre: T.chispa, hora: T.apertura.hora, guion });
+    dibujo.dibujar(0, performance.now()); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
   } catch {
     control.forzar();
     return;
   }
-  apertura = { control, dibujo, saltar: () => { control.saltar(); capa.classList.add('sale'); apagarSonido(); } };
-  apagarSonido = guion.quieto ? () => { } : (S.sonarAmbiente() || (() => { }));
-  if (guion.quieto) S.sonarEncender();
-  avisoT = setTimeout(() => aviso.classList.add('visible'), 700);
+  // En la larga, el toque que la salta no cuenta como jugada: la capa se lo queda (ver abajo) y la partida empieza
+  // después. En la corta sí cuenta: la partida arranca en el acto y el toque llega a ella.
+  const aterriza = guion.corto ? guion.aterriza : guion.partida;
+  apertura = { control, dibujo, corta, saltar: () => { const t = control.t; if (control.saltar() && t < aterriza) medir('apertura-saltada', t); capa.classList.add('sale'); apagarSonido(); } };
+  // la música empieza grave con la larga; con la corta o con menos movimiento, directo el tema del peaje. Si la
+  // música está apagada, queda el fondo grave de antes entre los efectos (solo en la larga).
+  const m = datos.ajustes.musica ? musica() : null;
+  if (m) { if (guion.quieto || corta) m.peaje(); else m.apertura(); }
+  else if (!guion.quieto && !corta) apagarSonido = S.sonarAmbiente(guion.bajada / 1000 + 0.6) || (() => { });
+  if (guion.quieto && !corta) S.sonarEncender();
+  // en la corta no hace falta el aviso: dura menos de lo que tarda en leerse
+  if (!corta) avisoT = setTimeout(() => aviso.classList.add('visible'), 700);
   // el reloj de seguridad: si los cuadros no llegan, se juega igual
   vigia = setTimeout(() => control.forzar(), guion.fin + 2500);
 
-  const inicio = performance.now();
-  const sonidos = { encender: S.sonarEncender, chispa: S.sonarChispa, letra: S.sonarLetra, destello: S.sonarDestello };
+  const sonidos = { encender: S.sonarEncender, chispa: S.sonarChispa, letra: S.sonarLetra, niebla: S.sonarNiebla, aterriza: S.sonarAterriza };
   const cuadroApertura = ahora => {
     if (control.terminada) return;
     const golpes = control.avanzar(ahora - inicio);
     for (const gp of golpes) if (!guion.quieto || gp === 'encender') sonidos[gp] && sonidos[gp]();
     if (control.terminada) return;
-    try { dibujo.dibujar(control.t); } catch { control.forzar(); return; }
+    try { dibujo.dibujar(control.t, ahora); } catch (e) { console.error(e); control.forzar(); return; }
     capa.style.opacity = String(control.opacidad);
     rafId = requestAnimationFrame(cuadroApertura);
   };
   rafId = requestAnimationFrame(cuadroApertura);
 }
 
-// un toque en cualquier lado la salta; el toque no llega a la partida de abajo
+// Un toque en cualquier lado la salta. En la larga, el toque no llega a la partida de abajo; en la corta, sí: es el
+// mismo gesto de la partida (deslizar o tocar una mitad), y se decide al soltar.
 for (const tipo of ['pointerdown', 'pointerup', 'click']) {
   $('apertura').addEventListener(tipo, e => {
     e.stopPropagation();
-    if (tipo === 'pointerdown' && apertura) apertura.saltar();
+    if (tipo === 'pointerdown' && apertura) {
+      if (apertura.corta) tocarAbajo(e);
+      apertura.saltar();
+    } else if (tipo === 'pointerup') soltarToque(e);
   });
 }
 addEventListener('keydown', e => {
   if (!apertura) return;
   if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Spacebar') { e.preventDefault(); apertura.saltar(); }
+  // en la corta, las flechas la saltan y juegan (las recibe la partida, más abajo)
+  else if (apertura.corta && /^(ArrowRight|ArrowLeft|a|A|d|D)$/.test(e.key)) apertura.saltar();
 }, true);
 addEventListener('resize', () => { if (apertura) try { apertura.dibujo.redimensionar(); } catch { } });
 
+// ---------- la historia en las pausas de la primera partida (la apertura corta) ----------
+// Arriba, en el tercio superior, lejos del pulgar. Cada línea avanza solo si no hay un auto esperando decisión
+// (apertura.js decide qué se ve; aquí solo se pinta). De paso, marca en el reloj del navegador cuándo asoma el
+// primer auto y cuándo ya se puede decidir, para medir la apertura en las herramientas del navegador.
+let historia = null;
+const horaDelTelefono = () => { const d = new Date(); return { horas: d.getHours(), minutos: d.getMinutes() }; };
+
+function empezarHistoria(inicio = performance.now()) {
+  pararHistoria();
+  try { performance.mark('guardia-toma', { startTime: inicio }); } catch { }
+  historia = { inicio, estado: crearHistoria(lineasDeHistoria(T.apertura.historia, horaDelTelefono())), acierto: false, raf: 0,
+    visto: '', lector: '', marcas: {} };
+  $('historia-cuaderno').innerHTML = aSVG(CUADERNO, PALETA_CUADERNO);
+  $('historia-cuaderno').setAttribute('aria-label', T.apertura.cuaderno);
+  historia.raf = requestAnimationFrame(cuadroHistoria);
+}
+
+function pararHistoria() {
+  if (!historia) return;
+  cancelAnimationFrame(historia.raf);
+  historia = null;
+  $('historia').hidden = true;
+}
+
+function marcar(nombre) {
+  if (historia.marcas[nombre]) return;
+  historia.marcas[nombre] = true;
+  try { performance.mark(nombre); } catch { }
+}
+
+function cuadroHistoria(ahora) {
+  const h = historia;
+  if (!h) return;
+  // se termina la partida: la historia se va con ella
+  if (partida && partida.terminada) { pararHistoria(); return; }
+  const frente = partida && partida.fila[0];
+  const esperando = !!partida && ((!!frente && partida.paso >= frente.listoEn) || partida.pausa > 0);
+  if (frente) marcar('guardia-auto');
+  if (esperando && frente) marcar('guardia-decidible');
+  const antes = h.estado;
+  h.estado = avanzarHistoria(antes, ahora - h.inicio, { esperando, acierto: h.acierto });
+  const v = verHistoria(h.estado);
+  // un golpecito de letra por cada dos nuevas, sin contar espacios
+  if (v.escribiendo && v.letras > Math.floor(antes.letras) && v.letras % 2 === 0 && v.texto[v.letras - 1] !== ' ' && antes.i === h.estado.i) S.sonarLetra();
+  const clave = `${v.id}|${v.letras}|${v.alfa.toFixed(2)}|${v.escribiendo}`;
+  if (clave !== h.visto) {
+    h.visto = clave;
+    const caja = $('historia');
+    caja.hidden = !v.id;
+    if (v.id) {
+      $('historia-texto').textContent = v.texto.slice(0, v.letras);
+      caja.classList.toggle('escribiendo', v.escribiendo);
+      caja.classList.toggle('con-cuaderno', v.cuaderno);
+      caja.style.opacity = String(v.alfa);
+      // para los lectores de pantalla, la línea entera una vez, no letra por letra
+      if (h.lector !== v.id) { h.lector = v.id; $('historia-lector').textContent = v.texto; }
+    }
+  }
+  if (h.estado.fin) { pararHistoria(); return; }
+  h.raf = requestAnimationFrame(cuadroHistoria);
+}
+
 // ---------- partida ----------
 let partida = null, modo = null, retoActual = null, bucle = 0, acumulado = 0, antes = 0, ayudaPaso = 0, finalizando = false;
+// el reloj de la barrera: el auto que espera decisión (desde cuándo) y el instante de la última jugada
+let espera = null, jugadaEn = 0;
 
 function empezar(tipo, { torreEncendida = false } = {}) {
   S.despertar();
@@ -250,6 +358,10 @@ function empezar(tipo, { torreEncendida = false } = {}) {
   }
   partida = crearPartida(nivel);
   finalizando = false;
+  espera = null;
+  // la historia es solo de la primera partida (la que viene de la apertura corta)
+  if (historia && historia.partida) pararHistoria();
+  if (historia) historia.partida = true;
   ayudaPaso = nivel.tutorial ? 1 : 0;
   escena.limpiar();
   mostrar('juego');
@@ -264,10 +376,14 @@ function empezar(tipo, { torreEncendida = false } = {}) {
   if (torreEncendida) escena.encenderTorre(performance.now() - 1000);
   else setTimeout(() => escena.encenderTorre(performance.now()), 500);
   medir(tipo === 'reto' ? 'reto' : 'partida');
+  // la música: si venía de la apertura, sigue sin corte; si no, el tema suave empieza en el próximo tiempo
+  if (datos.ajustes.musica && musica()) mus.peaje();
   antes = performance.now();
   acumulado = 0;
   cancelAnimationFrame(bucle);
   bucle = requestAnimationFrame(cuadro);
+  // el toque de la apertura corta que llegó antes de que hubiera partida (el reto espera su archivo)
+  if (jugadaGuardada) { const a = jugadaGuardada; jugadaGuardada = null; decidir(a); }
 }
 
 const PASO_MS = 1000 / PASOS_POR_SEGUNDO;
@@ -281,7 +397,12 @@ function cuadro(ahora) {
     acumulado -= PASO_MS;
     if (evs.length) { escena.eventos(evs, partida); reaccionar(evs); }
   }
+  // desde cuándo espera decisión el auto de adelante, para el reloj de la barrera
+  const f = partida.fila[0];
+  if (f && partida.paso >= f.listoEn && (!espera || espera.id !== f.id)) espera = { id: f.id, t: ahora };
   escena.dibujar(ahora);
+  // cuánto aprieta la partida, para las capas de la música
+  if (mus) mus.carga(cargaDe({ fila: partida.fila.length, filaMax: partida.nivel.fila, enRafaga: partida.enRafaga > 0, racha: partida.racha, paso: partida.paso, duracion: partida.nivel.duracion }));
   $('tiempo-barra').style.transform = `scaleX(${Math.max(0, 1 - partida.paso / partida.nivel.duracion)})`;
   if (partida.terminada) {
     if (!finalizando) { finalizando = true; setTimeout(terminar, 900); }
@@ -299,8 +420,16 @@ function avisar(texto, clase = 'mal', ms = 1500) {
   avisoT = setTimeout(() => { a.className = 'aviso'; }, ms);
 }
 
+// Lo que tardó la respuesta, en el reloj chico de la barrera: la siembra del giro (el Enjambre anota cuánto tarda
+// la puerta). Si el toque llegó antes que el auto, la puerta contestó en el acto: 0 ms.
+function relojDeRespuesta(id) {
+  const ms = espera && espera.id === id ? Math.max(0, jugadaEn - espera.t) : 0;
+  escena.mostrarReloj(T.reloj(ms));
+}
+
 function reaccionar(evs) {
   for (const ev of evs) {
+    if (ev.e === 'bien' || ev.e === 'mal') relojDeRespuesta(ev.id);
     if (ev.e === 'bien') {
       const nivel = Math.min(((partida.racha / 5) | 0), 5);
       if (ev.accion === 'P') S.sonarPasa(nivel); else S.sonarSello(nivel);
@@ -310,6 +439,7 @@ function reaccionar(evs) {
         c.classList.remove('sube'); void c.offsetWidth; c.classList.add('sube');
       }
       if (ayudaPaso) avanzarAyuda();
+      if (historia) historia.acierto = true;
     } else if (ev.e === 'mal') {
       S.sonarError();
       vibrar(45);
@@ -401,21 +531,32 @@ function pintarIntegridad() {
 }
 
 // ---------- entrada: deslizar, tocar una mitad o las flechas del teclado ----------
-let toque = null;
+let toque = null, jugadaGuardada = null, primeraJugadaDesde = 0;
 function decidir(accion) {
-  if (!partida || partida.terminada) return;
+  // en la apertura corta, el toque puede llegar antes que la partida del reto (que espera su archivo): se guarda
+  if (!partida) { if (apertura && apertura.corta) jugadaGuardada = accion; return; }
+  if (partida.terminada) return;
   S.despertar();
-  jugar(partida, accion);
+  const aceptada = jugar(partida, accion);
+  if (aceptada) jugadaEn = performance.now();
+  if (aceptada && primeraJugadaDesde) {
+    // la primera jugada de la primera partida: cuánto pasó desde «Tomar la guardia» (solo sale el tramo)
+    try { performance.mark('guardia-primera-jugada'); } catch { }
+    medir('primera-jugada', performance.now() - primeraJugadaDesde);
+    primeraJugadaDesde = 0;
+  }
 }
-$('juego').addEventListener('pointerdown', e => { toque = { x: e.clientX, y: e.clientY }; });
-$('juego').addEventListener('pointerup', e => {
+function tocarAbajo(e) { toque = { x: e.clientX, y: e.clientY }; }
+function soltarToque(e) {
   if (!toque) return;
   const dx = e.clientX - toque.x;
   const ancho = $('juego').getBoundingClientRect();
   toque = null;
   if (Math.abs(dx) > 28) decidir(dx > 0 ? 'P' : 'B');
   else decidir(e.clientX - ancho.left > ancho.width / 2 ? 'P' : 'B');
-});
+}
+$('juego').addEventListener('pointerdown', tocarAbajo);
+$('juego').addEventListener('pointerup', soltarToque);
 $('juego').addEventListener('pointercancel', () => { toque = null; });
 addEventListener('keydown', e => {
   if (!$('juego').classList.contains('activa')) return;
@@ -427,6 +568,7 @@ addEventListener('keydown', e => {
 let ultimo = null;
 function terminar() {
   cancelAnimationFrame(bucle);
+  primeraJugadaDesde = 0; // si la primera partida terminó sin jugadas, la siguiente ya no se mide
   const r = resumen(partida);
   const estrellas = estrellasDe(r.puntos);
   const asistido = partida.nivel.asistido;
@@ -442,7 +584,14 @@ function terminar() {
   guardar(datos);
   partida = null;
   medir('fin-peaje', estrellas);
+  // la primera victoria: antes del resultado, el giro (el puntaje ya está cerrado: el giro no lo toca)
+  if (tocaGiro(almacen, estrellas)) { marcarGiro(almacen); verGiro(() => pintarFin(r, estrellas, contado, asistido)); }
+  else pintarFin(r, estrellas, contado, asistido);
+}
+
+function pintarFin(r, estrellas, contado, asistido) {
   S.sonarFin(estrellas > 0);
+  if (mus) mus.cerrar(estrellas);
 
   $('fin-rotulo').textContent = modo === 'reto' ? `${T.reto(retoActual.numero)}${contado ? '' : ' · sin contar'}` : T.hora;
   $('fin-titulo').textContent = T.fin[r.motivoFin];
@@ -473,7 +622,70 @@ function terminar() {
   $('fin').scrollTop = 0;
 }
 
-// La hora que sigue todavía no está: se dice claro, sin fecha, y se ofrece lo que sí se puede hacer ya:
+// ---------- el giro de El peaje: la primera victoria ----------
+// Tras el final, en la misma escena: un último auto sospechoso llega, frena ante la barrera, no intenta pasar
+// mientras el reloj cuenta, y da la vuelta. Luego, arriba, las dos líneas letra por letra. Se salta con un toque
+// (salvo el primer medio segundo, que el jugador venía tocando). giro.js lleva el tiempo; aquí solo se pinta.
+let giro = null;
+function verGiro(alTerminar) {
+  const lineas = T.giro.peaje;
+  const caja = $('giro'), texto = $('giro-texto');
+  let raf = 0, inicio = 0, escritas = 0;
+  const cerrar = () => {
+    cancelAnimationFrame(raf);
+    caja.hidden = true;
+    $('juego').classList.remove('en-giro');
+    giro = null;
+    escena.moverGiro(null);
+    try { alTerminar(); } catch { }
+  };
+  const control = crearGiro({ lineas, alTerminar: cerrar });
+  giro = control;
+  // la música se calla: el auto llega en silencio (la cadencia del final suena con el resultado)
+  if (mus) mus.parar(0.6);
+  escena.empezarGiro();
+  texto.replaceChildren();
+  $('giro-seguir').textContent = T.giro.seguir;
+  caja.setAttribute('aria-label', T.giro.etiqueta);
+  $('giro-lector').textContent = '';
+  caja.hidden = false;
+  $('juego').classList.add('en-giro');
+  caja.classList.remove('escribiendo', 'con-texto');
+  const cuadroGiro = ahora => {
+    if (control.terminado) return;
+    if (!inicio) inicio = ahora;
+    const v = control.avanzar(ahora - inicio);
+    if (control.terminado) return;
+    escena.moverGiro(v.auto);
+    // mientras el auto espera ante la barrera, el reloj cuenta lo que tarda la puerta
+    if (v.auto && v.auto.espera > 0 && v.auto.mira > 0) escena.mostrarReloj(T.reloj(v.auto.espera), true);
+    escena.dibujar(ahora);
+    const n = v.letras[0] + v.letras[1];
+    if (n !== escritas) {
+      if (n > escritas && n % 2 === 0) S.sonarLetra();
+      escritas = n;
+      // el cursor va en la línea que se está escribiendo
+      const va = v.letras[1] > 0 ? 1 : 0;
+      texto.replaceChildren(el('span', `giro-linea${va === 0 ? ' escribe' : ''}`, lineas[0].slice(0, v.letras[0])),
+        el('span', `giro-linea segunda${va === 1 ? ' escribe' : ''}`, lineas[1].slice(0, v.letras[1])));
+      caja.classList.add('con-texto');
+      if ($('giro-lector').textContent === '') $('giro-lector').textContent = lineas.join(' ');
+    }
+    caja.classList.toggle('escribiendo', v.escribiendo);
+    raf = requestAnimationFrame(cuadroGiro);
+  };
+  raf = requestAnimationFrame(cuadroGiro);
+}
+for (const tipo of ['pointerdown', 'pointerup', 'click']) {
+  $('giro').addEventListener(tipo, e => { e.stopPropagation(); if (tipo === 'pointerdown' && giro) giro.saltar(); });
+}
+addEventListener('keydown', e => {
+  if (!giro) return;
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Spacebar') { e.preventDefault(); giro.saltar(); }
+}, true);
+
+// La hora que sigue todavía no está: se dice claro, sin fecha, con la pregunta que dejó el peaje, y se ofrece lo
+// que sí se puede hacer ya:
 // el reto (el de hoy si falta, o el de mañana con su racha) y mejorar las estrellas.
 function pintarProxima() {
   const P = T.proxima;
@@ -485,7 +697,7 @@ function pintarProxima() {
   const h = el('h3', '', P.titulo);
   h.id = 'proxima-titulo';
   const sub = el('p', 'proxima-sub');
-  sub.append(el('span', '', P.lente), el('span', 'pronto', P.pronto));
+  sub.append(el('span', 'pronto', P.pronto));
   titulos.append(el('p', 'rotulo', P.rotulo), h, sub);
   cabeza.append(lente, titulos);
 
@@ -521,7 +733,7 @@ function pintarProxima() {
   ya.append(fila('button', mini, P.estrellas(e), P.estrellasTexto(datos.mejor || 0, ESTRELLAS[e] || 0, e), P.mejorar,
     () => empezar('partida')));
 
-  caja.replaceChildren(cabeza, el('p', 'proxima-texto', P.texto), ya);
+  caja.replaceChildren(cabeza, el('p', 'proxima-pregunta', P.pregunta), el('p', 'proxima-texto', P.orden), ya);
 }
 // tocar la tarjeta cuenta una vez por visita: así se sabe si la hora que sigue despierta interés
 $('proxima').addEventListener('click', () => medir('proxima'));
@@ -574,6 +786,10 @@ $('reto').addEventListener('click', () => tomarGuardia('reto'));
 $('ver-apertura').addEventListener('click', () => verApertura('partida'));
 $('otra-vez').addEventListener('click', () => { medir('otra-vez'); if (ultimo && ultimo.modo === 'reto') empezarReto(); else empezar('partida'); });
 $('volver').addEventListener('click', portada);
+// los dos botones grandes vienen apagados y con «Cargando…» en el HTML: en 4G lenta se ven antes de que llegue
+// el código. Desde aquí ya responden (el detalle del reto lo escribe portada(), más abajo).
+$('empezar-texto').textContent = T.empezar;
+for (const id of ['empezar', 'reto']) $(id).disabled = false;
 addEventListener('resize', () => { if ($('juego').classList.contains('activa')) escena.redimensionar(); });
 
 pintarLanding();

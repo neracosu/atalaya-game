@@ -28,6 +28,23 @@
 <meta name="twitter:image:alt" content="La torre de Atalaya encendida sobre una calle de noche, con autos que esperan en el peaje.">
 <link rel="stylesheet" href="estilo.css">
 <script type="module" src="js/app.js"></script>
+<!-- todos los módulos que importa app.js, para que bajen juntos y no en olas (lo revisa test/reglas.test.mjs) -->
+<link rel="modulepreload" href="js/motor/azar.js">
+<link rel="modulepreload" href="js/motor/peaje.js">
+<link rel="modulepreload" href="js/dibujo/sprites.js">
+<link rel="modulepreload" href="js/dibujo/escena.js">
+<link rel="modulepreload" href="js/dibujo/postal.js">
+<link rel="modulepreload" href="js/dibujo/apertura.js">
+<link rel="modulepreload" href="js/textos.js">
+<link rel="modulepreload" href="js/reto.js">
+<link rel="modulepreload" href="js/compartir.js">
+<link rel="modulepreload" href="js/puerta.js">
+<link rel="modulepreload" href="js/sonido.js">
+<link rel="modulepreload" href="js/musica.js">
+<link rel="modulepreload" href="js/apertura.js">
+<link rel="modulepreload" href="js/giro.js">
+<link rel="modulepreload" href="js/medir.js">
+<link rel="modulepreload" href="js/ajustes.js">
 </head>
 <body>
 <main id="app">
@@ -41,14 +58,16 @@
       </div>
       <div id="torre-portada" class="torre-portada" aria-hidden="true"></div>
       <div class="portada-abajo">
-        <button id="empezar" class="boton principal" type="button"><span class="hora">00:00 · El peaje</span><span>Tomar la guardia</span></button>
-        <button id="reto" class="boton" type="button"><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle"></span></button>
+        <button id="empezar" class="boton principal" type="button" disabled><span class="hora">00:00 · El peaje</span><span id="empezar-texto">Cargando…</span></button>
+        <button id="reto" class="boton" type="button" disabled><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle">Cargando…</span></button>
         <p id="reto-tono" class="reto-tono" hidden></p>
         <p id="racha" class="racha" hidden></p>
         <details class="ajustes">
           <summary>Ajustes</summary>
-          <label><input type="checkbox" id="aj-asistido"> <span>Modo asistido</span> <small>El juego va más lento. Las estrellas cuentan igual.</small></label>
-          <label><input type="checkbox" id="aj-sonido" checked> <span>Sonido</span></label>
+          <label><input type="checkbox" id="aj-asistido"> <span>Modo asistido</span> <small>Los autos llegan más espaciados y la noche dura un poco más. Las estrellas cuentan igual.</small></label>
+          <label><input type="checkbox" id="aj-musica" checked> <span>Música</span></label>
+          <label class="volumen"><span>Volumen de la música</span> <input type="range" id="aj-volumen" min="0" max="100" step="5" value="40"></label>
+          <label><input type="checkbox" id="aj-efectos" checked> <span>Efectos</span></label>
           <label><input type="checkbox" id="aj-vibracion" checked> <span>Vibración</span></label>
           <label><input type="checkbox" id="aj-movimiento"> <span>Menos movimiento</span></label>
           <button id="ver-apertura" class="boton enlace ver-apertura" type="button">Ver la apertura</button>
@@ -80,6 +99,16 @@
       <canvas id="apertura-lienzo" aria-hidden="true"></canvas>
       <p id="apertura-texto" class="solo-lector"></p>
       <p id="apertura-saltar" class="apertura-saltar">Toque para saltar</p>
+    </div>
+    <div id="historia" class="historia" hidden>
+      <span id="historia-cuaderno" class="historia-cuaderno" role="img"></span>
+      <p id="historia-texto" class="historia-texto" aria-hidden="true"></p>
+    </div>
+    <p id="historia-lector" class="solo-lector" aria-live="polite"></p>
+    <div id="giro" class="giro" role="dialog" aria-label="El último auto" hidden>
+      <p id="giro-texto" class="giro-texto" aria-hidden="true"></p>
+      <p id="giro-lector" class="solo-lector" aria-live="polite"></p>
+      <p id="giro-seguir" class="apertura-saltar visible">Toque para seguir</p>
     </div>
   </section>
 

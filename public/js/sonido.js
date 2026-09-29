@@ -1,23 +1,68 @@
 // Sonido generado por código, sin archivos. El contexto de audio solo se crea después del primer toque,
 // como piden los navegadores. Todo el juego se entiende sin sonido.
+// Dos salidas: los efectos y la música (musica.js), cada una con su ajuste. La música usa este mismo contexto y se
+// agacha un poco cada vez que suena un efecto, para no taparlo nunca.
 
-let ctx = null, maestro = null, activo = true;
+let ctx = null, maestro = null, musicaBus = null, agache = null, activo = true;
+let musica = { si: true, volumen: 0.4 };
+let desfase = 0; // para programar efectos en otro momento (solo al grabar la muestra, fuera de línea)
+const NIVEL_EFECTOS = 0.22, NIVEL_MUSICA = 0.6;
 
 export function activarSonido(si) { activo = si; }
+export const activarEfectos = activarSonido;
+
+// la música: encendida o no y su volumen (0 a 1); el cambio es una rampa corta, sin clic
+export function ajustarMusica(si, volumen = musica.volumen) {
+  musica = { si: !!si, volumen: Math.max(0, Math.min(1, Number(volumen) || 0)) };
+  if (musicaBus) musicaBus.gain.setTargetAtTime(musica.si ? musica.volumen * NIVEL_MUSICA : 0, ctx.currentTime, 0.08);
+}
+export const musicaActiva = () => musica.si && musica.volumen > 0;
+
+function armar(c) {
+  ctx = c;
+  maestro = ctx.createGain();
+  maestro.gain.value = NIVEL_EFECTOS;
+  maestro.connect(ctx.destination);
+  agache = ctx.createGain();
+  agache.connect(ctx.destination);
+  musicaBus = ctx.createGain();
+  musicaBus.gain.value = musica.si ? musica.volumen * NIVEL_MUSICA : 0;
+  musicaBus.connect(agache);
+}
 
 export function despertar() {
-  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  if (ctx) { if (ctx.state === 'suspended' && !oculta()) ctx.resume(); return; }
   try {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    maestro = ctx.createGain();
-    maestro.gain.value = 0.22;
-    maestro.connect(ctx.destination);
+    armar(new (window.AudioContext || window.webkitAudioContext)());
+    // con la pestaña oculta, todo se pausa (el reloj de audio se detiene y la música sigue donde quedó)
+    document.addEventListener('visibilitychange', () => {
+      if (!ctx) return;
+      try { if (oculta()) ctx.suspend(); else ctx.resume(); } catch { }
+    });
   } catch { ctx = null; }
+}
+const oculta = () => typeof document !== 'undefined' && document.visibilityState === 'hidden';
+
+// para musica.js: el contexto y la entrada de la música (null antes del primer toque)
+export const contexto = () => ctx;
+export const salidaMusica = () => musicaBus;
+
+// Para grabar la muestra fuera de línea: usar otro contexto (OfflineAudioContext) y tocar un efecto en el
+// segundo `t` de ese contexto. No se usa en el juego.
+export function _usarContexto(c) { armar(c); }
+export function _enElSegundo(t, tocar) { desfase = t - ctx.currentTime; try { tocar(); } finally { desfase = 0; } }
+
+// la música se agacha un momento con cada efecto y vuelve sola (sin cortar lo programado: solo se suman rampas)
+function agachar(t) {
+  if (!agache || !musica.si) return;
+  agache.gain.setTargetAtTime(0.62, t, 0.012);
+  agache.gain.setTargetAtTime(1, t + 0.09, 0.16);
 }
 
 function tono(frec, dur, { tipo = 'square', desde = 0, hasta = null, vol = 1, ataque = 0.008 } = {}) {
   if (!ctx || !activo) return null;
-  const t = ctx.currentTime + desde;
+  const t = ctx.currentTime + desfase + desde;
+  agachar(t);
   const o = ctx.createOscillator(), v = ctx.createGain();
   o.type = tipo;
   o.frequency.setValueAtTime(frec, t);
@@ -32,6 +77,8 @@ function tono(frec, dur, { tipo = 'square', desde = 0, hasta = null, vol = 1, at
 
 function ruido(dur, vol = 0.6) {
   if (!ctx || !activo) return;
+  const t = ctx.currentTime + desfase;
+  agachar(t);
   const n = Math.floor(ctx.sampleRate * dur);
   const buf = ctx.createBuffer(1, n, ctx.sampleRate);
   const d = buf.getChannelData(0);
@@ -40,7 +87,7 @@ function ruido(dur, vol = 0.6) {
   f.type = 'lowpass'; f.frequency.value = 900;
   v.gain.value = vol;
   s.buffer = buf; s.connect(f); f.connect(v); v.connect(maestro);
-  s.start();
+  s.start(t);
 }
 
 // el acierto sube de tono con el combo: cada escalón suena más alto
@@ -58,9 +105,10 @@ export function sonarFin(bien) {
 export function sonarEstrella(i) { tono(ESCALA[2 + i], 0.14, { tipo: 'square', vol: 0.5 }); }
 
 // ---- la apertura: sutil, por debajo de todo ----
-// un fondo grave que entra despacio; devuelve cómo apagarlo si la apertura se salta
-export function sonarAmbiente() {
-  const notas = [tono(55, 7.8, { tipo: 'sine', vol: 0.55, ataque: 1.4 }), tono(82.5, 6.6, { tipo: 'sine', vol: 0.2, ataque: 2, desde: 0.9 })];
+// un fondo grave que entra despacio (solo si la música está apagada: con música, el tema empieza igual de grave);
+// devuelve cómo apagarlo si la apertura se salta
+export function sonarAmbiente(dura = 7.8) {
+  const notas = [tono(55, dura, { tipo: 'sine', vol: 0.55, ataque: 1.4 }), tono(82.5, dura - 1.2, { tipo: 'sine', vol: 0.2, ataque: 2, desde: 0.9 })];
   return () => {
     if (!ctx) return;
     const t = ctx.currentTime;
@@ -87,8 +135,12 @@ export function sonarChispa() {
 }
 // cada letra, apenas un golpecito
 export function sonarLetra() { tono(1900, 0.018, { tipo: 'triangle', vol: 0.05 }); }
-// la luz llega a la cámara
-export function sonarDestello() {
-  tono(220, 0.7, { tipo: 'sine', hasta: 880, vol: 0.28, ataque: 0.25 });
-  ruido(0.45, 0.22);
+// la cámara cruza la niebla y la luz del haz pasa por delante
+export function sonarNiebla() {
+  tono(220, 0.9, { tipo: 'sine', hasta: 660, vol: 0.2, ataque: 0.35 });
+  ruido(0.8, 0.16);
+}
+// la cámara llega a la barrera: un golpe grave y corto
+export function sonarAterriza() {
+  tono(98, 0.3, { tipo: 'triangle', hasta: 55, vol: 0.4, ataque: 0.01 });
 }

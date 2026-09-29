@@ -35,7 +35,9 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
 - **Qué se cuenta**, siempre como un nombre fijo y sumado por día: que se vio la portada, que empezó la primera
   partida, que la terminó y con cuántas estrellas (0 a 3), que llegó a 1, 2, 3, 5 o 10 reintentos, que empezó el
   reto del día, que compartió su resultado o el informe de su puerta, que revisó un dominio (solo el hecho), que
-  tocó «vigilar», que tocó la tarjeta de la hora que sigue («Llega pronto») y si es la primera visita, vuelve
+  tocó «vigilar», que tocó la tarjeta de la hora que sigue («Llega pronto»), si vio la apertura entera o en qué
+  tramo la saltó, cuánto tardó en su primera jugada (solo el tramo: menos de 2 s, de 2 a 3, de 3 a 5, de 5 a 10 o
+  más) y si es la primera visita, vuelve
   al día siguiente o vuelve otro día, y cuando llega a 3 y a 7 días distintos. El script de Atalaya suma además el tiempo con la página a la vista, cuánto bajó en la portada,
   la página de donde llegó (sin lo que va después del `?`), que envió un formulario y los clics a otros sitios
   (solo el nombre del sitio).
@@ -45,7 +47,8 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
 - **Qué queda en su teléfono**: la fecha de su última visita y cuántos días distintos jugó (la clave
   `guardia-visitas`), para saber si volvió. Eso no se envía: solo sale «volvió al día siguiente» u «otro día».
   Puede borrarla con los datos del sitio. Aparte, el juego guarda sus ajustes, su mejor marca y sus retos
-  (`guardia-v1`) y si ya vio la apertura (`guardia-apertura`); nada de eso sale del teléfono.
+  (`guardia-v1`), si ya vio la apertura (`guardia-apertura`) y el final de su primera victoria
+  (`guardia-giro-peaje`); nada de eso sale del teléfono.
 - **Cuándo no se mide nada**: si su navegador pide no ser seguido (Global Privacy Control o Do Not Track), si
   bloquea el script o si el juego corre en otro sitio (su máquina, una copia). El juego funciona igual.
 
@@ -101,6 +104,7 @@ public/                 lo que se publica, tal cual
   js/medir.js           qué se mide del embudo y cómo (ver «Qué se mide y qué no»)
   js/motor/             el núcleo determinista: la lógica de cada nivel, sin dibujo
   js/apertura.js        la apertura: el guion en datos, si toca verla y el control del tiempo (sin pantalla)
+  js/giro.js            el giro de la primera victoria: si toca verlo y su guion (sin pantalla; no toca el motor)
   js/dibujo/            sprites, la escena de la partida, la apertura y las postales (imagen del resultado y de «Su puerta»)
   fuentes/              Silkscreen y Space Grotesk, servidas desde el propio sitio
 scripts/                herramientas que no se publican (la tarjeta, los íconos y el embudo)

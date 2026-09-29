@@ -144,7 +144,8 @@ const CHISPA_BASE = { o: '#050814', B: '#d97757', b: '#8d4d38', h: '#efb9a3', v:
 export const PALETA_CHISPA_DORMIDO = { ...CHISPA_BASE, e: '#0b1020', a: '#475569' };
 export const PALETA_CHISPA = { ...CHISPA_BASE, e: '#e0f7ff', a: '#fbbf24' };
 
-// la torre vista desde arriba, 14x14: el techo octogonal con la baliza en el centro
+// la torre vista desde arriba y un poco de costado, 14x21: el techo con la baliza al centro y, debajo, la cara sur
+// de la sala (con sus ventanas) y del fuste. Así se lee como una torre y no como un anillo.
 export const TORRE_AIRE = [
   '....kkkkkk....',
   '..kkggggggkk..',
@@ -158,11 +159,20 @@ export const TORRE_AIRE = [
   'kgGgvvvvvvgGgk',
   '.kgGggggggGgk.',
   '.kggGGGGGGggk.',
-  '..kkggggggkk..',
-  '....kkkkkk....',
+  '.kkkggggggkkk.',
+  '.kssssssssssk.',
+  '.kslsslsslslk.',
+  '.kssssssssssk.',
+  '..kkffffffkk..',
+  '...kfLffLfk...',
+  '...kffffffk...',
+  '...kfLffLfk...',
+  '...kkkkkkkk...',
 ];
-export const PALETA_TORRE_AIRE = { k: '#050814', g: '#243049', G: '#2f3c58', v: '#141d30', w: '#1e293b', b: '#164e63' };
-export const PALETA_TORRE_AIRE_ENCENDIDA = { ...PALETA_TORRE_AIRE, g: '#334155', G: '#fde68a', v: '#0e7490', w: '#a5f3fc', b: '#f0fdff' };
+export const PALETA_TORRE_AIRE = { k: '#050814', g: '#243049', G: '#2f3c58', v: '#141d30', w: '#1e293b', b: '#164e63',
+  s: '#172238', l: '#1e293b', f: '#1c2740', L: '#27344f' };
+export const PALETA_TORRE_AIRE_ENCENDIDA = { ...PALETA_TORRE_AIRE, g: '#3b4a66', G: '#64748b', v: '#0e7490', w: '#a5f3fc', b: '#f0fdff',
+  s: '#0e5f75', l: '#fde68a', f: '#334155', L: '#fde68a' };
 
 // ---- la tarjeta de la hora siguiente: la lente del Castillo (18x18) con su torre adentro, y la araña 11x9 ----
 export const LENTE_CASTILLO = [
@@ -191,6 +201,28 @@ export const PALETA_ARANA = { k: '#e2e8f0', r: '#ef4444' };
 // el calendario del reto, 11x11: la hoja con sus anillas y el día marcado
 export const CALENDARIO = ['..k.....k..', 'rrkrrrrrkrr', 'rrrrrrrrrrr', 'wwwwwwwwwww', 'wdwdwdwdwdw', 'wwwwwwwwwww', 'wdwdwyyywdw', 'wwwwwyyywww', 'wdwdwyyywdw', 'wwwwwwwwwww', 'wwwwwwwwwww'];
 export const PALETA_CALENDARIO = { k: '#94a3b8', r: '#ef4444', w: '#e2e8f0', y: '#f59e0b', d: '#94a3b8' };
+
+// el cuaderno de la vigía, abierto, 17x13: dos páginas escritas, el lomo al medio, las tapas asomando y la cinta
+export const CUADERNO = [
+  '.kkkkkkk.kkkkkkk.',
+  'kpppppppkpppppppk',
+  'kpllllppkpllllppk',
+  'kpppppppkpppppppk',
+  'kplllllpkplllppak',
+  'kpppppppkpppppppk',
+  'kpllllppkplllllpk',
+  'kpppppppkpppppppk',
+  'kplllpppkpllllppk',
+  'kpppppppkpppppppk',
+  'kkkkkkkkkkkkkkkkk',
+  '.mmmmmmmrmmmmmmm.',
+  '........r........',
+];
+export const PALETA_CUADERNO = { k: '#0b1020', p: '#e7dcc1', l: '#64748b', a: '#b45309', m: '#78350f', r: '#ef4444' };
+
+// el reloj chico de la barrera, 5x5: la esfera y las agujas
+export const RELOJ = ['.ccc.', 'cwkwc', 'cwkkc', 'cwwwc', '.ccc.'];
+export const PALETA_RELOJ = { c: '#22d3ee', w: '#e2e8f0', k: '#0b1020' };
 
 // Convierte un sprite en un canvas a escala entera (sin suavizado: cada pixel del dibujo es un cuadro exacto)
 export function aCanvas(filas, paleta, escala) {

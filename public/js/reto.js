@@ -4,7 +4,7 @@
 import { semillaDe } from './motor/azar.js';
 import { nivelPeaje, PASOS_POR_SEGUNDO } from './motor/peaje.js';
 
-const INICIO = Date.UTC(2026, 9, 1, 4); // reto #1: 1 de octubre de 2026, medianoche de Venezuela (UTC-4)
+const INICIO = '2026-09-28'; // reto #1: el día en que se publicó el juego, en Venezuela
 const DIA = 86400000;
 
 // La fecha de hoy en Venezuela, como «2026-10-01»
@@ -12,8 +12,9 @@ export function hoyEnVenezuela(ahora = Date.now()) {
   return new Date(ahora - 4 * 3600000).toISOString().slice(0, 10);
 }
 
+// El número sale de la fecha de Venezuela, igual que la semilla: cambia a la misma medianoche que el reto
 export function numeroDeReto(ahora = Date.now()) {
-  return Math.max(1, Math.floor((ahora - INICIO) / DIA) + 1);
+  return Math.max(1, Math.round((Date.parse(hoyEnVenezuela(ahora)) - Date.parse(INICIO)) / DIA) + 1);
 }
 
 // Los cambios posibles. La semilla del día elige uno.
@@ -91,18 +92,17 @@ export function conTono(nivel, tono) {
   return n;
 }
 
-// Lee datos/anoche.json una vez. Si el que tiene no es de la noche de ayer (pasó la medianoche con la página
-// abierta), lo vuelve a pedir, como mucho una vez por minuto. Nunca falla: sin archivo devuelve null.
-let anocheLeida = null, anocheAl = 0;
-export async function cargarAnoche(fecha = hoyEnVenezuela()) {
-  if (anocheLeida) {
-    const d = await anocheLeida;
-    if (anocheDe(fecha, d) || Date.now() - anocheAl < 60000) return d;
+// Lee datos/anoche.json una sola vez por visita: el archivo cambia una vez al día. Si no está (404) o la red falla,
+// queda en null y no se vuelve a pedir en cada partida. Solo se pide de nuevo si pasó la medianoche de Venezuela
+// con la página abierta, porque entonces el reto es el de otro día. Nunca falla: sin archivo devuelve null.
+let anocheLeida = null, anocheFecha = null;
+export function cargarAnoche(fecha = hoyEnVenezuela()) {
+  if (!anocheLeida || anocheFecha !== fecha) {
+    anocheFecha = fecha;
+    anocheLeida = fetch('datos/anoche.json', { cache: 'no-cache' })
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null);
   }
-  anocheAl = Date.now();
-  anocheLeida = fetch('datos/anoche.json', { cache: 'no-cache' })
-    .then(r => (r.ok ? r.json() : null))
-    .catch(() => null);
   return anocheLeida;
 }
 

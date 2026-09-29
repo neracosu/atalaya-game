@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { crearMedidor, visitaDelDia, EVENTOS } from '../public/js/medir.js';
+import { crearMedidor, visitaDelDia, EVENTOS, tramoDePrimeraJugada } from '../public/js/medir.js';
 import { embudo, eventosPorDia } from '../scripts/embudo.mjs';
 
 function grabar() {
@@ -34,6 +34,19 @@ test('tocar la tarjeta de la hora 2 cuenta una sola vez', () => {
   medir('proxima'); medir('proxima'); medir('proxima');
   assert.deepEqual(salidos, ['toca-hora-2']);
   assert.ok(EVENTOS.includes('toca-hora-2'));
+});
+
+test('la primera jugada sale en tramos, una vez por visita, y el salto de la apertura se sigue contando', () => {
+  const casos = [[0, '0-2'], [1999, '0-2'], [2000, '2-3'], [2999, '2-3'], [3000, '3-5'], [4999, '3-5'], [5000, '5-10'], [9999, '5-10'], [10000, 'mas-10'], [95000, 'mas-10']];
+  for (const [ms, tramo] of casos) assert.equal(tramoDePrimeraJugada(ms), tramo, String(ms));
+  assert.equal(tramoDePrimeraJugada(undefined), '0-2');
+  const { salidos, medir } = grabar();
+  medir('apertura-saltada', 400);
+  medir('primera-jugada', 2210);
+  medir('primera-jugada', 800);
+  assert.deepEqual(salidos, ['apertura-saltada-0', 'primera-jugada-2-3']);
+  for (const n of salidos) assert.ok(EVENTOS.includes(n), n);
+  for (const [, tramo] of casos) assert.ok(EVENTOS.includes('primera-jugada-' + tramo), tramo);
 });
 
 test('nada que no esté en la lista sale, ni aunque se pase un dominio por error', () => {
