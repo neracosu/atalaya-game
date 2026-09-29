@@ -118,11 +118,23 @@ licencias/              las licencias de las fuentes
 - Pixel art como acento, texto nítido. Nunca se baja la resolución.
 - Nada de código ni estilos en línea en el HTML y nada cargado de otros sitios (la única excepción es el
   script de medición de Atalaya, ver arriba).
-- Nada de nombres reales de proyectos, clientes ni personas, ni siquiera en comentarios o pruebas.
+- Nada de nombres reales de proyectos, clientes ni personas, ni siquiera en comentarios o pruebas. La única
+  excepción son los agradecimientos a quien nos inspiró (abajo), que no son parte de la ficción.
 - Los secretos (por ejemplo, la clave que firma los puntajes) nunca van al repo.
 
 Cómo aportar está en [`CONTRIBUTING.md`](CONTRIBUTING.md). Si trabaja con un agente de IA, sus instrucciones
 están en [`AGENTS.md`](AGENTS.md).
+
+## Agradecimientos
+
+**DATA WING** (Dan Vogt, 2017, gratis para iOS y Android) inspiró el control de La patrulla, que acelera al rozar
+los bordes, y la forma de contar la historia entre niveles: lo justo para jugar al empezar, la historia al terminar.
+Su artículo *Welcoming Players into DATA WING* nos enseñó a recibir al jugador. Este proyecto no está afiliado a
+DATA WING ni a su autor, y ellos no lo respaldan.
+
+- App Store: https://apps.apple.com/us/app/data-wing/id1206723870
+- Google Play: https://play.google.com/store/apps/details?id=com.DanVogt.DATAWING
+- Artículo del autor: https://medium.com/@davogt/welcoming-players-into-data-wing-92c6587091ef
 
 ## Licencias
 

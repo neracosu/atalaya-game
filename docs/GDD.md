@@ -69,6 +69,7 @@ Es la puerta de entrada a Atalaya. Tiene que ser un buen juego por sí mismo, po
 | Geometry Dash | Niveles de la comunidad, con escalera de reconocimiento. |
 | Screeps, Zachtronics | Programar un bot también es jugar. |
 | Link's Awakening, Paper Mario | Cambiar de perspectiva por sorpresa, en el mismo mundo. |
+| DATA WING | Una sola trama que une niveles de mecánicas distintas; al empezar, solo lo justo para jugar, y la historia al terminar; un falso final; el último gesto igual al primero. Es la inspiración principal y se le rinde homenaje (parte 6, «Guiños a DATA WING»). |
 
 ### Lo que no se usa
 
@@ -135,7 +136,7 @@ Cada nivel es una hora de la noche, de medianoche al amanecer. La forma de la no
 2. **La madrugada.** Los problemas se suman, y el Enjambre prueba cada puerta. Cada hora que se supera deja una defensa nueva en la torre.
 3. **La caída.** Antes del amanecer, algo falla y arrastra a todo lo demás.
 4. **El amanecer.** La defensa de la torre: el Enjambre ataca por todas las calles y el jugador la defiende con las defensas que ganó en la noche, con la ciudad vista desde la torre.
-5. **La verdad.** Si la torre resiste, las lentes se caen una a una. Cada una deja ver su equivalente real, igual que en el monitor: la cárcel se vuelve `iptables -L ATALAYA`, el palomar se vuelve `mailq`, el tanque de datos se vuelve `mysqladmin processlist`. Queda la Terminal, en la máquina `alba@atalaya`. Chispa escribe `last`, y aparece la última vez que entró la vigía: la primera pista.
+5. **La verdad.** Si la torre resiste, las lentes se caen una a una. Cada una deja ver su equivalente real, igual que en el monitor: la cárcel se vuelve `iptables -L ATALAYA`, el palomar se vuelve `mailq`, el tanque de datos se vuelve `mysqladmin processlist`. Queda la Terminal, en la máquina `alba@atalaya`. Chispa escribe `last`, y Alba aparece todavía conectada (el giro de temporada, más abajo).
 6. **Esto pasó anoche.** Las cifras de la noche anterior en un servidor real: cuántos intentos de entrar hubo, cuántos robots se frenaron, cuántas visitas pasaron. Redondeadas y sin nombrar el servidor (parte 8).
 
 El remate no es descubrir que la ciudad es un servidor, porque quien llega desde Atalaya ya lo sabe. El remate es **que todo lo que acaba de jugar pasó de verdad anoche.**
@@ -143,6 +144,10 @@ El remate no es descubrir que la ciudad es un servidor, porque quien llega desde
 ### El plan del Enjambre
 
 Los niveles no son problemas sueltos: son **los pasos de un solo ataque**, en el orden en que llegan los ataques de verdad. El Enjambre tiene un plan y lo sigue toda la noche. Cada hora que el guardia gana le cierra un camino, y por eso el Enjambre cambia de táctica: **la victoria de una hora es la causa del problema de la siguiente.**
+
+**Lo que quiere.** El Enjambre no quiere destruir la ciudad: **quiere que la ciudad sea Enjambre**, un robot más que manda cartas y toca puertas ajenas. Es lo que hace una red de robots real con un servidor tomado. Se revela a las 04:00; quiénes son sus robots, al amanecer.
+
+**El objetivo del guardia en toda la noche:** que la ciudad llegue al amanecer siendo suya. No basta con que no se caiga.
 
 | Hora | Nivel | El paso del Enjambre | Por qué llega ahora | Lo que gana el guardia |
 |---|---|---|---|---|
@@ -159,9 +164,53 @@ Así se cuenta en cada hora:
 - **Antes** de jugar, Chispa lee una página del **cuaderno de Alba**. La vigía había anotado el paso que viene, antes de que pasara: «Primero tocan. Anotan quién abre.» Esa página dice qué hacer en la hora y por qué importa.
 - **Durante** la partida, la historia no interrumpe. Solo la sostienen los mensajes de Chispa y las fallas con humor.
 - **Al terminar**, la victoria muestra cómo el Enjambre cambia de plan («La puerta principal no le abre. Ahora busca otra.») y deja la pregunta que lleva a la hora siguiente.
-- **El hilo de fondo** es el cuaderno: cada página acertó lo que vino después. La pregunta de toda la temporada es cómo sabía Alba lo que iba a pasar, y por qué se fue justo esta noche. En la verdad, `last` muestra su última entrada, y la última página del cuaderno está en blanco.
+- **El hilo de fondo** es el cuaderno: cada página acertó lo que vino después. Durante la noche el jugador cree que Alba sabía lo que iba a pasar. Al final descubre que **el Enjambre también leía el cuaderno**, y por él sabía dónde iba a mirar el guardia a cada hora. El cuaderno salió de la torre por el correo de Alba: ella se mandaba una copia a su buzón, y su clave estaba repetida en otro lado.
 
 Además, el orden enseña algo real: así avanza un ataque contra un servidor, y cada defensa existe porque cierra uno de esos pasos.
+
+### Un giro por hora
+
+Cada hora termina con un giro que cambia lo que el jugador creía. Tres reglas:
+
+- **Sembrado a la vista.** Cada giro tiene una pista visible antes, en la misma hora o en otra. Nada de trampas: al verlo, el jugador piensa «estaba ahí y no lo vi».
+- **Verdad técnica.** Cada giro es algo que pasa de verdad en un servidor.
+- **Tamaños distintos.** De 00:00 a 03:00, giros chicos que reinterpretan la hora; a las 04:00 y 05:00, giros que revelan una causa; al amanecer y en la verdad, los grandes. Si todos fueran del mismo tipo, se adivinarían.
+
+El giro pasa **en el mundo**, en el último evento del nivel (el último auto da la vuelta, la última araña se abre), y luego se dice en una o dos líneas. Se muestra completo solo en la primera victoria; en los reintentos no interrumpe y queda para ver de nuevo en el cuaderno.
+
+| Hora | Siembra | El giro | Lo real detrás | Pregunta con que termina |
+|---|---|---|---|---|
+| 00:00 El peaje | Página previa: «Primero tocan. Anotan quién abre.» Algunos sospechosos se dejan bloquear sin insistir; un reloj chico sobre la barrera marca lo que tardó cada respuesta. | El último auto frena y da la vuelta. «No querían entrar. Querían saber qué contesta la puerta, y cuánto tarda.» «Ya saben que aquí hay alguien despierto.» | El reconocimiento: los códigos y los tiempos de respuesta dicen qué hay detrás. | Si la puerta principal no les abre, ¿por dónde van a probar? |
+| 01:00 La patrulla | Página previa: «El que hace ruido no es el que busca.» En el borde del radar, un punto gris toca la puerta web una vez por minuto, desde `203.0.113.7`. | «Ese marcador era un señuelo. El que importaba entró despacio por la puerta web, como una visita.» «Y anotó el formulario que acepta archivos.» | Los escaneos con señuelos y el barrido lento para no disparar alarmas. | ¿Qué va a meter por un formulario que la ciudad deja abierto a propósito? |
+| 02:00 La cuarentena | En el margen de la página de las 00:00: «Mandarme copia al correo.» A la página de esta noche le falta una esquina. | La última araña se abre en el ataúd. «Dentro había una página del cuaderno de Alba, copiada letra por letra.» «El Enjambre sabe cosas que solo estaban escritas ahí.» | Los ataques usan documentos internos filtrados: rutas, horarios, claves. | ¿Qué más sabe de la ciudad? |
+| 03:00 Las agujas | La página copiada dice «03:00: copia de la base». Una caja grande y lenta con el rótulo `copia` entra cada 30 s. | «La caja más pesada no era del Enjambre: era la copia de seguridad de todas las noches, a las 03:00.» «El Enjambre eligió la hora. La leyó en el cuaderno.» | Las copias nocturnas cargan la base; mal configuradas, hasta bloquean tablas. | Si la base era la distracción, ¿qué hacía mientras tanto? |
+| 04:00 El correo | La nota «Mandarme copia al correo». Entre las palomas buenas pasa una de `alba@` que cumple SPF, DKIM y DMARC. | El tope frena 300 cartas en un minuto, todas de `alba@`. «Pasan las tres pruebas: salen del buzón de Alba, con su clave.» «El Enjambre no quiere romper la ciudad. Quiere que trabaje para él.» | Con la clave de un buzón, el spam sale firmado de verdad; las claves repetidas se prueban en todos lados. | ¿Cómo consiguió la clave de Alba, y dónde más la usó? |
+| 05:00 La caída | En Las agujas, el medidor de disco sube de a poco. En un margen: «debug: encendido. No olvidar.» | La raíz: `alba-debug.log`, 47 GB. «Lo llenó un registro que Alba dejó encendido, y nadie lo rota.» «No lo borre. Ahí está la noche entera.» | Un registro sin rotación llena el disco, y el disco lleno tumba la base y atasca el correo. | ¿Lo olvidó encendido, o lo dejó así para que alguien viera la noche entera? |
+| 06:00 El amanecer | Toda la noche, los robots traen placas borrosas; en La patrulla, una placa decía «ciudad». | Con la primera luz, las placas se leen. «Cada robot del Enjambre es una ciudad que se quedó sin guardia.» «Si esta torre caía, esta ciudad iba a ser una más.» | Las redes de robots se hacen con servidores tomados. | ¿Quién le dio la orden de venir esta noche? |
+
+En La caída, la primera victoria (la de la historia) usa siempre el disco lleno por el registro de Alba; los reintentos sortean entre todas las causas.
+
+Tres de los giros apuntan a cosas que dejó Alba. Ninguna la deja como descuidada: la copia nocturna es buena práctica y el registro terminó guardando la noche entera. El único error de verdad es la clave repetida, y esa es la lección de la temporada, sin sermón.
+
+### El giro de temporada: la última página
+
+- **Siembra:** la dirección del escaneo lento de la una, las notas del margen y la última línea de la apertura («Ella sabía que venían. ¿Cómo?»).
+- **Momento:** caen las lentes, queda la Terminal en `alba@atalaya` y Chispa escribe `last`:
+
+  ```
+  alba     pts/0    203.0.113.7    Mon Sep 28 23:58   still logged in
+  ```
+
+- **Texto:** «Alba sigue conectada. Desde la misma dirección que el escaneo lento de la una.» Luego: «El cuaderno no adivinaba el ataque. El Enjambre lo leía para saber dónde iba a mirar usted.» La última página: «Está en blanco. Desde aquí, el cuaderno lo escribe usted.» En esa página quedan el apodo del guardia y la primera línea de «Esto pasó anoche», con las cifras reales.
+- **Pregunta para la temporada 2:** ¿es Alba, o alguien con su llave? Y si es ella, ¿por qué se fue justo esta noche?
+
+En la ficción, las direcciones son solo de los rangos reservados para documentación (`192.0.2.x`, `198.51.100.x`, `203.0.113.x`): son correctas y no señalan a nadie.
+
+### Tres momentos grandes
+
+1. **El falso final.** Al ganar las 04:00, Chispa dice «Lo peor ya pasó» y entra la primera luz por la ventana de la torre. Dos segundos después, tres salas se apagan a la vez: empieza La caída.
+2. **Lo más simple en el momento más grave.** Después del amanecer y antes de `last`, llega a la barrera del peaje un solo auto, despacio, con la placa `alba`. Se decide con el mismo gesto del primer minuto y ninguna respuesta pierde puntos. Si pasa, `last` muestra la sesión abierta; si se bloquea, `lastb` muestra el intento fallido y Chispa dice: «Si es ella, sabrá entrar con su llave.» El primer y el último gesto de la noche son el mismo.
+3. **La cuarta pared, con datos reales.** Si el teléfono marca entre las 22:00 y las 05:00, la apertura lo dice: «Son las 00:41 donde está usted. Aquí también es de noche.» (Se calcula en el teléfono y no se envía nada.) En La caída, el propio marcador entra en la cascada: el combo se congela con el rótulo «sin espacio» hasta dar con la raíz, y Chispa avisa en el acto: «Sus puntos están a salvo. El que no tiene espacio es el servidor.» Y el remate de siempre, «Esto pasó anoche», que es verdad.
 
 ### Los personajes
 
@@ -206,6 +255,8 @@ Los números de esta parte son el punto de partida. Se afinan jugando, y cada ni
 ### La columna de la noche
 
 Cada hora que se supera le da a la torre **una defensa nueva**, que después se usa en el amanecer. Así la noche no es una lista de minijuegos: es el camino que arma la defensa final.
+
+**Orden de construcción** (decidido el 2026-09-29): La cuarentena se construye antes que La patrulla, porque comparte motor con El peaje. Se muestra en su lugar, como la hora 3 (02:00), y la 01:00 queda como «llega pronto». Mientras falte La patrulla, la página del cuaderno antes de La cuarentena cuenta en una línea lo que pasó a la una («A la una, el cortafuegos cerró las puertas que sobraban. Solo queda la puerta web.»), para que la cadena de causa y efecto no se corte.
 
 | Hora | Nivel | Lente | Defensa que gana |
 |---|---|---|---|
@@ -252,7 +303,8 @@ Cada hora que se supera le da a la torre **una defensa nueva**, que después se 
 
 #### 01:00 · La patrulla · lente Ops · 75 s
 
-- **Qué hace el jugador.** Maneja el dron con toques: tocar a la izquierda de la pantalla gira a un lado, a la derecha gira al otro, y el dron avanza solo con inercia, derrapando. Es el control real de DATA WING, y el dedo nunca tapa el dron.
+- **Qué hace el jugador.** Maneja el dron con toques: tocar a la izquierda de la pantalla gira a un lado, a la derecha gira al otro, las dos a la vez frenan, y el dron avanza solo con inercia, derrapando. Al rozar el borde del radar salta una chispa y el dron acelera. Es el control de DATA WING, y el dedo nunca tapa el dron.
+- **El fantasma de la ronda de Alba.** En la primera partida, un dron translúcido repite la mejor ronda que Alba dejó en los registros y muestra por dónde ir.
 - **El objetivo.** En el borde del radar están las puertas: 22, 80 y 443 abiertas a propósito, porque se usan; 3306 y 3000, que no deberían estarlo. El marcador hostil las recorre. Hay que alcanzarlo antes de que encuentre una puerta que no debía estar abierta; al tocarlo, el blindado se lo lleva.
 - **Falla.** «El escáner encontró el 3306 expuesto. Lo anotó, y detrás viene el ataque.»
 - **Sorpresa.** «Alguien dejó un servidor de pruebas abierto en el 3000.»
@@ -472,19 +524,64 @@ La sala de la torre vista desde adentro. Por la ventana, la ciudad con la luz de
 
 ### Las escenas
 
-**Una sola escena antes de jugar, corta y que termina dentro de la partida.** La primera vez que se toca «Tomar la guardia» se ve la apertura; su último cuadro ya es la barrera con el primer auto llegando, así que no hay pantalla de por medio. Se salta con un toque y no se vuelve a mostrar (se puede ver de nuevo desde Ajustes). El resto de la historia llega después de jugar.
+**La apertura se juega.** Es la regla de DATA WING: mientras el jugador aprende a jugar, no se le cuenta el mundo. La primera vez que se toca «Tomar la guardia», la cámara baja del cielo en unos dos segundos y deja la barrera con el primer auto llegando: el primer toque posible cae hacia los 2,2 s. El texto de la apertura se escribe arriba, en el tercio superior, solo cuando no hay un auto esperando decisión, con la música de la noche de fondo:
+
+| Cuándo | Texto de Chispa | Para qué |
+|---|---|---|
+| Mientras baja la cámara | «Medianoche. La vigía se fue sin avisar.» | Qué pasa |
+| Tras el primer acierto | «El Enjambre ya está en la puerta.» | La amenaza |
+| En la pausa siguiente | «Cuídela hasta el amanecer.» | El objetivo |
+| Hacia los 12 a 15 s, con el cuaderno abierto en una esquina | «Ella sabía que venían. ¿Cómo?» | La pregunta de la temporada |
+
+La bajada larga, de unos 15 s, queda en «Ver la apertura» (Ajustes) y sirve para los videos.
+
+**Cada hora tiene la misma forma:**
+
+| Parte | Duración | Qué pasa |
+|---|---|---|
+| Antes | 5 s como máximo, solo la primera vez, se salta | Chispa lee una página del cuaderno: dice qué viene y siembra el giro. La página es también la instrucción. |
+| Primer toque | antes del segundo 3 | El primer elemento ya está llegando. |
+| Durante | 60 a 90 s | Sin interrupciones. La historia vive en la lente, en frases de Chispa de cinco palabras o menos en la calma, en las fallas con humor y en una pista a la vista del giro. |
+| El último evento | 2 a 4 s, dentro del nivel | El giro pasa en el mundo. |
+| Resultado | al instante | Estrellas, «le faltaron…» y reintentar en menos de un segundo. La dopamina va primero. |
+| Después | unos 8 s («Entre horas»), se salta | El giro en una o dos líneas, cómo cambia el plan del Enjambre y la página ganada del cuaderno. |
+| Próxima | tarjeta | La pregunta abierta y la hora que sigue. |
+
+Una sola pregunta abierta por hora, escrita como pregunta.
 
 | Escena | Cuándo | Duración | Qué cuenta |
 |---|---|---|---|
-| **La torre vacía** (apertura) | La primera vez que se toma la guardia, antes de la primera partida | unos 15 s | La ciudad de noche desde el aire, la torre apagada. Se enciende la luz y barre la ciudad, el Enjambre llega por los bordes, Chispa despierta: «Esta noche, la ciudad está bajo ataque. Alguien tiene que tomar la guardia.» La cámara baja del cielo hasta quedar de frente a la torre y aterriza en la barrera. |
+| **La torre vacía** (apertura) | La primera vez que se toma la guardia | unos 2 s de bajada y el resto jugando | La torre se enciende, la cámara baja a la barrera y la historia se cuenta en las pausas de la primera partida (tabla de arriba). La versión larga, de unos 15 s, desde Ajustes. |
 | **Entre horas** | Tras cada nivel | 8 s | El catalejo gira, la lente se agrieta un poco más y cambia. Chispa comenta según las estrellas. |
 | **La caída** | Antes de las 05:00 | 12 s | Se apagan tres salas a la vez. |
 | **Bajar del cielo** | Dentro de la apertura, y de nuevo en la entrada al amanecer | 5 s | La cámara baja hacia la torre y se abre la vista desde ella. |
-| **La verdad** | Tras el amanecer | 20 s | Las lentes caen, cada una deja ver su comando real, y queda `alba@atalaya`. |
+| **La verdad** | Tras el amanecer y el auto de Alba | 20 s | Las lentes caen, cada una deja ver su comando real, y queda `alba@atalaya` con `last`. |
+| **La mañana siguiente** | Tras los créditos, sin volver al menú | 15 s | La ciudad de día y qué fue de cada barrio. El epílogo nunca se esconde (lo que más le reprochan a DATA WING). |
 
 ### La selfie del distrito
 
 Al sacar tres estrellas, los habitantes de la lente posan de frente, con flash, con el apodo, el rango y la fecha del guardia. Se guarda como imagen vertical.
+
+### Guiños a DATA WING
+
+Homenaje que un fan reconoce y que no estorba a quien no lo conoce.
+
+| Guiño | Dónde | Cómo |
+|---|---|---|
+| Rozar la muralla da impulso | La patrulla | Al rozar el borde del radar salta una chispa y el dron acelera. |
+| El fantasma de la ronda | La patrulla, primera partida | Un dron translúcido repite la mejor ronda de Alba. |
+| Un byte en binario | Una grieta de la lente, en La patrulla | A veces el rótulo de una puerta se lee `22 = 0b00010110`. |
+| Las fichas que no compran nada | La sala de la torre | Un frasco de fichas brillantes. Al tocarlo: «No compran nada. Aquí nada se compra.» |
+| Tocar a Chispa en el menú | El menú | «Au. Soy de metal, pero igual.» |
+| El epílogo a la vista | Tras los créditos | «La mañana siguiente», sin esconderlo. |
+
+**Lo que no se usa:** los nombres de sus personajes y lugares, sus caras, su logotipo, su tipografía, sus diálogos textuales, su música ni su trama (la IA que quiere ser humana). Nada que sugiera un respaldo oficial: ni «secuela» ni «oficial» en ningún texto. Si algún día se quiere algo más directo, se le pide permiso por escrito al autor.
+
+**En los créditos del juego:**
+
+> Inspiración
+> DATA WING, de Dan Vogt (2017). Un juego gratuito, sin anuncios, que demostró que un juego de carreras podía contar una historia dentro de un teléfono. Gracias.
+> Este juego no está afiliado a DATA WING ni a su autor, y ellos no lo respaldan.
 
 ### Reglas de las escenas
 
