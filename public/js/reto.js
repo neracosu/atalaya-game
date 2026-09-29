@@ -4,7 +4,7 @@
 import { semillaDe } from './motor/azar.js';
 import { nivelPeaje, PASOS_POR_SEGUNDO } from './motor/peaje.js';
 
-const INICIO = Date.UTC(2026, 9, 1, 4); // reto #1: 1 de octubre de 2026, medianoche de Venezuela (UTC-4)
+const INICIO = '2026-09-28'; // reto #1: el día en que se publicó el juego, en Venezuela
 const DIA = 86400000;
 
 // La fecha de hoy en Venezuela, como «2026-10-01»
@@ -12,8 +12,9 @@ export function hoyEnVenezuela(ahora = Date.now()) {
   return new Date(ahora - 4 * 3600000).toISOString().slice(0, 10);
 }
 
+// El número sale de la fecha de Venezuela, igual que la semilla: cambia a la misma medianoche que el reto
 export function numeroDeReto(ahora = Date.now()) {
-  return Math.max(1, Math.floor((ahora - INICIO) / DIA) + 1);
+  return Math.max(1, Math.round((Date.parse(hoyEnVenezuela(ahora)) - Date.parse(INICIO)) / DIA) + 1);
 }
 
 // Los cambios posibles. La semilla del día elige uno.

@@ -1,7 +1,7 @@
 // El reto del día y el tono de la noche real (datos/anoche.json). Todo debe salir igual para todos ese día.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { retoDeHoy, tonoDeAnoche, anocheDe, diaAnterior, conTono, hoyEnVenezuela } from '../public/js/reto.js';
+import { retoDeHoy, tonoDeAnoche, anocheDe, diaAnterior, conTono, hoyEnVenezuela, numeroDeReto } from '../public/js/reto.js';
 import { nivelPeaje, volverAJugar, estrellasDe } from '../public/js/motor/peaje.js';
 import { semillaDe } from '../public/js/motor/azar.js';
 import { jugarCon } from './bots.mjs';
@@ -17,6 +17,21 @@ test('la fecha del reto y la noche de ayer', () => {
   assert.equal(diaAnterior(FECHA), ANOCHE);
   assert.equal(diaAnterior('2026-10-01'), '2026-09-30');
   assert.equal(diaAnterior('2027-01-01'), '2026-12-31');
+});
+
+test('el reto #1 es el del 28 de septiembre y cada medianoche de Venezuela suma uno', () => {
+  const venezuela = (m, d, h, min = 0) => Date.UTC(2026, m - 1, d, h + 4, min);
+  assert.equal(numeroDeReto(venezuela(9, 28, 0, 1)), 1);
+  assert.equal(numeroDeReto(venezuela(9, 28, 23, 59)), 1);
+  assert.equal(numeroDeReto(venezuela(9, 29, 0)), 2);
+  assert.equal(numeroDeReto(venezuela(10, 1, 12)), 4);
+  assert.equal(numeroDeReto(venezuela(9, 20, 12)), 1, 'antes de publicarse no hay números negativos');
+  assert.equal(retoDeHoy(HOY).numero, 1);
+  // el «reto de mañana» de la tarjeta es el número de hoy más uno, también al cruzar de mes y de año
+  for (let i = 0; i < 120; i++) {
+    const ahora = HOY + i * 86400000;
+    assert.equal(retoDeHoy(ahora + 86400000).numero, retoDeHoy(ahora).numero + 1);
+  }
 });
 
 test('sin archivo, el reto es el de siempre', () => {
