@@ -41,10 +41,10 @@ test('la primera jugada sale en tramos, una vez por visita, y el salto de la ape
   for (const [ms, tramo] of casos) assert.equal(tramoDePrimeraJugada(ms), tramo, String(ms));
   assert.equal(tramoDePrimeraJugada(undefined), '0-2');
   const { salidos, medir } = grabar();
-  medir('apertura-saltada', 400);
+  medir('apertura-saltada', 16200);
   medir('primera-jugada', 2210);
   medir('primera-jugada', 800);
-  assert.deepEqual(salidos, ['apertura-saltada-0', 'primera-jugada-2-3']);
+  assert.deepEqual(salidos, ['apertura-saltada-15', 'primera-jugada-2-3']);
   for (const n of salidos) assert.ok(EVENTOS.includes(n), n);
   for (const [, tramo] of casos) assert.ok(EVENTOS.includes('primera-jugada-' + tramo), tramo);
 });

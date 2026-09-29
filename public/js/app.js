@@ -4,15 +4,14 @@ import { nivelPeaje, crearPartida, jugar, avanzar, resumen, estrellasDe, ESTRELL
 import { crearEscena } from './dibujo/escena.js';
 import { imagenResultado, fuentesListas } from './dibujo/postal.js';
 import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, LENTE_CASTILLO, PALETA_LENTE, ARANA, PALETA_ARANA, CALENDARIO, PALETA_CALENDARIO,
-  CUADERNO, PALETA_CUADERNO, aSVG } from './dibujo/sprites.js';
+  aSVG } from './dibujo/sprites.js';
 import { retoDeHoy, leer, guardar, rachaActual, registrarReto, bloques, cargarAnoche, hoyEnVenezuela } from './reto.js';
 import { conectarRevision } from './puerta.js';
 import { compartir, aArchivo } from './compartir.js';
 import { T } from './textos.js';
 import * as S from './sonido.js';
 import { medir } from './medir.js';
-import { debeVerse, marcarVista, crearControl, GUION, GUION_QUIETO, GUION_CORTO, GUION_CORTO_QUIETO, lineasDeHistoria, crearHistoria,
-  avanzarHistoria, verHistoria } from './apertura.js';
+import { debeVerse, marcarVista, crearControl, crearGuion, lineasDeApertura } from './apertura.js';
 import { tocaGiro, marcarGiro, crearGiro } from './giro.js';
 import { crearMusica, cargaDe } from './musica.js';
 import { ajustesDe } from './ajustes.js';
@@ -170,77 +169,76 @@ function pintarLanding() {
 }
 
 
-// ---------- la apertura: «La torre vacía» ----------
-// La primera vez que se toma la guardia, la corta: la cámara baja a la barrera en menos de dos segundos y la
-// partida arranca con el primer auto llegando; la historia se escribe arriba, en las pausas (ver historia, abajo).
-// Un toque durante la bajada la acorta y cuenta como jugada. La larga, de unos quince segundos, desde los ajustes:
-// ahí el toque que la salta no cuenta. Empieza con el primer toque (así el sonido puede sonar) y termina dentro de
-// la partida. Se salta con un toque, Espacio, Enter o Escape. Si algo falla o tarda, se juega igual.
+// ---------- la apertura: «La torre vacía», una cinemática ----------
+// La primera vez que se toma la guardia: la ciudad desde el aire, la luz y el faro de la torre, toda la historia y la
+// bajada del cielo hasta la barrera, donde se funde en la partida (unos 15 s; 19 con la línea de la hora). Durante la
+// partida no sale ningún texto de historia. Desde los ajustes se vuelve a ver. Empieza con el primer toque (así el
+// sonido puede sonar) y se salta con un toque, Espacio, Enter, Escape o el botón «Saltar»: el toque que la salta no
+// cuenta como jugada. Si algo falla o tarda, se juega igual.
 const almacen = () => localStorage;
 let apertura = null;
+// la hora del teléfono, para la línea de la noche (se calcula aquí y no se envía)
+const horaDelTelefono = () => { const d = new Date(); return { horas: d.getHours(), minutos: d.getMinutes() }; };
 
 function tomarGuardia(tipo) {
-  if (debeVerse(almacen)) verApertura(tipo, { corta: true });
+  if (debeVerse(almacen)) verApertura(tipo, { primera: true });
   else if (tipo === 'reto') empezarReto();
   else empezar(tipo);
 }
 
-function verApertura(tipo = 'partida', { corta = false } = {}) {
+function verApertura(tipo = 'partida', { primera = false } = {}) {
   if (apertura) return;
-  // el guion cuenta desde el toque, no desde que el dibujo quedó armado: así el primer auto no se atrasa
+  // el guion cuenta desde el toque, no desde que el dibujo quedó armado
   const inicio = performance.now();
   S.despertar();
   marcarVista(almacen);
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  const guion = corta ? (menosMovimiento() ? GUION_CORTO_QUIETO : GUION_CORTO) : menosMovimiento() ? GUION_QUIETO : GUION;
-  const lineas = corta ? [] : T.apertura.lineas;
-  if (corta) { primeraJugadaDesde = inicio; empezarHistoria(inicio); }
-  const capa = $('apertura'), aviso = $('apertura-saltar');
-  const jugar = () => (tipo === 'reto' ? leerAnoche().then(() => empezar('reto', { torreEncendida: true })) : empezar(tipo, { torreEncendida: true }));
-  let dibujo = null, apagarSonido = () => { }, vigia = 0, avisoT = 0, rafId = 0;
+  const lineas = lineasDeApertura(T.apertura.historia, horaDelTelefono());
+  const guion = crearGuion(lineas, { quieto: menosMovimiento() });
+  const capa = $('apertura'), boton = $('apertura-saltar');
+  // la primera partida mide cuánto tarda la primera jugada desde que la partida empieza (ver decidir)
+  const opciones = { torreEncendida: true, medirPrimera: primera };
+  const jugar = () => (tipo === 'reto' ? leerAnoche().then(() => empezar('reto', opciones)) : empezar(tipo, opciones));
+  let dibujo = null, apagarSonido = () => { }, vigia = 0, rafId = 0;
   aplicarSonido();
 
   const cerrar = () => {
     cancelAnimationFrame(rafId);
-    clearTimeout(vigia); clearTimeout(avisoT);
+    clearTimeout(vigia);
     apagarSonido();
     capa.hidden = true;
     capa.classList.remove('sale');
     capa.style.opacity = '';
-    aviso.classList.remove('visible');
     apertura = null;
   };
   const control = crearControl({
-    guion, lineas,
+    guion,
     // vista entera: la partida arrancó por el guion, con la cámara ya en la barrera
     alEmpezarPartida: motivo => { if (motivo === 'guion') medir('apertura-completa'); capa.classList.add('sale'); try { jugar(); } catch { } },
     alTerminar: cerrar,
   });
 
   mostrar('juego');
-  $('apertura-texto').textContent = lineas.join(' ');
-  aviso.textContent = matchMedia('(hover: hover) and (pointer: fine)').matches ? T.apertura.saltarTeclado : T.apertura.saltar;
+  // para los lectores de pantalla, la historia entera de una vez
+  $('apertura-texto').textContent = lineas.map(l => (l.cuaderno ? `${T.apertura.cuaderno}: ${l.texto}` : l.texto)).join(' ');
+  boton.textContent = T.apertura.saltar;
   capa.setAttribute('aria-label', T.apertura.etiqueta);
   capa.hidden = false;
   try {
-    dibujo = crearDibujoApertura($('apertura-lienzo'), { lineas, nombre: T.chispa, hora: T.apertura.hora, guion });
+    dibujo = crearDibujoApertura($('apertura-lienzo'), { nombre: T.chispa, hora: T.apertura.hora, guion });
     dibujo.dibujar(0, performance.now()); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
   } catch {
     control.forzar();
     return;
   }
-  // En la larga, el toque que la salta no cuenta como jugada: la capa se lo queda (ver abajo) y la partida empieza
-  // después. En la corta sí cuenta: la partida arranca en el acto y el toque llega a ella.
-  const aterriza = guion.corto ? guion.aterriza : guion.partida;
-  apertura = { control, dibujo, corta, saltar: () => { const t = control.t; if (control.saltar() && t < aterriza) medir('apertura-saltada', t); capa.classList.add('sale'); apagarSonido(); } };
-  // la música empieza grave con la larga; con la corta o con menos movimiento, directo el tema del peaje. Si la
-  // música está apagada, queda el fondo grave de antes entre los efectos (solo en la larga).
+  try { boton.focus({ preventScroll: true }); } catch { }
+  apertura = { control, dibujo, saltar: () => { const t = control.t; if (control.saltar() && t < guion.partida) medir('apertura-saltada', t); capa.classList.add('sale'); apagarSonido(); } };
+  // la música empieza grave con la cinemática; con menos movimiento, directo el tema del peaje. Si la música está
+  // apagada, queda el fondo grave de antes entre los efectos.
   const m = datos.ajustes.musica ? musica() : null;
-  if (m) { if (guion.quieto || corta) m.peaje(); else m.apertura(); }
-  else if (!guion.quieto && !corta) apagarSonido = S.sonarAmbiente(guion.bajada / 1000 + 0.6) || (() => { });
-  if (guion.quieto && !corta) S.sonarEncender();
-  // en la corta no hace falta el aviso: dura menos de lo que tarda en leerse
-  if (!corta) avisoT = setTimeout(() => aviso.classList.add('visible'), 700);
+  if (m) { if (guion.quieto) m.peaje(); else m.apertura(guion); }
+  else if (!guion.quieto) apagarSonido = S.sonarAmbiente(guion.bajada / 1000 + 0.6) || (() => { });
+  if (guion.quieto) S.sonarEncender();
   // el reloj de seguridad: si los cuadros no llegan, se juega igual
   vigia = setTimeout(() => control.forzar(), guion.fin + 2500);
 
@@ -248,7 +246,7 @@ function verApertura(tipo = 'partida', { corta = false } = {}) {
   const cuadroApertura = ahora => {
     if (control.terminada) return;
     const golpes = control.avanzar(ahora - inicio);
-    for (const gp of golpes) if (!guion.quieto || gp === 'encender') sonidos[gp] && sonidos[gp]();
+    for (const gp of golpes) if (!guion.quieto) sonidos[gp] && sonidos[gp]();
     if (control.terminada) return;
     try { dibujo.dibujar(control.t, ahora); } catch (e) { console.error(e); control.forzar(); return; }
     capa.style.opacity = String(control.opacidad);
@@ -257,93 +255,26 @@ function verApertura(tipo = 'partida', { corta = false } = {}) {
   rafId = requestAnimationFrame(cuadroApertura);
 }
 
-// Un toque en cualquier lado la salta. En la larga, el toque no llega a la partida de abajo; en la corta, sí: es el
-// mismo gesto de la partida (deslizar o tocar una mitad), y se decide al soltar.
+// Un toque en cualquier lado (o en «Saltar») la salta, y no llega a la partida de abajo: la capa se lo queda. Cuando
+// ya se está yendo (clase «sale»), deja pasar los toques: son jugadas nuevas en la partida que ya empezó.
 for (const tipo of ['pointerdown', 'pointerup', 'click']) {
   $('apertura').addEventListener(tipo, e => {
     e.stopPropagation();
-    if (tipo === 'pointerdown' && apertura) {
-      if (apertura.corta) tocarAbajo(e);
-      apertura.saltar();
-    } else if (tipo === 'pointerup') soltarToque(e);
+    if (tipo !== 'pointerup' && apertura) apertura.saltar();
   });
 }
 addEventListener('keydown', e => {
   if (!apertura) return;
   if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Spacebar') { e.preventDefault(); apertura.saltar(); }
-  // en la corta, las flechas la saltan y juegan (las recibe la partida, más abajo)
-  else if (apertura.corta && /^(ArrowRight|ArrowLeft|a|A|d|D)$/.test(e.key)) apertura.saltar();
 }, true);
 addEventListener('resize', () => { if (apertura) try { apertura.dibujo.redimensionar(); } catch { } });
-
-// ---------- la historia en las pausas de la primera partida (la apertura corta) ----------
-// Arriba, en el tercio superior, lejos del pulgar. Cada línea avanza solo si no hay un auto esperando decisión
-// (apertura.js decide qué se ve; aquí solo se pinta). De paso, marca en el reloj del navegador cuándo asoma el
-// primer auto y cuándo ya se puede decidir, para medir la apertura en las herramientas del navegador.
-let historia = null;
-const horaDelTelefono = () => { const d = new Date(); return { horas: d.getHours(), minutos: d.getMinutes() }; };
-
-function empezarHistoria(inicio = performance.now()) {
-  pararHistoria();
-  try { performance.mark('guardia-toma', { startTime: inicio }); } catch { }
-  historia = { inicio, estado: crearHistoria(lineasDeHistoria(T.apertura.historia, horaDelTelefono())), acierto: false, raf: 0,
-    visto: '', lector: '', marcas: {} };
-  $('historia-cuaderno').innerHTML = aSVG(CUADERNO, PALETA_CUADERNO);
-  $('historia-cuaderno').setAttribute('aria-label', T.apertura.cuaderno);
-  historia.raf = requestAnimationFrame(cuadroHistoria);
-}
-
-function pararHistoria() {
-  if (!historia) return;
-  cancelAnimationFrame(historia.raf);
-  historia = null;
-  $('historia').hidden = true;
-}
-
-function marcar(nombre) {
-  if (historia.marcas[nombre]) return;
-  historia.marcas[nombre] = true;
-  try { performance.mark(nombre); } catch { }
-}
-
-function cuadroHistoria(ahora) {
-  const h = historia;
-  if (!h) return;
-  // se termina la partida: la historia se va con ella
-  if (partida && partida.terminada) { pararHistoria(); return; }
-  const frente = partida && partida.fila[0];
-  const esperando = !!partida && ((!!frente && partida.paso >= frente.listoEn) || partida.pausa > 0);
-  if (frente) marcar('guardia-auto');
-  if (esperando && frente) marcar('guardia-decidible');
-  const antes = h.estado;
-  h.estado = avanzarHistoria(antes, ahora - h.inicio, { esperando, acierto: h.acierto });
-  const v = verHistoria(h.estado);
-  // un golpecito de letra por cada dos nuevas, sin contar espacios
-  if (v.escribiendo && v.letras > Math.floor(antes.letras) && v.letras % 2 === 0 && v.texto[v.letras - 1] !== ' ' && antes.i === h.estado.i) S.sonarLetra();
-  const clave = `${v.id}|${v.letras}|${v.alfa.toFixed(2)}|${v.escribiendo}`;
-  if (clave !== h.visto) {
-    h.visto = clave;
-    const caja = $('historia');
-    caja.hidden = !v.id;
-    if (v.id) {
-      $('historia-texto').textContent = v.texto.slice(0, v.letras);
-      caja.classList.toggle('escribiendo', v.escribiendo);
-      caja.classList.toggle('con-cuaderno', v.cuaderno);
-      caja.style.opacity = String(v.alfa);
-      // para los lectores de pantalla, la línea entera una vez, no letra por letra
-      if (h.lector !== v.id) { h.lector = v.id; $('historia-lector').textContent = v.texto; }
-    }
-  }
-  if (h.estado.fin) { pararHistoria(); return; }
-  h.raf = requestAnimationFrame(cuadroHistoria);
-}
 
 // ---------- partida ----------
 let partida = null, modo = null, retoActual = null, bucle = 0, acumulado = 0, antes = 0, ayudaPaso = 0, finalizando = false;
 // el reloj de la barrera: el auto que espera decisión (desde cuándo) y el instante de la última jugada
 let espera = null, jugadaEn = 0;
 
-function empezar(tipo, { torreEncendida = false } = {}) {
+function empezar(tipo, { torreEncendida = false, medirPrimera = false } = {}) {
   S.despertar();
   modo = tipo;
   let nivel;
@@ -359,9 +290,6 @@ function empezar(tipo, { torreEncendida = false } = {}) {
   partida = crearPartida(nivel);
   finalizando = false;
   espera = null;
-  // la historia es solo de la primera partida (la que viene de la apertura corta)
-  if (historia && historia.partida) pararHistoria();
-  if (historia) historia.partida = true;
   ayudaPaso = nivel.tutorial ? 1 : 0;
   escena.limpiar();
   mostrar('juego');
@@ -382,8 +310,7 @@ function empezar(tipo, { torreEncendida = false } = {}) {
   acumulado = 0;
   cancelAnimationFrame(bucle);
   bucle = requestAnimationFrame(cuadro);
-  // el toque de la apertura corta que llegó antes de que hubiera partida (el reto espera su archivo)
-  if (jugadaGuardada) { const a = jugadaGuardada; jugadaGuardada = null; decidir(a); }
+  primeraJugadaDesde = medirPrimera ? performance.now() : 0;
 }
 
 const PASO_MS = 1000 / PASOS_POR_SEGUNDO;
@@ -439,7 +366,6 @@ function reaccionar(evs) {
         c.classList.remove('sube'); void c.offsetWidth; c.classList.add('sube');
       }
       if (ayudaPaso) avanzarAyuda();
-      if (historia) historia.acierto = true;
     } else if (ev.e === 'mal') {
       S.sonarError();
       vibrar(45);
@@ -531,16 +457,14 @@ function pintarIntegridad() {
 }
 
 // ---------- entrada: deslizar, tocar una mitad o las flechas del teclado ----------
-let toque = null, jugadaGuardada = null, primeraJugadaDesde = 0;
+let toque = null, primeraJugadaDesde = 0;
 function decidir(accion) {
-  // en la apertura corta, el toque puede llegar antes que la partida del reto (que espera su archivo): se guarda
-  if (!partida) { if (apertura && apertura.corta) jugadaGuardada = accion; return; }
-  if (partida.terminada) return;
+  if (!partida || partida.terminada) return;
   S.despertar();
   const aceptada = jugar(partida, accion);
   if (aceptada) jugadaEn = performance.now();
   if (aceptada && primeraJugadaDesde) {
-    // la primera jugada de la primera partida: cuánto pasó desde «Tomar la guardia» (solo sale el tramo)
+    // la primera jugada de la primera partida: cuánto pasó desde que empezó, tras la apertura (solo sale el tramo)
     try { performance.mark('guardia-primera-jugada'); } catch { }
     medir('primera-jugada', performance.now() - primeraJugadaDesde);
     primeraJugadaDesde = 0;

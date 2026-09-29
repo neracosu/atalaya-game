@@ -116,11 +116,11 @@ export const T = {
     clientela: n => `Hoy el reto trae la clientela de anoche: ${n.toLocaleString('es')} visitas en un servidor real.`,
   },
 
-  // la apertura: «La torre vacía» (GDD, parte 6). La primera vez se juega: la cámara baja a la barrera y la historia
-  // se escribe en las pausas de la primera partida. La versión larga, desde los ajustes, lleva las dos primeras líneas.
+  // la apertura: «La torre vacía» (GDD, parte 6), una cinemática antes de la primera partida con toda la historia:
+  // las dos primeras líneas desde el aire, la de la hora solo de noche, y en la bajada el objetivo y la pregunta del
+  // cuaderno. Durante la partida no sale texto de historia.
   apertura: {
     hora: '00:00',
-    lineas: ['Medianoche. La vigía se fue sin avisar.', 'El Enjambre ya está en la puerta.'],
     historia: {
       bajada: 'Medianoche. La vigía se fue sin avisar.',
       amenaza: 'El Enjambre ya está en la puerta.',
@@ -130,8 +130,7 @@ export const T = {
       pregunta: 'Ella sabía que venían. ¿Cómo?',
     },
     cuaderno: 'El cuaderno de la vigía',
-    saltar: 'Toque para saltar',
-    saltarTeclado: 'Haga clic o pulse Espacio para saltar',
+    saltar: 'Saltar',
     ver: 'Ver la apertura',
     etiqueta: 'Apertura del juego',
   },

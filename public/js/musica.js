@@ -9,7 +9,7 @@
 // - el que toca (crearMusica): programa las notas con el reloj de audio un poco antes de que suenen, cada nota
 //   con su envolvente (sin clics), en el mismo contexto de sonido.js.
 
-import { GUION, PULSO } from './apertura.js';
+import { PULSO } from './apertura.js';
 
 // ---- el compás: el mismo pulso que la apertura (111 por minuto), en semicorcheas ----
 export const TIEMPO = PULSO / 1000;          // segundos por tiempo
@@ -123,30 +123,33 @@ export function notasCompas(n, capas = ['base']) {
 }
 
 // ---- la apertura, con el mismo reloj del guion (segundos desde el primer toque) ----
-// noche: un zumbido grave y una campana lejana. luz: el arpegio sube con el encendido. bajada: tres compases
-// amplios (Fa, Sol, Mi) con el coro, el tema arriba y un redoble que aterriza en La, donde empieza el peaje.
-export function notasApertura(guion = GUION) {
+// noche: un zumbido grave y una campana lejana. luz: el arpegio sube con el encendido y sigue mientras se lee, un
+// compás por acorde (tres de día: La menor, Fa y Sol; con la línea de la hora, cinco). bajada: tres compases amplios
+// (Fa, Sol, Mi) con el coro, el tema arriba y un redoble que aterriza en La, donde empieza el peaje.
+export function notasApertura(guion) {
   const ev = [];
   const s = ms => ms / 1000;
   const t0 = s(guion.encender);
   const en = (tiempo, paso = 0) => t0 + tiempo * TIEMPO + paso * PASO; // tiempo contado desde el encendido
   const nota = (t, dur, voz, n, vol) => ev.push({ t: Math.round(t * 10000) / 10000, dur: Math.round(dur * 10000) / 10000, voz, nota: n, vol });
   const fin = s(guion.aterriza);
+  const n = guion.compasesLuz, b = n * 4; // el tiempo en que empieza la bajada
   // la noche: el zumbido entra despacio y se queda debajo hasta la bajada
   nota(0, s(guion.bajada) + 0.3, 'zumbido', 33, 0.3);
   nota(0.3, s(guion.bajada), 'zumbido', 40, 0.12);
   nota(0.12, 0.8, 'campana', 76, 0.07);
   // la luz: un barrido de arpa hacia arriba justo al encender
   [57, 60, 64, 69, 72, 76].forEach((m, k) => nota(t0 + k * PASO * 0.5, PASO * 1.5, 'arpa', m, 0.07 + 0.012 * k));
-  // tres compases: La menor, Fa y Sol, con el bajo y el arpegio en corcheas; Chispa despierta con la campana
-  const luz = ['Am', 'F', 'G'];
+  // un compás por acorde, con el bajo y el arpegio en corcheas; empieza en La menor y termina en Sol. Chispa
+  // despierta con la campana
+  const luz = ['Am', ...['F', 'C', 'Dm', 'Am', 'F', 'C'].slice(0, n - 2), 'G'];
   luz.forEach((a, c) => {
     const A = ACORDES[a];
     nota(en(c * 4), 2 * TIEMPO, 'bajo', A.bajo, 0.26);
     nota(en(c * 4 + 2), 2 * TIEMPO, 'bajo', A.bajo, 0.22);
-    for (let k = c === 0 ? 2 : 0; k < 8; k++) nota(en(c * 4, k * 2), 2 * PASO, 'arpa', tonoDe(a, FIGURA[k]), 0.07 + 0.01 * c);
-    // en el último tiempo del tercer compás el arpegio se apura: anuncia la bajada
-    if (c === 2) for (let k = 0; k < 4; k++) nota(en(11, k), PASO, 'arpa', tonoDe(a, 3 + (k % 3)) + 12, 0.05 + 0.012 * k);
+    for (let k = c === 0 ? 2 : 0; k < 8; k++) nota(en(c * 4, k * 2), 2 * PASO, 'arpa', tonoDe(a, FIGURA[k]), 0.07 + (0.02 * c) / (n - 1));
+    // en el último tiempo del último compás el arpegio se apura: anuncia la bajada
+    if (c === n - 1) for (let k = 0; k < 4; k++) nota(en(b - 1, k), PASO, 'arpa', tonoDe(a, 3 + (k % 3)) + 12, 0.05 + 0.012 * k);
   });
   nota(s(guion.chispa), 0.6, 'campana', 81, 0.05);
   // la bajada: amplia, en tres compases, con el coro y el tema una octava arriba
@@ -156,9 +159,9 @@ export function notasApertura(guion = GUION) {
     [[77, 0, 6], [76, 6, 2], [74, 8, 4], [71, 12, 4]],
     [[76, 0, 8], [74, 8, 2], [72, 10, 2], [71, 12, 2], [68, 14, 2]],
   ];
-  nota(en(12), 1.2, 'crash', 0, 0.2);
+  nota(en(b), 1.2, 'crash', 0, 0.2);
   bajada.forEach((a, c) => {
-    const A = ACORDES[a], comp = 12 + c * 4;
+    const A = ACORDES[a], comp = b + c * 4;
     nota(en(comp), 4 * TIEMPO, 'bajo', A.bajo - 12, 0.3);
     nota(en(comp + 2), 2 * TIEMPO, 'bajo', A.bajo, 0.22);
     for (const m of A.notas) nota(en(comp), 4 * TIEMPO - 0.05, 'coro', m, 0.05);
@@ -169,7 +172,7 @@ export function notasApertura(guion = GUION) {
     if (c > 0) for (const p of [2, 6, 10, 14]) nota(en(comp, p), PASO, 'platillo', 0, 0.08);
   });
   // el redoble del último tiempo, que crece hasta la barrera
-  for (let k = 0; k < 4; k++) nota(en(23, k), PASO, 'caja', 0, 0.08 + 0.04 * k);
+  for (let k = 0; k < 4; k++) nota(en(b + 11, k), PASO, 'caja', 0, 0.08 + 0.04 * k);
   // aterriza: La, el primer compás del peaje lo recibe
   nota(fin, 0.9, 'crash', 0, 0.12);
   return ev.sort((a, b) => a.t - b.t || a.voz.localeCompare(b.voz));
@@ -365,7 +368,7 @@ export function crearMusica(ctx, destino, { reloj = true } = {}) {
   return {
     mudo(si) { mudo = !!si; },
     // la apertura empieza ahora (en el segundo `t` del contexto)
-    apertura(t = ctx.currentTime + 0.02, guion = GUION) {
+    apertura(guion, t = ctx.currentTime + 0.02) {
       armar();
       this.parar(0.05);
       apertura = seccion();

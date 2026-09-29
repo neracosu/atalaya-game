@@ -1,25 +1,26 @@
 // El dibujo de la apertura: «La torre vacía» y «Bajar del cielo» (GDD, parte 6).
 // 1. La ciudad de noche vista desde el aire, como en el monitor: la baliza se enciende, la luz barre, el Enjambre
-//    asoma en rojo por los bordes, Chispa despierta y el texto entra letra por letra.
+//    asoma en rojo por los bordes, Chispa despierta y la historia entra letra por letra debajo de él, de a una
+//    página: las dos primeras líneas juntas y, si es de noche donde está el jugador, la de la hora.
 // 2. La cámara baja del cielo: el plano de la ciudad se inclina (una tira por cada fila de píxeles, como los juegos
 //    de 16 bits), la torre se levanta y el horizonte entra desde arriba. Una niebla con la luz del haz cruza la cámara.
 // 3. De frente: la ciudad de costado en capas que se mueven a distinta velocidad, la torre de la partida con su haz,
 //    y la cámara que baja hasta la barrera. El último cuadro es el primero de la partida: se pinta con las mismas
 //    funciones de escena.js.
-// La apertura corta (la que se juega) es solo el final del paso 3, apretado: sale de la niebla ya de frente y baja
-// a la barrera en menos de dos segundos. El texto de la corta no va aquí: lo escribe app.js arriba de la partida.
-// Capa pixel: manzanas, techos, farolas, la torre, Chispa y los edificios, a escala entera y en píxeles enteros.
-// Capa de código: la oscuridad, la luz, la niebla, el texto. Solo dibuja: el tiempo lo lleva apertura.js.
+// En la bajada, las dos últimas líneas van arriba, una por vez, sobre una sombra suave: el objetivo y la pregunta,
+// con el cuaderno de la vigía en pixel.
+// Capa pixel: manzanas, techos, farolas, la torre, Chispa, el cuaderno y los edificios, a escala entera y en píxeles
+// enteros. Capa de código: la oscuridad, la luz, la niebla, el texto. Solo dibuja: el tiempo lo lleva apertura.js.
 // Todo a la densidad de la pantalla (hasta 3), con el texto nítido. Para que un teléfono modesto llegue, lo que no
 // cambia en cada cuadro se pinta una vez en un lienzo aparte y se copia: la ciudad de noche, la luz bajo el haz, el
 // rojo del Enjambre, el velo del texto, los halos, la luz de la niebla y cada degradé vertical (una columna de un
 // píxel que se estira). Rellenar un degradé a pantalla completa cuesta cinco veces lo que copiar un lienzo.
 
 import { CHISPA, PALETA_CHISPA, PALETA_CHISPA_DORMIDO, TORRE_AIRE, PALETA_TORRE_AIRE, PALETA_TORRE_AIRE_ENCENDIDA,
-  TORRE, PALETA_TORRE_ENCENDIDA, BARRERA_POSTE, PALETA_BARRERA, aCanvas } from './sprites.js';
+  TORRE, PALETA_TORRE_ENCENDIDA, BARRERA_POSTE, PALETA_BARRERA, CUADERNO, PALETA_CUADERNO, aCanvas } from './sprites.js';
 import { disposicion, decoradoCiudad, pintarCielo, pintarCiudad, pintarTorre, pintarCalzada, pintarBarrera, columna,
   pintarColumna, CIELO } from './escena.js';
-import { GUION, letrasVisibles, inclinacion, niebla, altura } from '../apertura.js';
+import { letrasVisibles, alfaDe, inclinacion, niebla, altura } from '../apertura.js';
 
 const PAN = 8;            // lo que avanza la cámara desde el aire, en píxeles del dibujo, de a uno por vez
 const PLAZA = 10;         // media plaza de la torre
@@ -32,6 +33,10 @@ const BRUMA = [[0, 'rgba(26,42,72,0)'], [0.3, 'rgba(38,58,96,0.85)'], [0.55, 'rg
 const ROJO_HORIZONTE = [[0, 'rgba(220,38,38,0)'], [0.6, 'rgba(220,38,38,0.22)'], [1, 'rgba(220,38,38,0)']];
 const HONDURA = [[0, 'rgba(3,6,14,0)'], [1, 'rgba(3,6,14,0.55)']];
 const BRUMA_LEJOS = [[0, 'rgba(12,26,51,0)'], [1, 'rgba(12,26,51,0.55)']];
+// la sombra de arriba que deja leer las líneas de la bajada, sobre lo que esté pasando detrás
+const SOMBRA_ARRIBA = [[0, 'rgba(3,6,14,0.78)'], [0.6, 'rgba(3,6,14,0.55)'], [1, 'rgba(3,6,14,0)']];
+// el color de cada línea: la amenaza en cian, la pregunta del cuaderno en ámbar, las demás claras
+const COLOR_LINEA = { amenaza: '#67e8f9', pregunta: '#fde68a' };
 
 const suave = x => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const entre = (t, a, b) => suave((t - a) / (b - a));
@@ -82,7 +87,7 @@ function pixeles(w, h) {
   };
 }
 
-export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '', guion = GUION } = {}) {
+export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
   let g = canvas.getContext('2d'); // let: con menos movimiento, la vista quieta se pinta una vez en otro lienzo
   if (!g) throw new Error('sin lienzo');
   const Q = !!guion.quieto;
@@ -92,7 +97,8 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   let mapa = { oscura: null, clara: null, base: null, MW: 0, MH: 0, x0: 0, y0: 0 };
   let torre = { x: 50, y: 60 };
   let autos = [], enjambre = [], balizas = [], chispas = [], estrellasAire = [];
-  let texto = { fs: 20, alto: 26, filas: [] };
+  let texto = { fs: 20, alto: 26, lineas: [] };
+  const lineas = guion.lineas;
   // la vista de frente
   let L = null, deco = null, lejanos = [], extras = [], nubes = [];
   let capa = null; // para el fundido de menos movimiento
@@ -359,9 +365,16 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   }
   function pintarNube(n, x, y) { g.drawImage(n.img, 0, 0, n.img.width, n.img.height, x, y, n.img.width * u, n.alto); }
 
-  // ---- el texto: se arma entero antes de escribirse, para que las líneas no salten mientras aparece ----
+  // ---- el texto: cada línea se arma entera antes de escribirse, para que no salte mientras aparece ----
+  // Con menos movimiento va todo junto, con Chispa, debajo de la torre: si no cabe, la letra se achica (hasta 15 px).
   function armarTexto() {
-    const fs = Math.round(Math.max(18, Math.min(25, cw * 0.056)) * dpr);
+    const base = Math.round(Math.max(18, Math.min(25, cw * 0.056)) * dpr);
+    for (let fs = base; ; fs -= Math.max(1, Math.round(dpr))) {
+      partirTexto(fs);
+      if (!Q || fs <= 15 * dpr || altoQuieto() <= canvas.height - bajoLaTorre() - Math.round(24 * dpr)) break;
+    }
+  }
+  function partirTexto(fs) {
     g.font = `600 ${fs}px 'Space Grotesk', system-ui, sans-serif`;
     const maximo = (cw - 48) * dpr;
     // corta por palabras; luego achica el ancho mientras no sume filas, para que no quede una palabra sola abajo
@@ -375,23 +388,37 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       filas.push(fila);
       return filas;
     };
-    const filas = [];
-    lineas.forEach((linea, i) => {
-      let partes = cortar(linea, maximo);
-      if (partes.length > 1) {
-        let ancho = maximo;
-        while (ancho > maximo * 0.4) {
-          const otra = cortar(linea, ancho - 4 * dpr);
-          if (otra.length > partes.length) break;
-          partes = otra;
-          ancho -= 4 * dpr;
+    texto = {
+      fs, alto: Math.round(fs * 1.32),
+      lineas: lineas.map(l => {
+        let partes = cortar(l.texto, maximo);
+        if (partes.length > 1) {
+          let ancho = maximo;
+          while (ancho > maximo * 0.4) {
+            const otra = cortar(l.texto, ancho - 4 * dpr);
+            if (otra.length > partes.length) break;
+            partes = otra;
+            ancho -= 4 * dpr;
+          }
         }
-      }
-      let desde = 0;
-      for (const p of partes) { filas.push({ linea: i, desde, texto: p }); desde += p.length + 1; }
-    });
-    texto = { fs, alto: Math.round(fs * 1.32), filas };
+        const filas = [];
+        let desde = 0;
+        for (const p of partes) { filas.push({ desde, texto: p }); desde += p.length + 1; }
+        return filas;
+      }),
+    };
   }
+  // lo que ocupa cada cosa, para ubicar el texto
+  const escChispa = () => Math.max(3, Math.round(4.2 * dpr));
+  const altoChispa = () => 16 * escChispa() + Math.round(40 * dpr); // el robot, su nombre y el aire hasta el texto
+  const escCuaderno = () => Math.max(2, Math.round(3.2 * dpr));
+  const altoCuaderno = () => CUADERNO.length * escCuaderno() + Math.round(10 * dpr);
+  const entreLineas = () => Math.round(texto.alto * 0.3);
+  // con menos movimiento: debajo de la torre quieta (su techo mide 21 píxeles del dibujo, a escala 2u, y la baliza
+  // queda en la fila 7), Chispa, todas las líneas y el cuaderno, uno debajo del otro
+  const bajoLaTorre = () => Math.round((torre.y - mapa.y0 - PAN + 0.5) * u + 28 * u + 8 * dpr);
+  const altoQuieto = () => altoChispa() + lineas.reduce((s, l, i) => s + texto.lineas[i].length * texto.alto
+    + (l.cuaderno ? altoCuaderno() : 0), 0) + entreLineas() * (lineas.length - 1);
 
   function redimensionar() {
     dpr = Math.min(window.devicePixelRatio || 1, 3);
@@ -407,10 +434,9 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     balizas = [];
     capa = null;
     capas = {};
-    // la corta no pasa por el aire: ni el mapa de la ciudad ni el texto (así arranca sin esperar)
-    if (!guion.corto) armarCiudad();
+    armarCiudad();
     armarFrente();
-    if (!guion.corto) armarTexto();
+    armarTexto();
   }
 
   // ---- la luz de la torre: da vueltas parejas; al empezar la bajada apunta hacia la cámara ----
@@ -533,7 +559,6 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     g.imageSmoothingEnabled = false;
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
-    if (guion.corto) { corta(t, ahora); return; }
     if (Q) { quieto(t, ahora); return; }
     veloPintado = false;
     const inc = inclinacion(t, guion);
@@ -545,6 +570,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     } else pintarFrente(g, ahora, altura(t, guion), false);
     if (t > guion.niebla - 400 && t < guion.nieblaFin + 700) pintarNiebla(t, niebla(t, guion));
     else if (t >= guion.nieblaFin + 700) soltar('luzNiebla');
+    arriba(t);
   }
 
   // menos movimiento: la ciudad desde el aire quieta con todo a la vista, y un fundido a la vista de frente
@@ -563,34 +589,6 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     }
     g.globalAlpha = entre(t, guion.frente, guion.nieblaFin);
     g.drawImage(capa, 0, 0);
-    g.globalAlpha = 1;
-  }
-
-  // la corta: de frente desde arriba hasta la barrera, con la niebla que se abre al empezar. Con menos movimiento,
-  // la barrera quieta (se pinta una vez) y solo el fundido
-  function corta(t, ahora) {
-    if (Q) {
-      if (!capa) {
-        capa = lienzo(canvas.width, canvas.height);
-        pintarFrente(capa.getContext('2d'), ahora, 0, true);
-      }
-      g.drawImage(capa, 0, 0);
-      return;
-    }
-    pintarFrente(g, ahora, altura(t, guion), false);
-    const nb = niebla(t, guion);
-    if (nb <= 0) return;
-    const chp = canvas.height;
-    g.fillStyle = `rgba(22,36,62,${nb.toFixed(3)})`;
-    g.fillRect(0, 0, canvas.width, chp);
-    // los bancos de nube suben rápido y se deshacen: la cámara sale de la nube hacia abajo
-    g.globalAlpha = Math.min(1, nb * 1.1);
-    for (let i = 0; i < 3; i++) {
-      const n = nubes[(i * 2 + 1) % nubes.length];
-      const y = chp * (0.35 + i * 0.3) - t * (chp / 700) * n.vel;
-      if (y + n.alto < 0) continue;
-      pintarNube(n, (n.x - 10 * i) * u, Math.round(y / u) * u);
-    }
     g.globalAlpha = 1;
   }
 
@@ -922,7 +920,8 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     pintarBarrera(gc, L, sprite('poste', BARRERA_POSTE, PALETA_BARRERA, U), false, dx, dy);
   }
 
-  // ---- lo que se lee: la hora, Chispa y el texto, con la viñeta de abajo. A: cuánto se ve (se va en la bajada) ----
+  // ---- lo que se lee desde el aire: la hora, Chispa y la página de la historia que toca, con la viñeta de abajo.
+  // A: cuánto se ve (se va en la bajada). Con menos movimiento, todas las líneas juntas y el cuaderno ----
   function interfaz(t, A) {
     const cwp = canvas.width;
     g.globalAlpha = A;
@@ -938,20 +937,34 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       g.fillText(hora, cwp / 2, Math.round(26 * dpr));
     }
     g.globalAlpha = A;
-    escribir(t, chispa(t, A), A);
+    const yChispa = Q ? bajoLaTorre() + Math.max(0, Math.round((canvas.height - bajoLaTorre() - altoQuieto()) / 2)) : Math.round(canvas.height * 0.58);
+    let y = chispa(t, A, yChispa);
+    lineas.forEach((l, i) => {
+      if (Q) {
+        if (l.cuaderno) y = cuaderno(y);
+        y = escribir(t, i, y) + entreLineas();
+        return;
+      }
+      // desde el aire, una página por vez: las de la bajada van arriba (ver arriba)
+      const alfa = l.arriba ? 0 : alfaDe(l, t);
+      if (alfa <= 0) return;
+      g.globalAlpha = alfa;
+      y = escribir(t, i, y);
+    });
     g.globalAlpha = 1;
   }
 
-  // Chispa: dormido y a media luz; al despertar le parpadean los ojos, se prende la antena, da un saltito y saluda
-  function chispa(t, A) {
-    const sc = Math.max(3, Math.round(4.2 * dpr));
+  // Chispa: dormido y a media luz; al despertar le parpadean los ojos, se prende la antena, da un saltito y saluda.
+  // Devuelve dónde empieza el texto, debajo de su nombre.
+  function chispa(t, A, y) {
+    const sc = escChispa();
     const x = Math.round(canvas.width / 2 - 7 * sc);
-    let y = Math.round(canvas.height * 0.58);
     const dt = t - guion.chispa;
     const despierto = Q || (dt >= 0 && !(dt > 110 && dt < 220));
     let cuadro = CHISPA.quieto;
     if (!Q && dt > 520 && dt < 980) cuadro = CHISPA.saludo;
     else if (despierto && !Q && dt > 1200 && (dt % 2600) < 140) cuadro = CHISPA.parpadeo;
+    const texto0 = y + altoChispa();
     if (!Q && dt > 260 && dt < 460) y -= sc;
     if (despierto) {
       const brillo = Q ? 1 : entre(dt, 0, 400);
@@ -973,37 +986,65 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       g.fillText(nombre.toUpperCase(), canvas.width / 2, yNombre);
       g.globalAlpha = A;
     }
-    return yNombre + Math.round(28 * dpr);
+    return texto0;
   }
 
-  // el texto letra por letra, nítido y a resolución completa; un cursor de pixel marca por dónde va
-  function escribir(t, y0, A) {
-    const vis = letrasVisibles(Q ? 99999 : t, lineas, guion);
+  // ---- en la bajada, arriba: el objetivo y luego la pregunta con el cuaderno, una por vez, sobre su sombra ----
+  function arriba(t) {
+    const y0 = Math.round(Math.max(canvas.height * 0.2, 96 * dpr));
+    lineas.forEach((l, i) => {
+      const alfa = l.arriba ? alfaDe(l, t) : 0;
+      if (alfa <= 0) return;
+      const alto = (l.cuaderno ? altoCuaderno() : 0) + texto.lineas[i].length * texto.alto;
+      g.globalAlpha = alfa;
+      pintarColumna(g, columna(y0 + alto + 90 * dpr, SOMBRA_ARRIBA), 0);
+      let y = y0;
+      if (l.cuaderno) {
+        // el cuaderno asoma un poco antes que su línea
+        g.globalAlpha = alfa * Math.min(1, (t - l.aparece) / 200);
+        y = cuaderno(y);
+        g.globalAlpha = alfa;
+      }
+      escribir(t, i, y);
+    });
+    g.globalAlpha = 1;
+  }
+
+  // el cuaderno de la vigía, en pixel y centrado; devuelve dónde empieza su línea
+  function cuaderno(y) {
+    const img = sprite('cuaderno', CUADERNO, PALETA_CUADERNO, escCuaderno());
+    g.drawImage(img, Math.round((canvas.width - img.width) / 2), Math.round(y));
+    return y + altoCuaderno();
+  }
+
+  // una línea letra por letra, nítida y a resolución completa, centrada desde y0; un cursor de pixel marca por dónde
+  // va. Devuelve dónde termina.
+  function escribir(t, i, y0) {
+    const l = lineas[i], filas = texto.lineas[i];
+    const vis = letrasVisibles(Q ? 99999 : t, guion)[i];
     g.font = `600 ${texto.fs}px 'Space Grotesk', system-ui, sans-serif`;
     g.textAlign = 'left';
     g.textBaseline = 'top';
-    g.globalAlpha = A;
+    g.fillStyle = COLOR_LINEA[l.id] || '#f1f5f9';
     let cursor = null;
-    texto.filas.forEach((f, i) => {
-      const n = Math.max(0, Math.min(f.texto.length, vis[f.linea] - f.desde));
-      const completa = g.measureText(f.texto).width;
-      const x = Math.round((canvas.width - completa) / 2);
-      const y = y0 + i * texto.alto;
-      if (n > 0) {
-        const parte = f.texto.slice(0, n);
-        g.fillStyle = f.linea === 0 ? '#f1f5f9' : '#67e8f9';
-        g.fillText(parte, x, y);
-        if (vis[f.linea] < lineas[f.linea].length && n < f.texto.length + 1) cursor = [x + g.measureText(parte).width + 3 * dpr, y];
-      }
+    filas.forEach((f, k) => {
+      const n = Math.max(0, Math.min(f.texto.length, vis - f.desde));
+      const x = Math.round((canvas.width - g.measureText(f.texto).width) / 2);
+      const y = y0 + k * texto.alto;
+      if (n <= 0) return;
+      const parte = f.texto.slice(0, n);
+      g.fillText(parte, x, y);
+      if (vis < l.texto.length) cursor = [x + g.measureText(parte).width + 3 * dpr, y];
     });
     if (cursor && !Q && Math.floor(t / 260) % 2 === 0) {
       g.fillStyle = '#67e8f9';
       g.fillRect(Math.round(cursor[0]), Math.round(cursor[1] + texto.fs * 0.12), Math.max(2, Math.round(texto.fs * 0.42)), Math.round(texto.fs * 0.95));
     }
+    return y0 + filas.length * texto.alto;
   }
 
   redimensionar();
   // si la letra llega después, se vuelve a medir el texto
-  try { document.fonts && document.fonts.ready.then(() => armarTexto()); } catch { }
+  try { document.fonts && document.fonts.ready.then(() => { armarTexto(); soltar('quietoAire'); }); } catch { }
   return { dibujar, redimensionar };
 }

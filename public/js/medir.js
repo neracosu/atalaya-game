@@ -22,10 +22,12 @@ export const EVENTOS = [
   'fin-otra-0', 'fin-otra-1', 'fin-otra-2', 'fin-otra-3',
   'reintento-1', 'reintento-2', 'reintento-3', 'reintento-5', 'reintento-10',
   'comparte', 'comparte-puerta', 'dominio', 'vigilar', 'landing-atalaya', 'landing-empezar', 'toca-hora-2',
-  // la apertura: si se vio entera o en qué tramo de tres segundos se saltó (0 el encendido, 3 el texto, 6 el
-  // final del texto y el comienzo de la bajada, 9 la niebla, 12 el aterrizaje)
+  // la apertura: si se vio entera o en qué tramo de tres segundos se saltó (0 el encendido, 3 las dos primeras
+  // líneas; de día, 6 el final del texto y el comienzo de la bajada, 9 la niebla y 12 el aterrizaje; con la línea de
+  // la hora, 6 y 9 la hora, 12 y 15 la bajada; 18, por si el guion crece)
   'apertura-completa', 'apertura-saltada-0', 'apertura-saltada-3', 'apertura-saltada-6', 'apertura-saltada-9', 'apertura-saltada-12',
-  // la primera partida: cuánto pasó desde el toque en «Tomar la guardia» hasta la primera jugada, en tramos
+  'apertura-saltada-15', 'apertura-saltada-18',
+  // la primera partida: cuánto pasó desde que empezó (tras la apertura) hasta la primera jugada, en tramos
   'primera-jugada-0-2', 'primera-jugada-2-3', 'primera-jugada-3-5', 'primera-jugada-5-10', 'primera-jugada-mas-10',
 ];
 
@@ -75,7 +77,7 @@ export function crearMedidor(enviar) {
       hechos.add('apertura');
       mandar(evento === 'apertura-completa' ? evento : 'apertura-saltada-' + tramoDeSalto(estrellas));
     } else if (evento === 'primera-jugada') {
-      // una vez por visita: solo la partida que viene de la apertura corta la mide
+      // una vez por visita: solo la partida que viene de la primera apertura la mide
       if (hechos.has(evento)) return;
       hechos.add(evento);
       mandar('primera-jugada-' + tramoDePrimeraJugada(estrellas));

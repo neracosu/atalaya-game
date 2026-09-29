@@ -1,13 +1,21 @@
-// La apertura: sale solo la primera vez, saltarla lleva a la partida y un almacenamiento que falla no rompe nada.
-// La corta se juega: el primer auto se puede decidir antes del segundo 3, y la historia se escribe solo en las pausas.
+// La apertura es una cinemática: sale solo la primera vez, lleva toda la historia (la línea de la hora solo de noche),
+// se lee a un ritmo cómodo y al compás de la música, saltarla lleva a la partida sin que el toque cuente como jugada,
+// y durante la partida no sale ningún texto de historia. Un almacenamiento que falla no rompe nada.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { debeVerse, marcarVista, crearControl, letrasVisibles, altura, niebla, GUION, GUION_QUIETO, GUION_CORTO, GUION_CORTO_QUIETO,
-  CLAVE, _olvidar, HISTORIA, esDeNoche, lineasDeHistoria, crearHistoria, avanzarHistoria, verHistoria, historiaEn } from '../public/js/apertura.js';
-import { nivelPeaje, crearPartida, avanzar, PASOS_POR_SEGUNDO } from '../public/js/motor/peaje.js';
+import { debeVerse, marcarVista, crearControl, crearGuion, lineasDeApertura, letrasVisibles, alfaDe, esDeNoche, altura, niebla,
+  inclinacion, tramoDeSalto, TRAMOS_SALTO, LECTURA, PULSO, CLAVE, _olvidar } from '../public/js/apertura.js';
+import { notasApertura } from '../public/js/musica.js';
+import { EVENTOS } from '../public/js/medir.js';
 import { T } from '../public/js/textos.js';
 import { numeroDeReto } from '../public/js/reto.js';
+
+const leer = rel => readFileSync(new URL('../' + rel, import.meta.url), 'utf8');
+const H = T.apertura.historia;
+const DE_DIA = { horas: 15, minutos: 20 }, DE_NOCHE = { horas: 23, minutos: 41 };
+const lineas = (hora = DE_DIA) => lineasDeApertura(H, hora);
+const guion = (hora = DE_DIA, quieto = false) => crearGuion(lineas(hora), { quieto });
 
 function almacen() {
   const m = new Map();
@@ -16,9 +24,9 @@ function almacen() {
 const roto = { getItem() { throw new Error('bloqueado'); }, setItem() { throw new Error('lleno'); } };
 
 // un control con espías: cuántas veces arrancó la partida y cuántas terminó la apertura
-function espiar(guion = GUION) {
+function espiar(g = guion()) {
   const hechos = [];
-  const c = crearControl({ guion, lineas: T.apertura.lineas, alEmpezarPartida: m => hechos.push(['partida', m]), alTerminar: m => hechos.push(['fin', m]) });
+  const c = crearControl({ guion: g, alEmpezarPartida: m => hechos.push(['partida', m]), alTerminar: m => hechos.push(['fin', m]) });
   return { c, hechos };
 }
 
@@ -46,40 +54,114 @@ test('si el almacenamiento falla, no rompe y no se repite en la misma visita', (
   _olvidar();
 });
 
-test('entera: la partida arranca una vez, antes del final, y la apertura termina una vez', () => {
-  const { c, hechos } = espiar();
-  const golpes = [];
-  for (let t = 0; t <= GUION.fin + 500; t += 16) golpes.push(...c.avanzar(t));
-  assert.deepEqual(hechos, [['partida', 'guion'], ['fin', 'guion']]);
-  assert.ok(GUION.partida < GUION.fin, 'la partida corre debajo antes de que la apertura se vaya');
-  assert.ok(GUION.fin <= 16000, 'la larga dura unos quince segundos');
-  for (const g of ['encender', 'chispa', 'bajada', 'niebla', 'aterriza']) assert.equal(golpes.filter(x => x === g).length, 1, g);
-  assert.ok(golpes.includes('letra'));
-  assert.deepEqual(c.avanzar(GUION.fin + 1000), [], 'terminada no hace nada');
+// ---- la historia, dentro de la cinemática ----
+test('las líneas, en orden: la de la hora solo de noche, y cierra el cuaderno', () => {
+  assert.equal(H.bajada, 'Medianoche. La vigía se fue sin avisar.');
+  assert.equal(H.amenaza, 'El Enjambre ya está en la puerta.');
+  assert.equal(H.objetivo, 'Cuídela hasta el amanecer.');
+  assert.equal(H.pregunta, 'Ella sabía que venían. ¿Cómo?');
+  const con = (horas, minutos = 0) => lineas({ horas, minutos }).map(l => l.id);
+  for (const h of [22, 23, 0, 1, 3, 4]) assert.deepEqual(con(h, 41), ['bajada', 'amenaza', 'hora', 'objetivo', 'pregunta'], `${h}:41`);
+  for (const h of [5, 6, 12, 18, 21]) assert.deepEqual(con(h, 59), ['bajada', 'amenaza', 'objetivo', 'pregunta'], `${h}:59`);
+  assert.deepEqual(lineas(null).map(l => l.id), ['bajada', 'amenaza', 'objetivo', 'pregunta']);
+  assert.equal(esDeNoche(21), false); assert.equal(esDeNoche(22), true); assert.equal(esDeNoche(4), true); assert.equal(esDeNoche(5), false);
+  assert.equal(lineas({ horas: 0, minutos: 41 })[2].texto, 'Son las 00:41 donde está usted. Aquí también es de noche.');
+  assert.equal(lineas({ horas: 1, minutos: 5 })[2].texto, 'Es la 01:05 donde está usted. Aquí también es de noche.');
+  assert.equal(lineas({ horas: 4, minutos: 59 })[2].texto.slice(0, 13), 'Son las 04:59');
+  // el cuaderno va solo con la última, y las dos últimas van arriba, en la bajada
+  for (const L of [lineas(DE_DIA), lineas(DE_NOCHE)]) {
+    assert.deepEqual(L.filter(l => l.cuaderno).map(l => l.id), ['pregunta']);
+    assert.deepEqual(L.filter(l => l.arriba).map(l => l.id), ['objetivo', 'pregunta']);
+  }
+  // en el guion, en el mismo orden: cada línea empieza después de la anterior
+  for (const g of [guion(DE_DIA), guion(DE_NOCHE)]) {
+    for (let i = 1; i < g.lineas.length; i++) assert.ok(g.lineas[i].en > g.lineas[i - 1].en, g.lineas[i].id);
+  }
+});
+
+test('se lee bien: de 5 a 20 letras por segundo y cada línea completa a la vista el tiempo de leerla', () => {
+  assert.ok(LECTURA.letrasPorSegundo >= 5 && LECTURA.letrasPorSegundo <= 20);
+  for (const hora of [DE_DIA, DE_NOCHE, { horas: 1, minutos: 5 }]) {
+    const g = guion(hora);
+    for (const l of g.lineas) {
+      const completa = l.en + (l.texto.length * 1000) / g.letrasPorSegundo;
+      assert.ok(completa <= l.completa + 1, l.id);
+      assert.ok(l.sale - l.completa >= LECTURA.leer, `${l.id}: completa ${l.sale - l.completa} ms`);
+      assert.ok(l.sale - l.en >= (l.texto.length * 1000) / LECTURA.ritmo, `${l.id}: a la vista ${l.sale - l.en} ms`);
+      assert.ok(l.fuera > l.sale && alfaDe(l, l.completa) === 1 && alfaDe(l, l.fuera) === 0);
+      // letra por letra: a mitad de camino, a medias
+      const mitad = letrasVisibles((l.en + l.completa) / 2, g)[g.lineas.indexOf(l)];
+      assert.ok(mitad > 0 && mitad < l.texto.length, l.id);
+    }
+    // desde el aire, todo se va con la bajada; arriba, una por vez y antes de aterrizar
+    for (const l of g.lineas.filter(x => !x.arriba)) assert.ok(l.fuera <= g.bajada + LECTURA.salida, l.id);
+    const arriba = g.lineas.filter(x => x.arriba);
+    assert.ok(arriba[0].aparece >= g.bajada && arriba[1].aparece >= arriba[0].fuera && arriba[1].fuera <= g.aterriza);
+    // las páginas del aire no se pisan: la de la hora entra cuando se fue la de las dos primeras
+    const hLinea = g.lineas.find(l => l.id === 'hora');
+    if (hLinea) assert.ok(hLinea.aparece >= g.lineas[1].fuera);
+  }
+});
+
+test('al compás de la música: la bajada en un compás, tres compases hasta la barrera, y no pasa de 20 s', () => {
+  const dia = guion(DE_DIA), noche = guion(DE_NOCHE);
+  for (const g of [dia, noche]) {
+    assert.equal((g.bajada - g.encender) % (4 * PULSO), 0, 'la bajada empieza con un compás');
+    assert.equal(g.aterriza - g.bajada, 12 * PULSO);
+    assert.equal(g.partida, g.aterriza);
+    assert.ok(g.fin <= 20000, `${g.fin} ms`);
+    // la música: el golpe de la bajada, el redoble y el aterrizaje, en los tiempos del guion
+    const notas = notasApertura(g);
+    const crash = notas.filter(n => n.voz === 'crash').map(n => n.t);
+    assert.deepEqual(crash, [g.bajada / 1000, g.aterriza / 1000].map(x => Math.round(x * 10000) / 10000));
+    assert.ok(notas.every(n => n.t <= g.aterriza / 1000));
+  }
+  // de día, tres compases desde el aire (como antes); con la línea de la hora, cinco
+  assert.equal(dia.compasesLuz, 3);
+  assert.equal(noche.compasesLuz, 5);
+  assert.equal(dia.fin, 14740);
+  assert.equal(noche.fin, 19060);
+});
+
+test('entera: la partida arranca una vez, al aterrizar, y la apertura termina una vez', () => {
+  for (const g of [guion(DE_DIA), guion(DE_NOCHE)]) {
+    const { c, hechos } = espiar(g);
+    const golpes = [];
+    for (let t = 0; t < g.partida; t += 16) golpes.push(...c.avanzar(t));
+    assert.deepEqual(hechos, [], 'mientras baja, no hay partida');
+    for (let t = g.partida; t <= g.fin + 500; t += 16) golpes.push(...c.avanzar(t));
+    assert.deepEqual(hechos, [['partida', 'guion'], ['fin', 'guion']]);
+    for (const x of ['encender', 'chispa', 'bajada', 'niebla', 'aterriza']) assert.equal(golpes.filter(y => y === x).length, 1, x);
+    assert.ok(golpes.includes('letra'));
+    assert.deepEqual(c.avanzar(g.fin + 1000), [], 'terminada no hace nada');
+  }
 });
 
 test('saltarla lleva a la partida en el acto y se va con un fundido corto', () => {
-  const { c, hechos } = espiar();
+  const g = guion(DE_NOCHE);
+  const { c, hechos } = espiar(g);
   c.avanzar(0); c.avanzar(1200);
-  c.saltar();
+  assert.equal(c.saltar(), true);
   assert.deepEqual(hechos, [['partida', 'saltada']], 'la partida arranca al saltar');
-  c.saltar(); c.saltar();
+  assert.equal(c.saltar(), false, 'se mide una sola vez');
   c.avanzar(1300);
   assert.ok(c.opacidad > 0 && c.opacidad < 1);
-  c.avanzar(1200 + GUION.saltoFundido);
+  c.avanzar(1200 + g.saltoFundido);
   assert.deepEqual(hechos, [['partida', 'saltada'], ['fin', 'saltada']]);
   assert.equal(c.terminada, true);
+  assert.ok(g.saltoFundido <= 300);
   // después de saltar, no suena nada más de la apertura
-  const { c: c2 } = espiar();
+  const { c: c2 } = espiar(g);
   c2.avanzar(0); c2.saltar();
-  assert.deepEqual(c2.avanzar(GUION.aterriza + 10), []);
+  assert.deepEqual(c2.avanzar(g.aterriza + 10), []);
 });
 
 test('saltarla ya en la barrera no arranca otra partida', () => {
-  const { c, hechos } = espiar();
-  c.avanzar(0); c.avanzar(GUION.partida + 100);
+  const g = guion();
+  const { c, hechos } = espiar(g);
+  c.avanzar(0); c.avanzar(g.partida + 100);
   c.saltar();
-  c.avanzar(GUION.fin);
+  c.avanzar(g.fin);
   assert.deepEqual(hechos, [['partida', 'guion'], ['fin', 'saltada']]);
 });
 
@@ -89,174 +171,80 @@ test('el reloj de seguridad juega igual aunque no lleguen cuadros', () => {
   assert.deepEqual(hechos, [['partida', 'forzada'], ['fin', 'forzada']]);
 });
 
-test('con menos movimiento: un cuadro quieto, todo el texto a la vista y más corta', () => {
-  assert.deepEqual(letrasVisibles(0, T.apertura.lineas, GUION_QUIETO), T.apertura.lineas.map(l => l.length));
-  const { c, hechos } = espiar(GUION_QUIETO);
-  const golpes = [];
-  for (let t = 0; t <= GUION_QUIETO.fin; t += 50) golpes.push(...c.avanzar(t));
-  assert.ok(!golpes.includes('letra'));
-  assert.deepEqual(hechos.map(h => h[0]), ['partida', 'fin']);
-  assert.ok(GUION_QUIETO.fin < GUION.fin);
-});
-
-test('la larga: el texto entra letra por letra, a no más de 20 por segundo, y termina antes de la bajada', () => {
-  const [a, b] = T.apertura.lineas;
-  assert.ok(GUION.letrasPorSegundo >= 5 && GUION.letrasPorSegundo <= 20);
-  assert.deepEqual(letrasVisibles(GUION.linea1 - 1, [a, b]), [0, 0]);
-  assert.deepEqual(letrasVisibles(GUION.linea1 + 500, [a, b]), [10, 0]);
-  assert.ok(GUION.linea1 + (a.length * 1000) / GUION.letrasPorSegundo <= GUION.linea2, 'la primera termina antes de la segunda');
-  assert.ok(GUION.linea2 + (b.length * 1000) / GUION.letrasPorSegundo <= GUION.bajada - 300, 'queda un respiro para leer');
-  assert.deepEqual(letrasVisibles(GUION.bajada, [a, b]), [a.length, b.length]);
-  // las dos primeras líneas de la historia nueva, no las viejas
-  assert.deepEqual(T.apertura.lineas, [T.apertura.historia.bajada, T.apertura.historia.amenaza]);
-  assert.doesNotMatch(T.apertura.lineas.join(' '), /bajo ataque/);
-});
-
-// ---- la corta ----
-// cuántos milisegundos tarda el primer auto de la primera partida en quedar listo para decidir, según el motor
-function msHastaElPrimerAuto() {
-  const p = crearPartida(nivelPeaje(1, { tutorial: true }));
-  while (!(p.fila[0] && p.paso >= p.fila[0].listoEn)) avanzar(p);
-  return (p.paso * 1000) / PASOS_POR_SEGUNDO;
-}
-
-test('la corta: el primer toque posible cae hacia los 2,2 s y nunca después del segundo 3', () => {
-  for (const guion of [GUION_CORTO, GUION_CORTO_QUIETO]) {
-    const primer = guion.partida + msHastaElPrimerAuto();
-    assert.ok(primer <= 3000, `${primer} ms`);
-    assert.ok(primer >= 1900 && primer <= 2500, `hacia los 2,2 s: ${primer} ms`);
-    // el auto asoma cuando la cámara ya llegó (o casi) y la apertura se va enseguida
-    assert.ok(guion.partida < guion.aterriza && guion.aterriza <= 2000 && guion.fin <= primer);
+test('el salto se mide en tramos de tres segundos que están en la lista', () => {
+  assert.equal(tramoDeSalto(0), 0);
+  assert.equal(tramoDeSalto(2999), 0);
+  assert.equal(tramoDeSalto(3000), 3);
+  assert.equal(tramoDeSalto(17900), 15);
+  assert.equal(tramoDeSalto(99999), 18);
+  for (const n of TRAMOS_SALTO) assert.ok(EVENTOS.includes('apertura-saltada-' + n), n);
+  // antes de que empiece la partida, cualquier salto cae en un tramo de la lista
+  for (const g of [guion(DE_DIA), guion(DE_NOCHE)]) {
+    for (let t = 0; t < g.partida; t += 250) assert.ok(TRAMOS_SALTO.includes(tramoDeSalto(t)));
   }
-  // la bajada, en unos dos segundos: desde arriba hasta la barrera
-  assert.equal(altura(0, GUION_CORTO), 1);
-  assert.equal(altura(GUION_CORTO.aterriza, GUION_CORTO), 0);
-  assert.ok(niebla(0, GUION_CORTO) > 0.5 && niebla(GUION_CORTO.nieblaFin, GUION_CORTO) === 0, 'sale de la niebla');
 });
 
-test('la corta: la partida arranca debajo antes de aterrizar y la apertura se funde al llegar', () => {
-  const { c, hechos } = espiar(GUION_CORTO);
-  const golpes = [];
-  for (let t = 0; t < GUION_CORTO.partida; t += 16) golpes.push(...c.avanzar(t));
-  assert.deepEqual(hechos, []);
-  golpes.push(...c.avanzar(GUION_CORTO.partida));
-  assert.deepEqual(hechos, [['partida', 'guion']]);
-  assert.equal(c.opacidad, 1, 'hasta aterrizar tapa la partida');
-  golpes.push(...c.avanzar((GUION_CORTO.aterriza + GUION_CORTO.fin) / 2));
-  assert.ok(c.opacidad > 0 && c.opacidad < 1);
-  golpes.push(...c.avanzar(GUION_CORTO.fin));
-  assert.deepEqual(hechos, [['partida', 'guion'], ['fin', 'guion']]);
-  assert.deepEqual(golpes.sort(), ['aterriza', 'encender'], 'sin golpes de la larga');
-});
-
-test('la corta: un toque en la bajada la acorta y la partida empieza en el acto', () => {
-  const { c, hechos } = espiar(GUION_CORTO);
-  c.avanzar(0); c.avanzar(300);
-  assert.equal(c.saltar(), true);
-  assert.deepEqual(hechos, [['partida', 'saltada']], 'la partida arranca con el toque');
-  c.avanzar(300 + GUION_CORTO.saltoFundido);
-  assert.equal(c.terminada, true, 'un fundido corto');
-  assert.ok(GUION_CORTO.saltoFundido <= 250);
-});
-
-test('la corta con menos movimiento: sin cámara que se mueva ni niebla, y los mismos tiempos', () => {
-  for (const t of [0, 500, 1000, 1800]) {
-    assert.equal(altura(t, GUION_CORTO_QUIETO), 0);
-    assert.equal(niebla(t, GUION_CORTO_QUIETO), 0);
+test('con menos movimiento: quieta, con todas las líneas a la vista el tiempo de leerlas y más corta', () => {
+  for (const hora of [DE_DIA, DE_NOCHE]) {
+    const q = guion(hora, true), g = guion(hora);
+    assert.equal(q.quieto, true);
+    assert.deepEqual(letrasVisibles(0, q), q.lineas.map(l => l.texto.length));
+    assert.deepEqual(q.lineas.map(l => l.id), g.lineas.map(l => l.id), 'las mismas líneas nuevas');
+    const letras = q.lineas.reduce((s, l) => s + l.texto.length, 0);
+    assert.ok(q.frente >= (letras * 1000) / LECTURA.ritmo, 'el tiempo de leerlo todo');
+    for (const t of [0, q.frente, q.fin]) { assert.equal(altura(t, q), 0); assert.equal(niebla(t, q), 0); }
+    assert.equal(inclinacion(q.frente - 1, q), 0);
+    const { c, hechos } = espiar(q);
+    const golpes = [];
+    for (let t = 0; t < q.fin; t += 50) golpes.push(...c.avanzar(t));
+    golpes.push(...c.avanzar(q.fin));
+    assert.ok(!golpes.includes('letra'));
+    assert.deepEqual(hechos.map(h => h[0]), ['partida', 'fin']);
+    assert.ok(q.fin < g.fin);
   }
-  assert.equal(GUION_CORTO_QUIETO.partida, GUION_CORTO.partida);
 });
 
-// ---- la historia en las pausas ----
-const H = T.apertura.historia;
-const lineas = (hora = null) => lineasDeHistoria(H, hora);
-const texto = e => { const v = verHistoria(e); return v.texto.slice(0, v.letras); };
-
-test('la historia: cuatro líneas en orden, la del cuaderno al final', () => {
-  const L = lineas();
-  assert.deepEqual(L.map(l => l.texto), [H.bajada, H.amenaza, H.objetivo, H.pregunta]);
-  assert.equal(H.bajada, 'Medianoche. La vigía se fue sin avisar.');
-  assert.equal(H.amenaza, 'El Enjambre ya está en la puerta.');
-  assert.equal(H.objetivo, 'Cuídela hasta el amanecer.');
-  assert.equal(H.pregunta, 'Ella sabía que venían. ¿Cómo?');
-  assert.ok(L[3].cuaderno && !L[0].cuaderno);
-});
-
-test('la historia: la primera línea se escribe mientras baja la cámara, a no más de 20 letras por segundo', () => {
-  assert.ok(HISTORIA.letrasPorSegundo >= 5 && HISTORIA.letrasPorSegundo <= 20);
-  const e = historiaEn(1000, lineas());
-  const v = verHistoria(e);
-  assert.equal(v.id, 'bajada');
-  assert.ok(v.letras > 0 && v.letras <= Math.floor(((1000 - HISTORIA.primera) * 20) / 1000));
-  assert.equal(texto(e), H.bajada.slice(0, v.letras));
-});
-
-test('la historia: no se escribe mientras hay un auto esperando decisión; la línea espera donde iba', () => {
-  // un acierto a los 2,5 s; desde los 4 s un auto espera y no se decide
-  const hechos = [[2500, 'acierto'], [4000, 'espera']];
-  const a = verHistoria(historiaEn(4000, lineas(), hechos));
-  assert.equal(a.id, 'amenaza');
-  assert.ok(a.letras > 0 && a.letras < H.amenaza.length, 'iba a medias');
-  const b = verHistoria(historiaEn(9000, lineas(), hechos));
-  assert.equal(b.id, 'amenaza');
-  assert.equal(b.letras, a.letras, 'cinco segundos después, igual');
-  // cuando el auto se decide, sigue desde ahí
-  const c = verHistoria(historiaEn(9300, lineas(), [...hechos, [9000, 'libre']]));
-  assert.ok(c.letras > a.letras);
-  // y una línea no empieza mientras hay un auto esperando
-  const d = verHistoria(historiaEn(6000, lineas(), [[2500, 'acierto'], [3000, 'espera']]));
-  assert.notEqual(d.id, 'amenaza');
-});
-
-test('la historia: la amenaza espera el primer acierto y la pregunta no sale antes de los 12 s', () => {
-  const sinAcierto = historiaEn(9000, lineas());
-  assert.equal(sinAcierto.i, 1, 'sigue esperando el acierto');
-  assert.equal(verHistoria(sinAcierto).id, null, 'la primera ya se fue');
-  // un jugador sin pausas perdidas: acierto a los 2,3 s y siempre libre
-  const hechos = [[2300, 'acierto']];
-  let vioLaPregunta = null;
-  for (let t = 0; t <= 20000; t += 50) {
-    const v = verHistoria(historiaEn(t, lineas(), hechos, 50));
-    if (v.id === 'pregunta' && vioLaPregunta === null) vioLaPregunta = t;
-    if (v.id === 'pregunta') assert.equal(v.cuaderno, true);
-  }
-  assert.ok(vioLaPregunta >= 12000 && vioLaPregunta <= 15000, `${vioLaPregunta} ms`);
-  // y al final se va
-  assert.equal(historiaEn(30000, lineas(), hechos, 50).fin, true);
-});
-
-test('la historia: la línea de la hora solo entre las 22:00 y las 05:00, antes de la última', () => {
-  const con = (horas, minutos = 0) => lineas({ horas, minutos }).map(l => l.id);
-  for (const h of [22, 23, 0, 1, 3, 4]) assert.deepEqual(con(h, 41), ['bajada', 'amenaza', 'objetivo', 'hora', 'pregunta'], `${h}:41`);
-  for (const h of [5, 6, 12, 18, 21]) assert.deepEqual(con(h, 59), ['bajada', 'amenaza', 'objetivo', 'pregunta'], `${h}:59`);
-  assert.equal(esDeNoche(21), false); assert.equal(esDeNoche(22), true); assert.equal(esDeNoche(4), true); assert.equal(esDeNoche(5), false);
-  assert.deepEqual(lineas(null).map(l => l.id), ['bajada', 'amenaza', 'objetivo', 'pregunta']);
-  const hora = lineas({ horas: 0, minutos: 41 }).find(l => l.id === 'hora');
-  assert.equal(hora.texto, 'Son las 00:41 donde está usted. Aquí también es de noche.');
-  assert.equal(lineas({ horas: 1, minutos: 5 }).find(l => l.id === 'hora').texto, 'Es la 01:05 donde está usted. Aquí también es de noche.');
-  assert.equal(lineas({ horas: 23, minutos: 7 }).find(l => l.id === 'hora').texto.slice(0, 13), 'Son las 23:07');
-});
-
-test('la historia: avanzar no toca el estado anterior (es una función pura)', () => {
-  const e0 = crearHistoria(lineas());
-  const copia = JSON.stringify(e0);
-  const e1 = avanzarHistoria(e0, 2000, { esperando: false, acierto: true });
-  assert.equal(JSON.stringify(e0), copia);
-  assert.notEqual(e1, e0);
-  assert.deepEqual(historiaEn(5000, lineas(), [[2500, 'acierto']]), historiaEn(5000, lineas(), [[2500, 'acierto']]));
-});
-
-test('app.js: la primera partida pasa por la apertura corta, y su toque llega a la partida', () => {
-  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
-  assert.match(app, /debeVerse\(almacen\)\) verApertura\(tipo, \{ corta: true \}\)/);
-  assert.match(app, /alEmpezarPartida: motivo => \{[^}]*try \{ jugar\(\); \}/);
+// ---- en app.js: cuándo sale, el salto y la partida sin historia ----
+test('app.js: la primera vez que se toma la guardia sale la cinemática entera, y desde los ajustes otra vez', () => {
+  const app = leer('public/js/app.js');
+  assert.match(app, /if \(debeVerse\(almacen\)\) verApertura\(tipo, \{ primera: true \}\);/);
   assert.match(app, /\$\('empezar'\)\.addEventListener\('click', \(\) => tomarGuardia\('partida'\)\)/);
-  // «Ver la apertura» es la larga
   assert.match(app, /\$\('ver-apertura'\)\.addEventListener\('click', \(\) => verApertura\('partida'\)\)/);
-  // en la corta, el toque que la salta es el mismo gesto de la partida
-  assert.match(app, /if \(apertura\.corta\) tocarAbajo\(e\);\s*apertura\.saltar\(\);/);
-  // Espacio, Enter y Escape la saltan
-  for (const k of ["' '", "'Enter'", "'Escape'"]) assert.ok(app.includes(`e.key === ${k}`), k);
+  // se marca como vista al empezar, y la línea de la hora sale de la hora del teléfono
+  assert.match(app, /marcarVista\(almacen\);/);
+  assert.match(app, /lineasDeApertura\(T\.apertura\.historia, horaDelTelefono\(\)\)/);
+  // la música va con el mismo guion
+  assert.match(app, /m\.apertura\(guion\)/);
+});
+
+test('app.js: el toque que la salta no cuenta como jugada', () => {
+  const app = leer('public/js/app.js'), css = leer('public/estilo.css'), html = leer('public/index.html');
+  // la capa se queda el toque: no lo deja llegar a la partida ni lo convierte en jugada
+  const capa = app.slice(app.indexOf("$('apertura').addEventListener"), app.indexOf("addEventListener('keydown'", app.indexOf("$('apertura').addEventListener")));
+  assert.match(capa, /e\.stopPropagation\(\);/);
+  assert.match(capa, /apertura\.saltar\(\)/);
+  assert.doesNotMatch(capa, /tocarAbajo|soltarToque|decidir/);
+  // ya saltada o yéndose, deja pasar los toques nuevos a la partida
+  assert.match(css, /\.apertura\.sale \{ pointer-events: none; \}/);
+  // Espacio, Enter y Escape la saltan, y ninguna tecla de jugar
+  const teclas = app.slice(app.indexOf("addEventListener('keydown', e => {\n  if (!apertura) return;"));
+  for (const k of ["' '", "'Enter'", "'Escape'"]) assert.ok(teclas.includes(`e.key === ${k}`), k);
+  assert.doesNotMatch(teclas.slice(0, teclas.indexOf('}, true);')), /ArrowRight|ArrowLeft/);
+  // el botón «Saltar»: un botón de verdad, dentro de la capa
+  assert.match(html, /<div id="apertura"[^>]*>[\s\S]*<button id="apertura-saltar" class="saltar" type="button">Saltar<\/button>\s*<\/div>/);
+  assert.match(css, /\.saltar \{[^}]*min-height: 44px;/);
+  assert.equal(T.apertura.saltar, 'Saltar');
+});
+
+test('durante la partida no sale ningún texto de historia', () => {
+  const app = leer('public/js/app.js'), html = leer('public/index.html'), css = leer('public/estilo.css');
+  assert.doesNotMatch(html, /id="historia/);
+  assert.doesNotMatch(css, /\.historia/);
+  assert.doesNotMatch(app, /\$\('historia|crearHistoria|avanzarHistoria|verHistoria/);
+  // la historia solo se lee para armar la apertura
+  assert.deepEqual([...app.matchAll(/T\.apertura\.historia/g)].length, 1);
+  // la ayuda de Chispa del tutorial sigue
+  assert.match(app, /function ayuda\(tipo\)/);
 });
 
 test('la tarjeta de la hora 3: dice que llega pronto, sin fecha, y ofrece el reto y las estrellas', () => {

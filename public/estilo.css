@@ -120,29 +120,25 @@ a { color: var(--cian); }
 .apertura { position: absolute; inset: 0; z-index: 10; cursor: pointer; touch-action: none; }
 .apertura[hidden] { display: none; }
 .apertura canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* el aviso de abajo, «Toque para seguir» en el giro */
 .apertura-saltar { position: absolute; left: 0; right: 0; bottom: max(18px, env(safe-area-inset-bottom)); margin: 0; text-align: center;
   font-size: .85rem; color: rgba(169, 182, 202, .72); opacity: 0; transition: opacity .6s; pointer-events: none; }
 .apertura-saltar.visible { opacity: 1; }
-.apertura.sale .apertura-saltar { opacity: 0; transition-duration: .2s; }
-/* la historia de la apertura corta: arriba, bajo el marcador, lejos del pulgar y encima de la ayuda de Chispa */
-.historia { position: absolute; z-index: 12; left: 16px; right: 16px; top: calc(max(10px, env(safe-area-inset-top)) + 96px);
-  display: flex; align-items: center; justify-content: center; gap: 12px; pointer-events: none; }
-.historia[hidden] { display: none; }
-.historia-texto { margin: 0; font-weight: 600; font-size: 1.12rem; line-height: 1.35; text-align: center; color: #f1f5f9;
-  text-shadow: 0 1px 2px #000, 0 0 12px rgba(3, 6, 14, .9); min-height: 1.35em; }
-.historia.escribiendo .historia-texto::after { content: ''; display: inline-block; width: .42em; height: .95em; margin-left: 3px;
-  vertical-align: -.12em; background: var(--cian); animation: cursor .52s steps(1) infinite; }
+/* ya se está yendo: los toques pasan a la partida que empezó debajo */
+.apertura.sale { pointer-events: none; }
+/* «Saltar»: discreto, en la esquina de arriba, lejos del texto; del tamaño de un dedo */
+.saltar { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); z-index: 1;
+  min-width: 64px; min-height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid rgba(148, 163, 184, .35);
+  background: rgba(3, 6, 14, .45); color: rgba(226, 232, 240, .82); font: 600 .9rem/1 var(--texto);
+  letter-spacing: .02em; cursor: pointer; transition: opacity .2s; }
+.saltar:focus-visible { outline: 2px solid var(--ambar); outline-offset: 2px; }
+.apertura.sale .saltar { opacity: 0; }
 @keyframes cursor { 50% { opacity: 0; } }
-.historia-cuaderno { display: none; flex: none; }
-.historia.con-cuaderno { justify-content: flex-start; }
-.historia.con-cuaderno .historia-cuaderno { display: block; }
-.historia.con-cuaderno .historia-texto { text-align: left; color: #fde68a; }
-.historia-cuaderno svg { display: block; width: 68px; height: 52px; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .7)); }
 /* el giro: una capa transparente sobre la escena (el auto se ve), que se lleva los toques; el texto arriba */
 .giro { position: absolute; inset: 0; z-index: 12; cursor: pointer; touch-action: none;
   background: linear-gradient(180deg, rgba(3, 6, 14, .72) 0%, rgba(3, 6, 14, 0) 42%); }
 .giro[hidden] { display: none; }
-/* más abajo que la historia: al final de la partida las reglas del boletín ya ocupan dos filas */
+/* bajo el marcador: al final de la partida las reglas del boletín ya ocupan dos filas */
 .giro-texto { position: absolute; left: 20px; right: 20px; top: calc(max(10px, env(safe-area-inset-top)) + 150px); margin: 0;
   display: grid; gap: .7rem; text-align: center; font-weight: 600; font-size: 1.15rem; line-height: 1.4; color: #f1f5f9;
   text-shadow: 0 1px 2px #000, 0 0 12px rgba(3, 6, 14, .9); }
@@ -293,5 +289,5 @@ button.ya:active { transform: translateY(1px); }
   .landing { border-top: 0; border-left: 1px solid var(--linea); background: linear-gradient(180deg, #081126 0%, var(--noche) 420px); padding: 56px 52px 64px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .historia.escribiendo .historia-texto::after, .giro-linea::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .giro-linea::after { animation: none; } }
 @media (min-width: 700px) { #app { border-left: 1px solid var(--linea); border-right: 1px solid var(--linea); } }
