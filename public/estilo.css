@@ -138,6 +138,20 @@ a { color: var(--cian); }
 .historia.con-cuaderno .historia-cuaderno { display: block; }
 .historia.con-cuaderno .historia-texto { text-align: left; color: #fde68a; }
 .historia-cuaderno svg { display: block; width: 68px; height: 52px; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .7)); }
+/* el giro: una capa transparente sobre la escena (el auto se ve), que se lleva los toques; el texto arriba */
+.giro { position: absolute; inset: 0; z-index: 12; cursor: pointer; touch-action: none;
+  background: linear-gradient(180deg, rgba(3, 6, 14, .72) 0%, rgba(3, 6, 14, 0) 42%); }
+.giro[hidden] { display: none; }
+/* más abajo que la historia: al final de la partida las reglas del boletín ya ocupan dos filas */
+.giro-texto { position: absolute; left: 20px; right: 20px; top: calc(max(10px, env(safe-area-inset-top)) + 150px); margin: 0;
+  display: grid; gap: .7rem; text-align: center; font-weight: 600; font-size: 1.15rem; line-height: 1.4; color: #f1f5f9;
+  text-shadow: 0 1px 2px #000, 0 0 12px rgba(3, 6, 14, .9); }
+.giro-linea:empty { display: none; }
+.giro-linea.segunda { color: #fde68a; }
+.giro.escribiendo .giro-linea.escribe::after {
+  content: ''; display: inline-block; width: .42em; height: .95em; margin-left: 3px; vertical-align: -.12em; background: var(--cian);
+  animation: cursor .52s steps(1) infinite; }
+#juego.en-giro .mando { opacity: 0; transition: opacity .4s; }
 .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
 .ajustes .ver-apertura { width: auto; min-height: 44px; justify-self: center; font-size: .95rem; font-weight: 400; }
 
@@ -278,5 +292,5 @@ button.ya:active { transform: translateY(1px); }
   .landing { border-top: 0; border-left: 1px solid var(--linea); background: linear-gradient(180deg, #081126 0%, var(--noche) 420px); padding: 56px 52px 64px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .historia.escribiendo .historia-texto::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .historia.escribiendo .historia-texto::after, .giro-linea::after { animation: none; } }
 @media (min-width: 700px) { #app { border-left: 1px solid var(--linea); border-right: 1px solid var(--linea); } }

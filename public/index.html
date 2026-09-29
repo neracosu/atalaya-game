@@ -42,6 +42,7 @@
 <link rel="modulepreload" href="js/sonido.js">
 <link rel="modulepreload" href="js/musica.js">
 <link rel="modulepreload" href="js/apertura.js">
+<link rel="modulepreload" href="js/giro.js">
 <link rel="modulepreload" href="js/medir.js">
 <link rel="modulepreload" href="js/ajustes.js">
 </head>
@@ -104,6 +105,11 @@
       <p id="historia-texto" class="historia-texto" aria-hidden="true"></p>
     </div>
     <p id="historia-lector" class="solo-lector" aria-live="polite"></p>
+    <div id="giro" class="giro" role="dialog" aria-label="El último auto" hidden>
+      <p id="giro-texto" class="giro-texto" aria-hidden="true"></p>
+      <p id="giro-lector" class="solo-lector" aria-live="polite"></p>
+      <p id="giro-seguir" class="apertura-saltar visible">Toque para seguir</p>
+    </div>
   </section>
 
   <section id="fin" class="pantalla" aria-labelledby="fin-titulo">

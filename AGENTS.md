@@ -18,6 +18,8 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
 - `public/js/motor/`: el núcleo determinista. `peaje.js` es la lógica del nivel; `azar.js`, el azar con semilla.
 - `public/js/apertura.js`: la apertura («La torre vacía» en corto, solo la primera vez): el guion como datos,
   si toca verla y el control del tiempo, sin pantalla para poder probarlo en Node. Termina dentro de la partida.
+- `public/js/giro.js`: el giro de El peaje, solo en la primera victoria (clave `guardia-giro-peaje`): si toca verlo,
+  el guion como datos y dónde va el auto en cada instante. Pasa después del final y no toca el motor.
 - `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida en canvas), `apertura.js`
   (el dibujo de la apertura) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
 - `public/js/reto.js`: el reto del día, la racha y lo que se guarda en el teléfono. Si existe

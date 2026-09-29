@@ -13,6 +13,7 @@ import * as S from './sonido.js';
 import { medir } from './medir.js';
 import { debeVerse, marcarVista, crearControl, GUION, GUION_QUIETO, GUION_CORTO, GUION_CORTO_QUIETO, lineasDeHistoria, crearHistoria,
   avanzarHistoria, verHistoria } from './apertura.js';
+import { tocaGiro, marcarGiro, crearGiro } from './giro.js';
 import { crearMusica, cargaDe } from './musica.js';
 import { ajustesDe } from './ajustes.js';
 import { crearDibujoApertura } from './dibujo/apertura.js'; // el embudo, sin cookies ni datos personales (ver medir.js)
@@ -339,6 +340,8 @@ function cuadroHistoria(ahora) {
 
 // ---------- partida ----------
 let partida = null, modo = null, retoActual = null, bucle = 0, acumulado = 0, antes = 0, ayudaPaso = 0, finalizando = false;
+// el reloj de la barrera: el auto que espera decisión (desde cuándo) y el instante de la última jugada
+let espera = null, jugadaEn = 0;
 
 function empezar(tipo, { torreEncendida = false } = {}) {
   S.despertar();
@@ -355,6 +358,7 @@ function empezar(tipo, { torreEncendida = false } = {}) {
   }
   partida = crearPartida(nivel);
   finalizando = false;
+  espera = null;
   // la historia es solo de la primera partida (la que viene de la apertura corta)
   if (historia && historia.partida) pararHistoria();
   if (historia) historia.partida = true;
@@ -393,6 +397,9 @@ function cuadro(ahora) {
     acumulado -= PASO_MS;
     if (evs.length) { escena.eventos(evs, partida); reaccionar(evs); }
   }
+  // desde cuándo espera decisión el auto de adelante, para el reloj de la barrera
+  const f = partida.fila[0];
+  if (f && partida.paso >= f.listoEn && (!espera || espera.id !== f.id)) espera = { id: f.id, t: ahora };
   escena.dibujar(ahora);
   // cuánto aprieta la partida, para las capas de la música
   if (mus) mus.carga(cargaDe({ fila: partida.fila.length, filaMax: partida.nivel.fila, enRafaga: partida.enRafaga > 0, racha: partida.racha, paso: partida.paso, duracion: partida.nivel.duracion }));
@@ -413,8 +420,16 @@ function avisar(texto, clase = 'mal', ms = 1500) {
   avisoT = setTimeout(() => { a.className = 'aviso'; }, ms);
 }
 
+// Lo que tardó la respuesta, en el reloj chico de la barrera: la siembra del giro (el Enjambre anota cuánto tarda
+// la puerta). Si el toque llegó antes que el auto, la puerta contestó en el acto: 0 ms.
+function relojDeRespuesta(id) {
+  const ms = espera && espera.id === id ? Math.max(0, jugadaEn - espera.t) : 0;
+  escena.mostrarReloj(T.reloj(ms));
+}
+
 function reaccionar(evs) {
   for (const ev of evs) {
+    if (ev.e === 'bien' || ev.e === 'mal') relojDeRespuesta(ev.id);
     if (ev.e === 'bien') {
       const nivel = Math.min(((partida.racha / 5) | 0), 5);
       if (ev.accion === 'P') S.sonarPasa(nivel); else S.sonarSello(nivel);
@@ -522,7 +537,9 @@ function decidir(accion) {
   if (!partida) { if (apertura && apertura.corta) jugadaGuardada = accion; return; }
   if (partida.terminada) return;
   S.despertar();
-  if (jugar(partida, accion) && primeraJugadaDesde) {
+  const aceptada = jugar(partida, accion);
+  if (aceptada) jugadaEn = performance.now();
+  if (aceptada && primeraJugadaDesde) {
     // la primera jugada de la primera partida: cuánto pasó desde «Tomar la guardia» (solo sale el tramo)
     try { performance.mark('guardia-primera-jugada'); } catch { }
     medir('primera-jugada', performance.now() - primeraJugadaDesde);
@@ -567,6 +584,12 @@ function terminar() {
   guardar(datos);
   partida = null;
   medir('fin-peaje', estrellas);
+  // la primera victoria: antes del resultado, el giro (el puntaje ya está cerrado: el giro no lo toca)
+  if (tocaGiro(almacen, estrellas)) { marcarGiro(almacen); verGiro(() => pintarFin(r, estrellas, contado, asistido)); }
+  else pintarFin(r, estrellas, contado, asistido);
+}
+
+function pintarFin(r, estrellas, contado, asistido) {
   S.sonarFin(estrellas > 0);
   if (mus) mus.cerrar(estrellas);
 
@@ -598,6 +621,68 @@ function terminar() {
   mostrar('fin');
   $('fin').scrollTop = 0;
 }
+
+// ---------- el giro de El peaje: la primera victoria ----------
+// Tras el final, en la misma escena: un último auto sospechoso llega, frena ante la barrera, no intenta pasar
+// mientras el reloj cuenta, y da la vuelta. Luego, arriba, las dos líneas letra por letra. Se salta con un toque
+// (salvo el primer medio segundo, que el jugador venía tocando). giro.js lleva el tiempo; aquí solo se pinta.
+let giro = null;
+function verGiro(alTerminar) {
+  const lineas = T.giro.peaje;
+  const caja = $('giro'), texto = $('giro-texto');
+  let raf = 0, inicio = 0, escritas = 0;
+  const cerrar = () => {
+    cancelAnimationFrame(raf);
+    caja.hidden = true;
+    $('juego').classList.remove('en-giro');
+    giro = null;
+    escena.moverGiro(null);
+    try { alTerminar(); } catch { }
+  };
+  const control = crearGiro({ lineas, alTerminar: cerrar });
+  giro = control;
+  // la música se calla: el auto llega en silencio (la cadencia del final suena con el resultado)
+  if (mus) mus.parar(0.6);
+  escena.empezarGiro();
+  texto.replaceChildren();
+  $('giro-seguir').textContent = T.giro.seguir;
+  caja.setAttribute('aria-label', T.giro.etiqueta);
+  $('giro-lector').textContent = '';
+  caja.hidden = false;
+  $('juego').classList.add('en-giro');
+  caja.classList.remove('escribiendo', 'con-texto');
+  const cuadroGiro = ahora => {
+    if (control.terminado) return;
+    if (!inicio) inicio = ahora;
+    const v = control.avanzar(ahora - inicio);
+    if (control.terminado) return;
+    escena.moverGiro(v.auto);
+    // mientras el auto espera ante la barrera, el reloj cuenta lo que tarda la puerta
+    if (v.auto && v.auto.espera > 0 && v.auto.mira > 0) escena.mostrarReloj(T.reloj(v.auto.espera), true);
+    escena.dibujar(ahora);
+    const n = v.letras[0] + v.letras[1];
+    if (n !== escritas) {
+      if (n > escritas && n % 2 === 0) S.sonarLetra();
+      escritas = n;
+      // el cursor va en la línea que se está escribiendo
+      const va = v.letras[1] > 0 ? 1 : 0;
+      texto.replaceChildren(el('span', `giro-linea${va === 0 ? ' escribe' : ''}`, lineas[0].slice(0, v.letras[0])),
+        el('span', `giro-linea segunda${va === 1 ? ' escribe' : ''}`, lineas[1].slice(0, v.letras[1])));
+      caja.classList.add('con-texto');
+      if ($('giro-lector').textContent === '') $('giro-lector').textContent = lineas.join(' ');
+    }
+    caja.classList.toggle('escribiendo', v.escribiendo);
+    raf = requestAnimationFrame(cuadroGiro);
+  };
+  raf = requestAnimationFrame(cuadroGiro);
+}
+for (const tipo of ['pointerdown', 'pointerup', 'click']) {
+  $('giro').addEventListener(tipo, e => { e.stopPropagation(); if (tipo === 'pointerdown' && giro) giro.saltar(); });
+}
+addEventListener('keydown', e => {
+  if (!giro) return;
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Spacebar') { e.preventDefault(); giro.saltar(); }
+}, true);
 
 // La hora que sigue todavía no está: se dice claro, sin fecha, y se ofrece lo que sí se puede hacer ya:
 // el reto (el de hoy si falta, o el de mañana con su racha) y mejorar las estrellas.

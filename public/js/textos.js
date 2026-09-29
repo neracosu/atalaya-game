@@ -137,6 +137,15 @@ export const T = {
   },
 
   // al terminar: la hora que sigue todavía no está, y lo que sí se puede hacer ya
+  // el giro de El peaje: tras la primera victoria, el último auto frena y da la vuelta (GDD, parte 2)
+  giro: {
+    peaje: ['No querían entrar. Querían saber qué contesta la puerta, y cuánto tarda.', 'Ya saben que aquí hay alguien despierto.'],
+    seguir: 'Toque para seguir',
+    etiqueta: 'El último auto',
+  },
+  // el reloj chico sobre la barrera: lo que tardó cada respuesta
+  reloj: ms => `${Math.max(0, Math.round(ms))} ms`,
+
   proxima: {
     rotulo: 'La noche sigue · Hora 2',
     titulo: 'La cuarentena',

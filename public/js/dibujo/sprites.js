@@ -220,6 +220,10 @@ export const CUADERNO = [
 ];
 export const PALETA_CUADERNO = { k: '#0b1020', p: '#e7dcc1', l: '#64748b', a: '#b45309', m: '#78350f', r: '#ef4444' };
 
+// el reloj chico de la barrera, 5x5: la esfera y las agujas
+export const RELOJ = ['.ccc.', 'cwkwc', 'cwkkc', 'cwwwc', '.ccc.'];
+export const PALETA_RELOJ = { c: '#22d3ee', w: '#e2e8f0', k: '#0b1020' };
+
 // Convierte un sprite en un canvas a escala entera (sin suavizado: cada pixel del dibujo es un cuadro exacto)
 export function aCanvas(filas, paleta, escala) {
   const alto = filas.length, ancho = filas[0].length;

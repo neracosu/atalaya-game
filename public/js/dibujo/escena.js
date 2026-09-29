@@ -3,7 +3,7 @@
 // - la capa de código (cielo, estrellas, luz de la baliza, sellos, textos), generada en el momento.
 // El motor no sabe nada de esto: la escena solo escucha los eventos que el motor devuelve.
 
-import { SPRITES, PALETAS, BARRERA_POSTE, PALETA_BARRERA, TORRE, PALETA_TORRE, PALETA_TORRE_ENCENDIDA, aCanvas } from './sprites.js';
+import { SPRITES, PALETAS, BARRERA_POSTE, PALETA_BARRERA, TORRE, PALETA_TORRE, PALETA_TORRE_ENCENDIDA, RELOJ, PALETA_RELOJ, aCanvas } from './sprites.js';
 import { T } from '../textos.js';
 
 const ANCHO_AUTO = 20;
@@ -181,12 +181,27 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   let abierta = 0;
   let torreEncendida = false, encendidaEn = 0;
   let estrellas = [], edificios = [], L = disposicion(300, 600);
+  // el reloj chico sobre la barrera (lo que tardó la última respuesta) y el auto del giro, que no es del motor
+  let reloj = null, autoGiro = null;
 
   function sprite(tipo, paleta, cuadro) {
     const k = `${tipo}:${paleta}:${cuadro}:${u}`;
     if (!cache.has(k)) {
       const cuadros = SPRITES[tipo];
       cache.set(k, aCanvas(cuadros[cuadro % cuadros.length], PALETAS[tipo][paleta], u));
+    }
+    return cache.get(k);
+  }
+  // el mismo sprite mirando al otro lado: un espejo exacto, píxel por píxel (nunca una rotación)
+  function espejo(tipo, paleta) {
+    const k = `espejo:${tipo}:${paleta}:${u}`;
+    if (!cache.has(k)) {
+      const img = sprite(tipo, paleta, 0), c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const cg = c.getContext('2d');
+      cg.imageSmoothingEnabled = false;
+      cg.translate(img.width, 0); cg.scale(-1, 1); cg.drawImage(img, 0, 0);
+      cache.set(k, c);
     }
     return cache.get(k);
   }
@@ -282,6 +297,8 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
       } else if (a.estado === 'bloqueado') {
         a.y += dt * 0.03;
         a.alfa = Math.max(0, a.alfa - dt * 0.0016);
+      } else if (a.estado === 'sale') {
+        a.alfa = Math.max(0, a.alfa - dt * 0.004);
       }
       if (a.x > W + 30 || a.alfa <= 0) { autos.delete(a.id); continue; }
       const cuadro = quieto ? 0 : ((ahora / 350) | 0);
@@ -299,7 +316,36 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
       if (placa && a.estado !== 'bloqueado') etiqueta(placa[0], a.x + ANCHO_AUTO / 2, y - 1, placa[1], placa[2]);
       g.globalAlpha = 1;
     }
+    // el auto del giro: llega, frena, espera y da la vuelta (giro.js dice dónde va; aquí solo se pinta)
+    if (autoGiro) {
+      const desde = -ANCHO_AUTO - 6, x = desde + (lugar(0) - desde) * autoGiro.pos, y = calle + 1;
+      const img = autoGiro.mira > 0 ? sprite('sospechoso', 0, quieto || autoGiro.espera ? 0 : ((ahora / 350) | 0)) : espejo('sospechoso', 0);
+      g.drawImage(img, px(x), px(y));
+      pisa.push([px(x - 1), px(y - 1), img.width + 2 * u, img.height + 2 * u]);
+    }
     pisados = pisa;
+  }
+
+  // el reloj de la barrera: un relojito pixel y los milisegundos, chico y encima del poste
+  function pintarReloj(dt) {
+    if (!reloj) return;
+    reloj.t += dt;
+    if (!reloj.fijo && reloj.t > 1000) { reloj = null; return; }
+    const tam = Math.max(10, Math.round(3 * u));
+    g.font = `600 ${tam}px ui-monospace, Menlo, Consolas, monospace`;
+    const icono = fijo('reloj', RELOJ, PALETA_RELOJ);
+    const ancho = icono.width + tam * 0.35 + g.measureText(reloj.texto).width;
+    const cx = (barrera + 4) * u, cy = (calle - 17) * u;
+    const x0 = Math.round(cx - ancho / 2), alto = Math.round(tam * 1.5);
+    g.globalAlpha = reloj.fijo ? 1 : Math.min(1, (1000 - reloj.t) / 300);
+    g.fillStyle = 'rgba(8, 13, 26, .78)';
+    g.fillRect(x0 - Math.round(tam * 0.35), Math.round(cy - alto / 2), Math.round(ancho + tam * 0.7), alto);
+    g.drawImage(icono, x0, Math.round(cy - icono.height / 2));
+    g.fillStyle = '#a5f3fc';
+    g.textAlign = 'left';
+    g.textBaseline = 'middle';
+    g.fillText(reloj.texto, x0 + icono.width + Math.round(tam * 0.35), cy);
+    g.globalAlpha = 1;
   }
 
   function efectos(dt) {
@@ -359,11 +405,27 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     autosDibujo(ahora, dt, quieto);
     pintarBarrera(g, L, fijo('poste', BARRERA_POSTE, PALETA_BARRERA), abierta > 0);
     efectos(dt);
+    pintarReloj(dt);
     g.restore();
   }
 
-  function limpiar() { autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; sueloEntero = true; }
+  function limpiar() { autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; sueloEntero = true; reloj = null; autoGiro = null; }
+
+  // lo que tardó la última respuesta; `fijo` lo deja a la vista (en el giro, mientras el auto espera)
+  function mostrarReloj(texto, fijo = false) {
+    if (fijo && reloj && reloj.fijo) reloj.texto = texto;
+    else reloj = { texto, t: 0, fijo };
+  }
+  // el giro: los autos que quedaban en la fila se van y entra el último; `estado` es el de giro.js (o null)
+  function empezarGiro() {
+    for (const a of autos.values()) if (a.estado === 'fila') a.estado = 'sale';
+    reloj = null;
+  }
+  function moverGiro(estado) {
+    autoGiro = estado;
+    if (!estado || estado.mira < 0) { if (reloj && reloj.fijo) reloj = { ...reloj, fijo: false, t: 700 }; }
+  }
 
   redimensionar();
-  return { redimensionar, eventos, dibujar, encenderTorre, limpiar, zonaCalle: () => (calle + 8) / H };
+  return { redimensionar, eventos, dibujar, encenderTorre, limpiar, mostrarReloj, empezarGiro, moverGiro, zonaCalle: () => (calle + 8) / H };
 }
