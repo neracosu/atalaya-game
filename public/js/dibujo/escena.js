@@ -290,7 +290,9 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     for (const a of autos.values()) {
       if (a.estado === 'fila') {
         const meta = a.meta ?? lugar(4);
-        a.x += Math.sign(meta - a.x) * Math.min(Math.abs(meta - a.x), dt * 0.09);
+        // entra rápido y frena al llegar: el auto se ve en la barrera cuando el motor ya deja decidir sobre él
+        const falta = Math.abs(meta - a.x);
+        a.x += Math.sign(meta - a.x) * Math.min(falta, dt * Math.max(0.09, falta * 0.008));
       } else if (a.estado === 'pasa') {
         a.vel = Math.min(a.vel + dt * 0.0009, 0.25);
         a.x += a.vel * dt;
