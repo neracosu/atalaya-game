@@ -140,6 +140,29 @@ Cada nivel es una hora de la noche, de medianoche al amanecer. La forma de la no
 
 El remate no es descubrir que la ciudad es un servidor, porque quien llega desde Atalaya ya lo sabe. El remate es **que todo lo que acaba de jugar pasó de verdad anoche.**
 
+### El plan del Enjambre
+
+Los niveles no son problemas sueltos: son **los pasos de un solo ataque**, en el orden en que llegan los ataques de verdad. El Enjambre tiene un plan y lo sigue toda la noche. Cada hora que el guardia gana le cierra un camino, y por eso el Enjambre cambia de táctica: **la victoria de una hora es la causa del problema de la siguiente.**
+
+| Hora | Nivel | El paso del Enjambre | Por qué llega ahora | Lo que gana el guardia |
+|---|---|---|---|---|
+| 00:00 | El peaje | **Tocar.** Manda robots a la puerta para ver quién abre y qué hay adentro: `/wp-login.php`, `/.env`. | Es el primer paso de todo ataque. | Límite de peticiones |
+| 01:00 | La patrulla | **Buscar otra puerta.** Un escáner recorre la muralla buscando la que quedó abierta: el 3306, el 3000. | La puerta principal ya no le abre. | Cortafuegos |
+| 02:00 | La cuarentena | **Entrar escondido.** Si no puede forzar una puerta, entra dentro de algo que la ciudad sí deja pasar: un archivo subido por el formulario. | Las puertas que sobraban ya están cerradas. | Cuarentena |
+| 03:00 | Las agujas | **Distraer.** Ahoga la base con consultas para tener al guardia ocupado. | Lo que metió quedó encerrado y no puede correr. | Caché |
+| 04:00 | El correo | **Hablar en nombre de la ciudad.** Mientras el guardia salvaba la base, usó el formulario para mandar cartas firmadas por la villa. | La distracción era para esto. | Tope de envíos |
+| 05:00 | La caída | **Esperar.** No empuja: toda la noche de golpes llenó los registros, y la ciudad se cae sola, en cascada. | Ya no le quedan caminos, pero la ciudad está cansada. | Alarmas |
+| 06:00 | El amanecer | **Todo a la vez.** Ataca por todas las calles con todo lo que probó en la noche. | Es su última oportunidad antes de que salga el sol. | Se usan todas |
+
+Así se cuenta en cada hora:
+
+- **Antes** de jugar, Chispa lee una página del **cuaderno de Alba**. La vigía había anotado el paso que viene, antes de que pasara: «Primero tocan. Anotan quién abre.» Esa página dice qué hacer en la hora y por qué importa.
+- **Durante** la partida, la historia no interrumpe. Solo la sostienen los mensajes de Chispa y las fallas con humor.
+- **Al terminar**, la victoria muestra cómo el Enjambre cambia de plan («La puerta principal no le abre. Ahora busca otra.») y deja la pregunta que lleva a la hora siguiente.
+- **El hilo de fondo** es el cuaderno: cada página acertó lo que vino después. La pregunta de toda la temporada es cómo sabía Alba lo que iba a pasar, y por qué se fue justo esta noche. En la verdad, `last` muestra su última entrada, y la última página del cuaderno está en blanco.
+
+Además, el orden enseña algo real: así avanza un ataque contra un servidor, y cada defensa existe porque cierra uno de esos pasos.
+
 ### Los personajes
 
 - **El guardia** es el jugador, con su apodo.
