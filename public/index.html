@@ -28,6 +28,22 @@
 <meta name="twitter:image:alt" content="La torre de Atalaya encendida sobre una calle de noche, con autos que esperan en el peaje.">
 <link rel="stylesheet" href="estilo.css">
 <script type="module" src="js/app.js"></script>
+<!-- todos los módulos que importa app.js, para que bajen juntos y no en olas (lo revisa test/reglas.test.mjs) -->
+<link rel="modulepreload" href="js/motor/azar.js">
+<link rel="modulepreload" href="js/motor/peaje.js">
+<link rel="modulepreload" href="js/dibujo/sprites.js">
+<link rel="modulepreload" href="js/dibujo/escena.js">
+<link rel="modulepreload" href="js/dibujo/postal.js">
+<link rel="modulepreload" href="js/dibujo/apertura.js">
+<link rel="modulepreload" href="js/textos.js">
+<link rel="modulepreload" href="js/reto.js">
+<link rel="modulepreload" href="js/compartir.js">
+<link rel="modulepreload" href="js/puerta.js">
+<link rel="modulepreload" href="js/sonido.js">
+<link rel="modulepreload" href="js/musica.js">
+<link rel="modulepreload" href="js/apertura.js">
+<link rel="modulepreload" href="js/medir.js">
+<link rel="modulepreload" href="js/ajustes.js">
 </head>
 <body>
 <main id="app">
@@ -41,8 +57,8 @@
       </div>
       <div id="torre-portada" class="torre-portada" aria-hidden="true"></div>
       <div class="portada-abajo">
-        <button id="empezar" class="boton principal" type="button"><span class="hora">00:00 · El peaje</span><span>Tomar la guardia</span></button>
-        <button id="reto" class="boton" type="button"><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle"></span></button>
+        <button id="empezar" class="boton principal" type="button" disabled><span class="hora">00:00 · El peaje</span><span id="empezar-texto">Cargando…</span></button>
+        <button id="reto" class="boton" type="button" disabled><span id="reto-titulo">Reto del día</span><span id="reto-detalle" class="detalle">Cargando…</span></button>
         <p id="reto-tono" class="reto-tono" hidden></p>
         <p id="racha" class="racha" hidden></p>
         <details class="ajustes">

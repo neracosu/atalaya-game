@@ -606,6 +606,10 @@ $('reto').addEventListener('click', () => tomarGuardia('reto'));
 $('ver-apertura').addEventListener('click', () => verApertura('partida'));
 $('otra-vez').addEventListener('click', () => { medir('otra-vez'); if (ultimo && ultimo.modo === 'reto') empezarReto(); else empezar('partida'); });
 $('volver').addEventListener('click', portada);
+// los dos botones grandes vienen apagados y con «Cargando…» en el HTML: en 4G lenta se ven antes de que llegue
+// el código. Desde aquí ya responden (el detalle del reto lo escribe portada(), más abajo).
+$('empezar-texto').textContent = T.empezar;
+for (const id of ['empezar', 'reto']) $(id).disabled = false;
 addEventListener('resize', () => { if ($('juego').classList.contains('activa')) escena.redimensionar(); });
 
 pintarLanding();
