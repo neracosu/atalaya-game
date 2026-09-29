@@ -449,14 +449,14 @@ La sala de la torre vista desde adentro. Por la ventana, la ciudad con la luz de
 
 ### Las escenas
 
-**Nadie espera una escena antes de jugar.** El juego arranca en el primer nivel; la historia llega después.
+**Una sola escena antes de jugar, corta y que termina dentro de la partida.** La primera vez que se toca «Tomar la guardia» se ve la apertura; su último cuadro ya es la barrera con el primer auto llegando, así que no hay pantalla de por medio. Se salta con un toque y no se vuelve a mostrar (se puede ver de nuevo desde Ajustes). El resto de la historia llega después de jugar.
 
 | Escena | Cuándo | Duración | Qué cuenta |
 |---|---|---|---|
-| **La torre vacía** | Mientras se juega la primera partida, de fondo, y completa al terminarla | 20 s | La ciudad de noche, la torre apagada. El guardia enciende la luz; Chispa despierta. |
+| **La torre vacía** (apertura) | La primera vez que se toma la guardia, antes de la primera partida | unos 15 s | La ciudad de noche desde el aire, la torre apagada. Se enciende la luz y barre la ciudad, el Enjambre llega por los bordes, Chispa despierta: «Esta noche, la ciudad está bajo ataque. Alguien tiene que tomar la guardia.» La cámara baja del cielo hasta quedar de frente a la torre y aterriza en la barrera. |
 | **Entre horas** | Tras cada nivel | 8 s | El catalejo gira, la lente se agrieta un poco más y cambia. Chispa comenta según las estrellas. |
 | **La caída** | Antes de las 05:00 | 12 s | Se apagan tres salas a la vez. |
-| **Bajar del cielo** | Entrada al amanecer | 5 s | La cámara baja hacia la torre y se abre la vista desde ella. |
+| **Bajar del cielo** | Dentro de la apertura, y de nuevo en la entrada al amanecer | 5 s | La cámara baja hacia la torre y se abre la vista desde ella. |
 | **La verdad** | Tras el amanecer | 20 s | Las lentes caen, cada una deja ver su comando real, y queda `alba@atalaya`. |
 
 ### La selfie del distrito
@@ -505,7 +505,7 @@ Pesa poco, cada escena es un guion en datos y puede usar datos del jugador: su a
 ### Sonido
 
 - **Efectos generados por código**, sin archivos. El combo sube de tono.
-- **Música que sigue la carga**, más adelante: pocos instrumentos en calma y más capas cuando aprieta.
+- **Música que sigue la carga**, compuesta en código (WebAudio, sin archivos: no pesa y no tiene licencias ajenas): un tema de la noche que empieza grave en la apertura, se abre en la bajada del cielo y sigue suave en la partida, con pocos instrumentos en calma y más capas cuando aprieta. Nunca tapa los efectos. Música y efectos se apagan por separado.
 - Vibración corta en aciertos grandes y fallas, que se puede apagar.
 - Todo el juego se entiende sin sonido.
 
