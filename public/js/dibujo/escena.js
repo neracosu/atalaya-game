@@ -38,14 +38,47 @@ export function decoradoCiudad(W, calle) {
   return { estrellas, edificios };
 }
 
+// ---- los degradés, pintados una vez ----
+// Rellenar un degradé cuesta por cada píxel en cada cuadro: a densidad completa (1024x2216 en un Android de 2,625) un
+// degradé lineal a pantalla completa es la mitad del cuadro en un teléfono modesto. Por eso cada degradé vertical se
+// pinta una sola vez en una columna de un píxel de ancho y se estira a lo ancho con drawImage. A lo alto se copia a
+// escala 1:1, así que cada fila tiene el mismo color que daría el degradé: no se pierde resolución.
+const columnas = new Map();
+export function columna(alto, paradas) {
+  alto = Math.max(1, Math.round(alto));
+  const k = alto + '|' + paradas.join('|');
+  let c = columnas.get(k);
+  if (!c) {
+    c = document.createElement('canvas');
+    c.width = 1;
+    c.height = alto;
+    const cg = c.getContext('2d'), grad = cg.createLinearGradient(0, 0, 0, alto);
+    for (const [pos, color] of paradas) grad.addColorStop(pos, color);
+    cg.fillStyle = grad;
+    cg.fillRect(0, 0, 1, alto);
+    // la apertura pide otra altura del cielo en cada paso de la bajada: se guardan solo las últimas
+    if (columnas.size > 48) columnas.delete(columnas.keys().next().value);
+    columnas.set(k, c);
+  }
+  return c;
+}
+// la columna con su borde de arriba en y0, a todo lo ancho, solo entre las filas desde y hasta del canvas. Con
+// suavizado: estirar una sola columna no mezcla nada, y a escala 1:1 en vertical cada fila queda con su color.
+export function pintarColumna(g, col, y0, desde = 0, hasta = g.canvas.height) {
+  y0 = Math.round(y0);
+  const a = Math.max(desde, y0, 0), b = Math.min(hasta, y0 + col.height, g.canvas.height);
+  if (b <= a) return;
+  const suave = g.imageSmoothingEnabled;
+  g.imageSmoothingEnabled = true;
+  g.drawImage(col, 0, a - y0, 1, b - a, 0, a, g.canvas.width, b - a);
+  g.imageSmoothingEnabled = suave;
+}
+export const CIELO = [[0, '#050914'], [1, '#0c1a33']];
+
 // el cielo: el degradé llega hasta la calle, que con la cámara más alta queda más abajo (dy > 0)
 export function pintarCielo(g, L, estrellas, ahora, quieto, dx = 0, dy = 0) {
   const u = L.u, hasta = Math.max(1, (L.calle + dy) * u);
-  const grad = g.createLinearGradient(0, 0, 0, hasta);
-  grad.addColorStop(0, '#050914');
-  grad.addColorStop(1, '#0c1a33');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, g.canvas.width, Math.min(g.canvas.height, hasta));
+  pintarColumna(g, columna(hasta, CIELO), 0);
   for (const e of estrellas) {
     const b = quieto ? 0.7 : 0.45 + 0.4 * Math.sin(ahora / 900 + e.f);
     g.fillStyle = `rgba(226,232,240,${b.toFixed(2)})`;
@@ -70,6 +103,20 @@ export function pintarCiudad(g, L, edificios, ahora, quieto, dx = 0, dy = 0) {
   }
 }
 
+// el degradé de la luz de la baliza: se crea una vez por lugar (en la partida, uno solo; en la apertura, uno por paso de
+// la cámara) y se reusa
+let baliza = { k: '', grad: null };
+function luzBaliza(g, bx, by, largo) {
+  const k = `${bx},${by},${largo}`;
+  if (baliza.k !== k) {
+    const grad = g.createRadialGradient(bx, by, 0, bx, by, largo);
+    grad.addColorStop(0, 'rgba(34,211,238,0.22)');
+    grad.addColorStop(1, 'rgba(34,211,238,0)');
+    baliza = { k, grad };
+  }
+  return baliza.grad;
+}
+
 // la torre de frente y la luz de su baliza, que barre la ciudad (capa de código)
 export function pintarTorre(g, L, img, encendida, ahora, quieto, dx = 0, dy = 0) {
   const u = L.u, esc = 2, tx = L.torre.x + dx, ty = L.torre.y + dy;
@@ -77,10 +124,7 @@ export function pintarTorre(g, L, img, encendida, ahora, quieto, dx = 0, dy = 0)
     const bx = (tx + 8 * esc) * u, by = (ty + 1 * esc) * u;
     const ang = quieto ? Math.PI * 1.1 : Math.PI + Math.sin(ahora / 2400) * 0.55;
     const largo = L.W * u * 0.9, abre = 0.13;
-    const grad = g.createRadialGradient(bx, by, 0, bx, by, largo);
-    grad.addColorStop(0, 'rgba(34,211,238,0.22)');
-    grad.addColorStop(1, 'rgba(34,211,238,0)');
-    g.fillStyle = grad;
+    g.fillStyle = luzBaliza(g, bx, by, largo);
     g.beginPath();
     g.moveTo(bx, by);
     g.lineTo(bx + Math.cos(ang - abre) * largo, by + Math.sin(ang - abre) * largo);
@@ -91,7 +135,7 @@ export function pintarTorre(g, L, img, encendida, ahora, quieto, dx = 0, dy = 0)
   g.drawImage(img, tx * u, ty * u);
 }
 
-export function pintarCalzada(g, L, dx = 0, dy = 0) {
+export function pintarCalzada(g, L, dx = 0, dy = 0, suelo = null) {
   const u = L.u, c = L.calle + dy, ancho = g.canvas.width;
   g.fillStyle = '#1e293b';
   g.fillRect(0, (c - 3) * u, ancho, 3 * u);
@@ -102,9 +146,12 @@ export function pintarCalzada(g, L, dx = 0, dy = 0) {
   g.fillStyle = '#475569';
   const x0 = ((dx % 8) + 8) % 8;
   for (let x = 2 + x0 - 8; x < L.W + 8; x += 8) g.fillRect(x * u, (c + 12) * u, 4 * u, u);
-  // abajo de la calle: el suelo de la ciudad hasta el borde
+  // abajo de la calle: el suelo de la ciudad hasta el borde. Con `suelo`, solo esos rectángulos: la partida no lo
+  // repinta entero en cada cuadro (es un tercio de la pantalla y no cambia), solo donde cayó un auto bloqueado
   g.fillStyle = '#0a1120';
-  g.fillRect(0, (c + 19) * u, ancho, Math.max(0, g.canvas.height - (c + 19) * u));
+  const y0 = (c + 19) * u, y1 = g.canvas.height;
+  if (!suelo) g.fillRect(0, y0, ancho, Math.max(0, y1 - y0));
+  else for (const [x, y, w, h] of suelo) if (Math.min(y + h, y1) > Math.max(y, y0)) g.fillRect(x, Math.max(y, y0), w, Math.min(y + h, y1) - Math.max(y, y0));
 }
 
 // la barrera: rayado rojo y blanco. Cerrada cruza la calle a la altura de los autos, delante del que espera;
@@ -129,6 +176,8 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   const flotantes = [];
   const sellos = [];
   let temblor = 0;
+  // el suelo se pinta entero solo al empezar, al cambiar de tamaño y con el temblor; si no, solo donde hubo autos
+  let sueloEntero = true, tembloAntes = false, pisados = [];
   let abierta = 0;
   let torreEncendida = false, encendidaEn = 0;
   let estrellas = [], edificios = [], L = disposicion(300, 600);
@@ -148,9 +197,9 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   }
 
   function redimensionar() {
-    // tope de 1,5: más densidad no le suma nada al pixel art y en un Android modesto baja la partida a 30 cuadros
-    // por segundo. El navegador agranda el resto sin suavizar (image-rendering: pixelated en estilo.css).
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    // a la densidad de la pantalla (hasta 3): el texto de las placas, los puntos y los sellos, siempre nítido. La
+    // velocidad sale de no repintar degradés en cada cuadro (ver columna), no de bajar la resolución.
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
@@ -159,6 +208,7 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     cache = new Map();
     g.imageSmoothingEnabled = false;
     ({ estrellas, edificios } = decoradoCiudad(W, calle));
+    sueloEntero = true;
   }
 
   const lugar = i => barrera - ANCHO_AUTO - 2 - i * (ANCHO_AUTO + HUECO);
@@ -220,8 +270,8 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     return null;
   }
 
-  function autosDibujo(ahora, dt) {
-    const quieto = menosMovimiento();
+  function autosDibujo(ahora, dt, quieto) {
+    const pisa = [];
     for (const a of autos.values()) {
       if (a.estado === 'fila') {
         const meta = a.meta ?? lugar(4);
@@ -239,6 +289,7 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
       const y = calle + 1 + (a.y | 0);
       g.globalAlpha = a.alfa;
       g.drawImage(img, px(a.x), px(y));
+      pisa.push([px(a.x - 1), px(y - 1), img.width + 2 * u, img.height + 2 * u]);
       // el brillo del auto dorado es código, no dibujo
       if (a.tipo === 'dorado' && !quieto) {
         g.fillStyle = `rgba(254,240,138,${(0.25 + 0.2 * Math.sin(ahora / 180)).toFixed(2)})`;
@@ -248,6 +299,7 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
       if (placa && a.estado !== 'bloqueado') etiqueta(placa[0], a.x + ANCHO_AUTO / 2, y - 1, placa[1], placa[2]);
       g.globalAlpha = 1;
     }
+    pisados = pisa;
   }
 
   function efectos(dt) {
@@ -290,23 +342,27 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     antes = ahora;
     if (abierta > 0) abierta -= dt / 16;
     g.save();
-    if (temblor > 0) {
+    const tiembla = temblor > 0;
+    if (tiembla) {
       g.translate(((temblor % 2) ? 1 : -1) * u, 0);
       temblor--;
     }
+    const suelo = sueloEntero || tiembla || tembloAntes ? null : pisados;
+    sueloEntero = false;
+    tembloAntes = tiembla;
     const quieto = menosMovimiento();
     pintarCielo(g, L, estrellas, ahora, quieto);
     pintarCiudad(g, L, edificios, ahora, quieto);
     const [img, encendida] = torreImg(ahora);
     pintarTorre(g, L, img, encendida, ahora, quieto);
-    pintarCalzada(g, L);
-    autosDibujo(ahora, dt);
+    pintarCalzada(g, L, 0, 0, suelo);
+    autosDibujo(ahora, dt, quieto);
     pintarBarrera(g, L, fijo('poste', BARRERA_POSTE, PALETA_BARRERA), abierta > 0);
     efectos(dt);
     g.restore();
   }
 
-  function limpiar() { autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; }
+  function limpiar() { autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; sueloEntero = true; }
 
   redimensionar();
   return { redimensionar, eventos, dibujar, encenderTorre, limpiar, zonaCalle: () => (calle + 8) / H };

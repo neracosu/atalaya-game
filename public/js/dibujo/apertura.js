@@ -8,10 +8,15 @@
 //    funciones de escena.js.
 // Capa pixel: manzanas, techos, farolas, la torre, Chispa y los edificios, a escala entera y en píxeles enteros.
 // Capa de código: la oscuridad, la luz, la niebla, el texto. Solo dibuja: el tiempo lo lleva apertura.js.
+// Todo a la densidad de la pantalla (hasta 3), con el texto nítido. Para que un teléfono modesto llegue, lo que no
+// cambia en cada cuadro se pinta una vez en un lienzo aparte y se copia: la ciudad de noche, la luz bajo el haz, el
+// rojo del Enjambre, el velo del texto, los halos, la luz de la niebla y cada degradé vertical (una columna de un
+// píxel que se estira). Rellenar un degradé a pantalla completa cuesta cinco veces lo que copiar un lienzo.
 
 import { CHISPA, PALETA_CHISPA, PALETA_CHISPA_DORMIDO, TORRE_AIRE, PALETA_TORRE_AIRE, PALETA_TORRE_AIRE_ENCENDIDA,
   TORRE, PALETA_TORRE_ENCENDIDA, BARRERA_POSTE, PALETA_BARRERA, aCanvas } from './sprites.js';
-import { disposicion, decoradoCiudad, pintarCielo, pintarCiudad, pintarTorre, pintarCalzada, pintarBarrera } from './escena.js';
+import { disposicion, decoradoCiudad, pintarCielo, pintarCiudad, pintarTorre, pintarCalzada, pintarBarrera, columna,
+  pintarColumna, CIELO } from './escena.js';
 import { GUION, letrasVisibles, inclinacion, niebla, altura } from '../apertura.js';
 
 const PAN = 8;            // lo que avanza la cámara desde el aire, en píxeles del dibujo, de a uno por vez
@@ -19,6 +24,12 @@ const PLAZA = 10;         // media plaza de la torre
 const VUELTA = 3600;      // ms por vuelta de la luz
 const ABRE = 0.2;         // media apertura del haz, en radianes
 const INCLINA_FIN = 0.52; // la inclinación final del plano (unos 30 grados sobre el horizonte)
+const NOCHE = 0.55, NOCHE_FIN = 0.14; // el velo de la noche, antes y después de encenderse la torre
+// los degradés verticales de la bajada, relativos a su propio alto (ver columna en escena.js)
+const BRUMA = [[0, 'rgba(26,42,72,0)'], [0.3, 'rgba(38,58,96,0.85)'], [0.55, 'rgba(24,38,66,0.6)'], [1, 'rgba(12,20,38,0)']];
+const ROJO_HORIZONTE = [[0, 'rgba(220,38,38,0)'], [0.6, 'rgba(220,38,38,0.22)'], [1, 'rgba(220,38,38,0)']];
+const HONDURA = [[0, 'rgba(3,6,14,0)'], [1, 'rgba(3,6,14,0.55)']];
+const BRUMA_LEJOS = [[0, 'rgba(12,26,51,0)'], [1, 'rgba(12,26,51,0.55)']];
 
 const suave = x => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const entre = (t, a, b) => suave((t - a) / (b - a));
@@ -37,8 +48,40 @@ const CLARO = { calle: '#15243f', raya: '#4b5f7d', farola: '#fff3c4', charco: '#
   luz: '#fde68a', aire: '#7188a8', techos: ['#1d3150', '#223a5c', '#1a2c49', '#27446b'], plaza: '#2a3d5e', parque: '#173d33',
   arbol: '#2f6b4f', vereda: '#2a3c5c' };
 
+// Un lienzo que se pinta de a píxel en memoria. El mapa de la ciudad y las nubes son decenas de miles de rectángulos
+// de un píxel y se arman al tocar «Empezar»: con fillRect, en un teléfono modesto, era casi medio segundo de pantalla
+// congelada. Escritos directo en un ImageData, el resultado es el mismo y tarda una fracción.
+function pixeles(w, h) {
+  const img = new ImageData(w, h), p = new Uint32Array(img.data.buffer);
+  const colores = new Map();
+  const color = hex => {
+    let c = colores.get(hex);
+    if (c === undefined) {
+      const n = parseInt(hex.slice(1), 16);
+      // los bytes en el orden de ImageData (rojo, verde, azul, alfa), leídos como un número del mismo orden de memoria
+      c = new Uint32Array(new Uint8Array([n >> 16, (n >> 8) & 255, n & 255, 255]).buffer)[0];
+      colores.set(hex, c);
+    }
+    return c;
+  };
+  return {
+    rect(x, y, rw, rh, hex) {
+      const x0 = Math.max(0, x), x1 = Math.min(w, x + rw), c = color(hex);
+      if (x1 <= x0) return;
+      for (let f = Math.max(0, y), f1 = Math.min(h, y + rh); f < f1; f++) p.fill(c, f * w + x0, f * w + x1);
+    },
+    lienzo() {
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      c.getContext('2d').putImageData(img, 0, 0);
+      return c;
+    },
+  };
+}
+
 export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '', guion = GUION } = {}) {
-  const g = canvas.getContext('2d');
+  let g = canvas.getContext('2d'); // let: con menos movimiento, la vista quieta se pinta una vez en otro lienzo
   if (!g) throw new Error('sin lienzo');
   const Q = !!guion.quieto;
   let dpr = 1, u = 3, W = 100, H = 200, cw = 390, ch = 844;
@@ -51,6 +94,8 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   // la vista de frente
   let L = null, deco = null, lejanos = [], extras = [], nubes = [];
   let capa = null; // para el fundido de menos movimiento
+  // las capas pintadas una vez (ver capaDe); se sueltan al pasar de fase, para no guardar la memoria de todas juntas
+  let capas = {};
   const cache = new Map();
   const sprite = (k, filas, paleta, esc) => {
     const c = `${k}:${esc}`;
@@ -60,6 +105,90 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
 
   function lienzo(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 
+  // ---- las capas que no cambian en cada cuadro: se pintan la primera vez que hacen falta y después se copian ----
+  function capaDe(clave, w, h, pintar) {
+    if (!capas[clave]) {
+      const c = lienzo(Math.max(1, Math.ceil(w)), Math.max(1, Math.ceil(h))), cg = c.getContext('2d');
+      cg.imageSmoothingEnabled = false;
+      pintar(cg, c);
+      capas[clave] = c;
+    }
+    return capas[clave];
+  }
+  // (por prefijo: 'juntos' suelta todas las capas juntos1, juntos2...)
+  const soltar = (...claves) => { for (const k of Object.keys(capas)) if (claves.some(c => k.startsWith(c))) capas[k] = null; };
+  // Con el rojo ya a toda fuerza, el rojo y el velo del texto van juntos en una sola capa: una copia a pantalla
+  // completa menos en cada cuadro. El rojo va pegado al mapa, así que se rehace en cada paso de la cámara (cinco
+  // veces). La torre queda debajo de las dos, como antes: ninguna la toca (el rojo empieza lejos de ella y el velo
+  // deja limpio el centro).
+  function capaJuntos(cam) {
+    const k = 'juntos' + cam;
+    if (!capas[k]) soltar('juntos');
+    return capaDe(k, canvas.width, canvas.height, c => {
+      c.drawImage(capaAsedio(), 0, -cam * u);
+      c.drawImage(capaVelo(), 0, 0);
+    });
+  }
+  let veloPintado = false; // si en este cuadro el velo ya fue con el rojo
+
+  // un halo redondo (un degradé radial que se apaga en el borde) en su propio lienzo, del tamaño del rectángulo que se
+  // pintaba; (cx, cy) es el centro del degradé dentro del rectángulo
+  function haloDe(clave, w, h, cx, cy, radio, paradas) {
+    return capaDe(clave, w, h, c => {
+      const grad = c.createRadialGradient(cx, cy, 0, cx, cy, radio);
+      for (const [pos, color] of paradas) grad.addColorStop(pos, color);
+      c.fillStyle = grad;
+      c.fillRect(0, 0, w, h);
+    });
+  }
+  // un halo en un lugar que no cae en un píxel entero: se copia en el píxel más cercano (medio píxel corrido, en un
+  // degradé que se apaga, no se ve; copiar con suavizado costaba el doble)
+  function pintarHalo(img, x, y) { g.drawImage(img, Math.round(x), Math.round(y)); }
+
+  // Desde el aire, la cámara solo avanza de a un píxel del dibujo (PAN pasos): lo que está pegado al mapa se pinta una
+  // vez con todas las filas que puede llegar a mostrar y se copia corrido. Coordenadas de esas capas: la fila 0 es la
+  // fila y0 del mapa, a escala u.
+  const altoAire = () => (H + PAN) * u;
+  const torreEnCapa = () => [(torre.x - mapa.x0 + 0.5) * u, (torre.y - mapa.y0 + 0.5) * u];
+  // la ciudad de noche, agrandada, con la noche ya aclarada (la torre encendida)
+  const capaNoche = () => capaDe('noche', W * u, altoAire(), c => {
+    c.drawImage(mapa.oscura, mapa.x0, mapa.y0, W, H + PAN, 0, 0, W * u, altoAire());
+    c.fillStyle = `rgba(2,4,10,${NOCHE_FIN})`;
+    c.fillRect(0, 0, W * u, altoAire());
+  });
+  // lo que se ve dentro del haz: la ciudad bajo la luz y la luz misma, sumada
+  const capaLuzAire = () => capaDe('luzAire', W * u, altoAire(), c => {
+    c.drawImage(mapa.clara, mapa.x0, mapa.y0, W, H + PAN, 0, 0, W * u, altoAire());
+    const [x, y] = torreEnCapa();
+    c.globalCompositeOperation = 'lighter';
+    c.fillStyle = gradHaz(c, x, y, largoLuz(), 1);
+    c.fillRect(0, 0, W * u, altoAire());
+  });
+  // el rojo del Enjambre en los bordes, a toda fuerza (se copia con globalAlpha mientras llega)
+  const capaAsedio = () => capaDe('asedio', W * u, altoAire(), c => {
+    const [x, y] = torreEnCapa();
+    const rojo = c.createRadialGradient(x, y, canvas.width * 0.45, x, y, Math.hypot(canvas.width, canvas.height) * 0.62);
+    rojo.addColorStop(0, 'rgba(220,38,38,0)');
+    rojo.addColorStop(1, 'rgba(220,38,38,0.26)');
+    c.fillStyle = rojo;
+    c.fillRect(0, 0, W * u, altoAire());
+  });
+  // el velo que deja leer el texto: la viñeta y la sombra de abajo
+  const capaVelo = () => capaDe('velo', canvas.width, canvas.height, c => {
+    const cwp = canvas.width, chp = canvas.height;
+    const vi = c.createRadialGradient(cwp / 2, chp * 0.3, cwp * 0.35, cwp / 2, chp * 0.3, Math.hypot(cwp, chp) * 0.75);
+    vi.addColorStop(0, 'rgba(3,6,14,0)');
+    vi.addColorStop(1, 'rgba(3,6,14,0.6)');
+    c.fillStyle = vi;
+    c.fillRect(0, 0, cwp, chp);
+    const abajo = c.createLinearGradient(0, chp * 0.48, 0, chp);
+    abajo.addColorStop(0, 'rgba(3,6,14,0)');
+    abajo.addColorStop(0.3, 'rgba(3,6,14,0.72)');
+    abajo.addColorStop(1, 'rgba(3,6,14,0.92)');
+    c.fillStyle = abajo;
+    c.fillRect(0, chp * 0.48, cwp, chp * 0.52);
+  });
+
   // ---- la ciudad desde el aire: un mapa pintado una vez en dos versiones, de noche y bajo la luz ----
   function armarCiudad() {
     const r = azarDe(20261001);
@@ -67,10 +196,9 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     const MW = W + 2 * MX, MH = H + PAN + MN + MS;
     const x0 = MX, y0 = MN;
     torre = { x: x0 + (W >> 1), y: y0 + Math.round(H * 0.3) + PAN };
-    const oscura = lienzo(MW, MH), clara = lienzo(MW, MH);
-    const capas = [[oscura.getContext('2d'), OSCURO], [clara.getContext('2d'), CLARO]];
+    const px = [[pixeles(MW, MH), OSCURO], [pixeles(MW, MH), CLARO]];
     const rect = (x, y, w, h, clave, idx) => {
-      for (const [c, p] of capas) { c.fillStyle = idx === undefined ? p[clave] : p[clave][idx]; c.fillRect(x, y, w, h); }
+      for (const [c, p] of px) c.rect(x, y, w, h, idx === undefined ? p[clave] : p[clave][idx]);
     };
     rect(0, 0, MW, MH, 'calle');
 
@@ -133,6 +261,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       const fx = torre.x + dx * (PLAZA - 2), fy = torre.y + dy * (PLAZA - 2);
       rect(fx - 1, fy, 3, 1, 'charco'); rect(fx, fy - 1, 1, 3, 'charco'); rect(fx, fy, 1, 1, 'farola');
     }
+    const oscura = px[0][0].lienzo(), clara = px[1][0].lienzo();
     // la base para inclinar: la ciudad de noche con la luz de la torre ya prendida
     const base = lienzo(MW, MH), gb = base.getContext('2d');
     gb.drawImage(oscura, 0, 0);
@@ -202,13 +331,17 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       x += ancho + ((r() * 4) | 0) - 1;
     }
     // la niebla: bancos de nube en pixel, dos tonos
-    nubes = Array.from({ length: 7 }, (_, i) => ({ img: nubeDe(r, L.W + 60, 26 + ((r() * 16) | 0)), x: -40 + ((r() * 20) | 0), orden: i, vel: 0.8 + r() * 0.7 }));
+    nubes = Array.from({ length: 7 }, (_, i) => {
+      const img = nubeDe(r, L.W + 60, 26 + ((r() * 16) | 0));
+      return { img, alto: img.height * u, x: -40 + ((r() * 20) | 0), orden: i, vel: 0.8 + r() * 0.7 };
+    });
   }
 
-  // una nube en pixel: bultos redondos rasterizados en la cuadrícula, con el borde de arriba más claro
+  // una nube en pixel: bultos redondos rasterizados en la cuadrícula, con el borde de arriba más claro. Se guarda a un
+  // píxel por píxel del dibujo y se agranda al copiarla (sin suavizar): los mismos píxeles, con mucha menos memoria
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   function nubeDe(r, ancho, alto) {
-    const c = lienzo(ancho * u, alto * u), n = c.getContext('2d');
+    const n = pixeles(ancho, alto);
     // abajo se deshace en una trama de pixel, sin borde recto
     const bultos = Array.from({ length: Math.ceil(ancho / 9) }, (_, i) => ({ x: i * 9 + r() * 6, y: alto * (0.45 + r() * 0.25), rad: alto * (0.28 + r() * 0.22) }));
     const dentro = (x, y) => y > alto * 0.6 || bultos.some(b => (x - b.x) ** 2 + (y - b.y) ** 2 <= b.rad * b.rad);
@@ -218,11 +351,11 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       if (deshace > 0 && BAYER[(y & 3) * 4 + (x & 3)] / 16 < deshace) continue;
       // el borde de arriba, solo donde termina la nube (no entre un bulto y otro)
       const borde = !dentro(x, y - 1) || !dentro(x, y - 2);
-      n.fillStyle = borde ? '#3a5277' : ((x * 3 + y * 5) % 11 === 0 ? '#22375a' : '#1c2e4d');
-      n.fillRect(x * u, y * u, u, u);
+      n.rect(x, y, 1, 1, borde ? '#3a5277' : ((x * 3 + y * 5) % 11 === 0 ? '#22375a' : '#1c2e4d'));
     }
-    return c;
+    return n.lienzo();
   }
+  function pintarNube(n, x, y) { g.drawImage(n.img, 0, 0, n.img.width, n.img.height, x, y, n.img.width * u, n.alto); }
 
   // ---- el texto: se arma entero antes de escribirse, para que las líneas no salten mientras aparece ----
   function armarTexto() {
@@ -259,7 +392,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   }
 
   function redimensionar() {
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rc = canvas.getBoundingClientRect();
     cw = Math.max(1, rc.width || 390);
     ch = Math.max(1, rc.height || 844);
@@ -271,6 +404,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     cache.clear();
     balizas = [];
     capa = null;
+    capas = {};
     armarCiudad();
     armarFrente();
     armarTexto();
@@ -289,6 +423,14 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       g.lineTo(bx + Math.cos(a) * largo, by + Math.sin(a) * largo);
     }
     g.closePath();
+  }
+  const largoLuz = () => Math.hypot(canvas.width, canvas.height) * 1.2;
+  function gradHaz(c, x, y, largo, bi) {
+    const grad = c.createRadialGradient(x, y, 0, x, y, largo * 0.75);
+    grad.addColorStop(0, `rgba(103,232,249,${(0.34 * bi).toFixed(3)})`);
+    grad.addColorStop(0.35, `rgba(34,211,238,${(0.14 * bi).toFixed(3)})`);
+    grad.addColorStop(1, 'rgba(34,211,238,0)');
+    return grad;
   }
   const dentroDeLuz = (ax, ay, ang, abre) => {
     let d = Math.atan2(ay, ax) - ang;
@@ -318,31 +460,68 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     const f = focal();
     return [c.px0 + (f * (X - torre.x - 0.5)) / prof, c.py0 + (f * s * (Y - torre.y - 0.5)) / prof];
   }
-  // el plano de la ciudad inclinado: una tira por cada fila de píxeles del dibujo, cada una a su escala
-  function plano(c, tex) {
+  // el plano de la ciudad inclinado: una tira por cada fila de píxeles del dibujo, cada una a su escala. Devuelve el
+  // horizonte y las filas que quedaron sin pintar (cerca del horizonte o más allá del mapa). `rango(y)`, si está,
+  // limita cada tira a lo ancho: [desde, hasta) en la pantalla, o null para saltarla. Cada trozo se copia con la
+  // misma correspondencia de píxeles que la tira entera, así que lo que se pinta coincide píxel a píxel.
+  function plano(c, tex, rango = null) {
     const s = Math.sin(c.th), co = Math.cos(c.th), f = focal(), h = c.D * s;
     const LX = torre.x + 0.5, LY = torre.y + 0.5;
     const yH = co > 1e-4 ? c.py0 - (f * s) / co : -Infinity;
     const filaDe = v => LY + c.D * co - (f * co - v * s) * (h / (f * s + v * co));
+    const huecos = [];
     for (let y = Math.max(0, Math.floor((yH + 1) / u) * u); y < canvas.height; y += u) {
       const vA = y - c.py0, vB = y + u - c.py0;
-      if (f * s + vA * co <= 0) continue;
+      if (f * s + vA * co <= 0) { huecos.push(y); continue; }
       const escala = h / (f * s + (vA + u / 2) * co);
-      if (escala > 6) continue; // muy cerca del horizonte: lo tapa la bruma
+      if (escala > 6) { huecos.push(y); continue; } // muy cerca del horizonte: lo tapa la bruma
       let sy = filaDe(vA);
       const sh = Math.max(0.02, filaDe(vB) - sy);
       if (sy + sh < 0) sy = ((sy % mapa.MH) + mapa.MH) % mapa.MH; // más allá del mapa, la ciudad sigue
-      if (sy > mapa.MH) continue;
+      if (sy > mapa.MH) { huecos.push(y); continue; }
+      const r = rango && rango(y);
+      if (rango && !r) continue;
       // a lo ancho, el mapa se repite: la ciudad no se corta a los lados
       const sx0 = LX - c.px0 * escala, sw = canvas.width * escala;
       for (let k = Math.floor(sx0 / mapa.MW); k * mapa.MW < sx0 + sw; k++) {
         const a = Math.max(sx0, k * mapa.MW), b = Math.min(sx0 + sw, (k + 1) * mapa.MW);
         if (b - a <= 0) continue;
         const dx = (a - sx0) / escala, dw = (b - a) / escala;
-        g.drawImage(tex, a - k * mapa.MW, sy, b - a, sh, Math.floor(dx), y, Math.ceil(dw + (dx - Math.floor(dx))), u);
+        const D0 = Math.floor(dx), DW = Math.ceil(dw + (dx - D0));
+        if (!r) { g.drawImage(tex, a - k * mapa.MW, sy, b - a, sh, D0, y, DW, u); continue; }
+        const X0 = Math.max(D0, r[0]), X1 = Math.min(D0 + DW, r[1]);
+        if (X1 <= X0) continue;
+        const paso = (b - a) / DW;
+        g.drawImage(tex, a - k * mapa.MW + (X0 - D0) * paso, sy, (X1 - X0) * paso, sh, X0, y, X1 - X0, u);
       }
     }
-    return yH;
+    return { yH, huecos };
+  }
+  // lo que el cono de luz ocupa de cada tira de la pantalla, [desde, hasta) con un píxel de sobra a cada lado: el
+  // polígono de conoLuz recortado a las filas de la tira
+  function rangoCono(bx, by, ang, abre, largo) {
+    const pts = [[bx, by]];
+    for (let i = 0; i <= 10; i++) {
+      const a = ang - abre + (2 * abre * i) / 10;
+      pts.push([bx + Math.cos(a) * largo, by + Math.sin(a) * largo]);
+    }
+    return y => {
+      const y1 = y + u;
+      let x0 = Infinity, x1 = -Infinity;
+      for (let i = 0; i < pts.length; i++) {
+        const [ax, ay] = pts[i], [bx2, by2] = pts[(i + 1) % pts.length];
+        const lo = Math.max(y, Math.min(ay, by2)), hi = Math.min(y1, Math.max(ay, by2));
+        if (lo > hi) continue;
+        for (const yy of [lo, hi]) {
+          const x = ay === by2 ? ax : ax + ((bx2 - ax) * (yy - ay)) / (by2 - ay);
+          const xs = ay === by2 ? [ax, bx2] : [x];
+          for (const v of xs) { if (v < x0) x0 = v; if (v > x1) x1 = v; }
+        }
+      }
+      if (x0 > x1) return null;
+      const a = Math.max(0, Math.floor(x0) - 1), b = Math.min(canvas.width, Math.ceil(x1) + 1);
+      return b > a ? [a, b] : null;
+    };
   }
 
   // ---- un cuadro. `ahora` es el reloj de la página: de frente, el haz y las ventanas van al mismo compás que en
@@ -352,22 +531,32 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
     if (Q) { quieto(t, ahora); return; }
+    veloPintado = false;
     const inc = inclinacion(t, guion);
     if (t < guion.frente) {
       if (inc <= 0) aire(t, false); else inclinado(t, inc);
       const A = 1 - entre(t, guion.bajada, guion.bajada + 450);
       if (A > 0) interfaz(t, A);
+      else soltar('noche', 'luzAire', 'asedio', 'velo', 'juntos');
     } else pintarFrente(g, ahora, altura(t, guion), false);
     if (t > guion.niebla - 400 && t < guion.nieblaFin + 700) pintarNiebla(t, niebla(t, guion));
+    else if (t >= guion.nieblaFin + 700) soltar('luzNiebla');
   }
 
   // menos movimiento: la ciudad desde el aire quieta con todo a la vista, y un fundido a la vista de frente
+  // (todo quieto: cada vista se pinta una sola vez y después se copia)
   function quieto(t, ahora) {
-    aire(99999, true);
-    interfaz(99999, 1);
+    g.drawImage(capaDe('quietoAire', canvas.width, canvas.height, c => {
+      const antes = g;
+      g = c;
+      try { aire(99999, true); interfaz(99999, 1); } finally { g = antes; }
+      soltar('noche', 'luzAire', 'asedio', 'velo');
+    }), 0, 0);
     if (t < guion.frente) return;
-    if (!capa) capa = lienzo(canvas.width, canvas.height);
-    pintarFrente(capa.getContext('2d'), ahora, 0, true);
+    if (!capa) {
+      capa = lienzo(canvas.width, canvas.height);
+      pintarFrente(capa.getContext('2d'), ahora, 0, true);
+    }
     g.globalAlpha = entre(t, guion.frente, guion.nieblaFin);
     g.drawImage(capa, 0, 0);
     g.globalAlpha = 1;
@@ -376,14 +565,18 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   // ---- 1. desde el aire ----
   function aire(t, Qd) {
     const cam = Qd ? PAN : Math.min(PAN, Math.floor((t / guion.bajada) * (PAN + 1)));
-    const ox = mapa.x0, oy = mapa.y0 + cam;
+    const ox = mapa.x0, oy = mapa.y0 + cam, dy = -cam * u;
     const tx = (torre.x - ox + 0.5) * u, ty = (torre.y - oy + 0.5) * u;
-    g.drawImage(mapa.oscura, ox, oy, W, H, 0, 0, W * u, H * u);
+    g.drawImage(capaNoche(), 0, dy);
 
-    // la noche se aclara cuando la torre se enciende; la ciudad se lee sin perder la noche
+    // la noche se aclara cuando la torre se enciende; la ciudad se lee sin perder la noche. La capa ya trae el velo
+    // de la torre encendida: antes, otro velo encima, que sumado a ese da el de ahora (NOCHE - (NOCHE - NOCHE_FIN)·enc)
     const enc = Qd ? 1 : entre(t, guion.encender, guion.encender + 700);
-    g.fillStyle = `rgba(2,4,10,${(0.55 - 0.41 * enc).toFixed(3)})`;
-    g.fillRect(0, 0, canvas.width, canvas.height);
+    const extra = 1 - (1 - (NOCHE - (NOCHE - NOCHE_FIN) * enc)) / (1 - NOCHE_FIN);
+    if (extra > 0.0005) {
+      g.fillStyle = `rgba(2,4,10,${extra.toFixed(3)})`;
+      g.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // los autos
     for (const a of autos) {
@@ -398,29 +591,36 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     g.fillStyle = '#f87171';
     for (const b of balizas) if (Qd || (t + b.fase) % 1400 < 700) g.fillRect((b.x - ox) * u, (b.y - oy) * u, u, u);
 
-    // la luz que barre: revela la ciudad de verdad debajo del haz
+    // la luz que barre: revela la ciudad de verdad debajo del haz. La ciudad clara y la luz ya vienen sumadas en una
+    // capa; el centro del haz, más angosto, recibe otra pasada de la misma luz
     const bi = Qd ? 1 : entre(t, guion.barrido, guion.barrido + 450);
     const ang = anguloLuz(t);
-    const largo = Math.hypot(canvas.width, canvas.height) * 1.2;
+    const largo = largoLuz();
     if (bi > 0) {
       g.save();
       conoLuz(tx, ty, ang, ABRE, largo);
       g.clip();
       g.globalAlpha = bi;
-      g.drawImage(mapa.clara, ox, oy, W, H, 0, 0, W * u, H * u);
+      g.drawImage(capaLuzAire(), 0, dy);
       g.restore();
-      haz(tx, ty, ang, ABRE, largo, bi);
+      g.save();
+      g.globalCompositeOperation = 'lighter';
+      g.fillStyle = gradHaz(g, tx, ty, largo, bi);
+      conoLuz(tx, ty, ang, ABRE * 0.28, largo);
+      g.fill();
+      g.restore();
     }
 
     enjambreAire(t, Qd, ox, oy, bi, ang);
     // el Enjambre tiñe de rojo los bordes de la ciudad mientras se acerca
     const asedio = Qd ? 1 : entre(t, guion.enjambre, guion.enjambre + 2200);
-    if (asedio > 0) {
-      const rojo = g.createRadialGradient(tx, ty, canvas.width * 0.45, tx, ty, Math.hypot(canvas.width, canvas.height) * 0.62);
-      rojo.addColorStop(0, 'rgba(220,38,38,0)');
-      rojo.addColorStop(1, `rgba(220,38,38,${(0.26 * asedio).toFixed(3)})`);
-      g.fillStyle = rojo;
-      g.fillRect(0, 0, canvas.width, canvas.height);
+    if (asedio >= 1 && !Qd) {
+      g.drawImage(capaJuntos(cam), 0, 0);
+      veloPintado = true;
+    } else if (asedio > 0) {
+      g.globalAlpha = asedio;
+      g.drawImage(capaAsedio(), 0, dy);
+      g.globalAlpha = 1;
     }
 
     const prendida = Qd || (t >= guion.encender && (t < guion.encender + 70 || t >= guion.encender + 150));
@@ -431,11 +631,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   function haz(tx, ty, ang, abre, largo, bi) {
     g.save();
     g.globalCompositeOperation = 'lighter';
-    const grad = g.createRadialGradient(tx, ty, 0, tx, ty, largo * 0.75);
-    grad.addColorStop(0, `rgba(103,232,249,${(0.34 * bi).toFixed(3)})`);
-    grad.addColorStop(0.35, `rgba(34,211,238,${(0.14 * bi).toFixed(3)})`);
-    grad.addColorStop(1, 'rgba(34,211,238,0)');
-    g.fillStyle = grad;
+    g.fillStyle = gradHaz(g, tx, ty, largo, bi);
     conoLuz(tx, ty, ang, abre, largo);
     g.fill();
     conoLuz(tx, ty, ang, abre * 0.28, largo);
@@ -473,12 +669,12 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     if (alfa <= 0) return;
     g.globalAlpha = alfa;
     if (prendida) {
-      const halo = g.createRadialGradient(tx, ty, 0, tx, ty, 22 * u);
+      // el halo, pintado una vez a toda fuerza: el pulso va en globalAlpha
       const pulso = Qd ? 1 : 0.9 + 0.1 * Math.sin(t / 260);
-      halo.addColorStop(0, `rgba(165,243,252,${(0.42 * pulso).toFixed(3)})`);
-      halo.addColorStop(1, 'rgba(34,211,238,0)');
-      g.fillStyle = halo;
-      g.fillRect(tx - 22 * u, ty - 22 * u, 44 * u, 44 * u);
+      g.globalAlpha = alfa * pulso;
+      pintarHalo(haloDe('haloAire', 44 * u, 44 * u, 22 * u, 22 * u, 22 * u, [[0, 'rgba(165,243,252,0.42)'], [1, 'rgba(34,211,238,0)']]),
+        tx - 22 * u, ty - 22 * u);
+      g.globalAlpha = alfa;
     }
     const esc = 2 * u;
     const img = sprite(prendida ? 'torreOn' : 'torreOff', TORRE_AIRE, prendida ? PALETA_TORRE_AIRE_ENCENDIDA : PALETA_TORRE_AIRE, esc);
@@ -512,10 +708,10 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   function inclinado(t, inc) {
     const c = camara(inc);
     const cwp = canvas.width, chp = canvas.height;
-    // el suelo lejano, por si el mapa no llega
+    const { yH, huecos } = plano(c, mapa.base);
+    // el suelo lejano, donde el mapa no llega
     g.fillStyle = OSCURO.calle;
-    g.fillRect(0, 0, cwp, chp);
-    const yH = plano(c, mapa.base);
+    for (const y of huecos) g.fillRect(0, y, cwp, u);
     // al empezar, la luz del haz sigue barriendo el suelo y se apaga mientras la torre se levanta
     const ang = anguloLuz(t);
     const suelo = 1 - entre(inc, 0.1, 0.6);
@@ -525,7 +721,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       conoLuz(c.px0, c.py0, ang, ABRE, largo);
       g.clip();
       g.globalAlpha = suelo;
-      plano(c, mapa.clara);
+      plano(c, mapa.clara, rangoCono(c.px0, c.py0, ang, ABRE, largo));
       g.restore();
       haz(c.px0, c.py0, ang, ABRE, largo, suelo);
     }
@@ -553,11 +749,12 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     if (yH > -chp * 0.3) {
       const tope = Math.max(0, yH);
       if (tope > 0) {
-        const cielo = g.createLinearGradient(0, yH - chp * 0.7, 0, yH);
-        cielo.addColorStop(0, '#050914');
-        cielo.addColorStop(1, '#0c1a33');
-        g.fillStyle = cielo;
-        g.fillRect(0, 0, cwp, tope + 1);
+        // el degradé va de yH - 0,7·alto hasta yH; más arriba, el color de arriba
+        const y0 = Math.round(yH - chp * 0.7);
+        if (y0 > 0) { g.fillStyle = CIELO[0][1]; g.fillRect(0, 0, cwp, y0); }
+        pintarColumna(g, columna(chp * 0.7, CIELO), y0, 0, Math.round(yH));
+        g.fillStyle = CIELO[1][1];
+        g.fillRect(0, Math.round(yH), cwp, Math.round(tope + 1) - Math.round(yH));
         for (const e of estrellasAire) {
           const y = yH - e.y * chp * 0.75;
           if (y < 0 || y > yH - 2 * u) continue;
@@ -565,26 +762,13 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
           g.fillRect(Math.round((e.x * cwp) / u) * u, Math.round(y / u) * u, u, u);
         }
       }
-      const bruma = g.createLinearGradient(0, yH - chp * 0.06, 0, yH + chp * 0.2);
-      bruma.addColorStop(0, 'rgba(26,42,72,0)');
-      bruma.addColorStop(0.3, 'rgba(38,58,96,0.85)');
-      bruma.addColorStop(0.55, 'rgba(24,38,66,0.6)');
-      bruma.addColorStop(1, 'rgba(12,20,38,0)');
-      g.fillStyle = bruma;
-      g.fillRect(0, yH - chp * 0.06, cwp, chp * 0.26);
-      const rojo = g.createLinearGradient(0, yH - chp * 0.05, 0, yH + chp * 0.03);
-      rojo.addColorStop(0, 'rgba(220,38,38,0)');
-      rojo.addColorStop(0.6, 'rgba(220,38,38,0.22)');
-      rojo.addColorStop(1, 'rgba(220,38,38,0)');
-      g.fillStyle = rojo;
-      g.fillRect(0, yH - chp * 0.05, cwp, chp * 0.08);
+      pintarColumna(g, columna(chp * 0.26, BRUMA), yH - chp * 0.06);
+      pintarColumna(g, columna(chp * 0.08, ROJO_HORIZONTE), yH - chp * 0.05);
     }
     // más cerca, el borde de abajo se oscurece: da hondura
-    const vi = g.createLinearGradient(0, chp * 0.6, 0, chp);
-    vi.addColorStop(0, 'rgba(3,6,14,0)');
-    vi.addColorStop(1, `rgba(3,6,14,${(0.55 * inc).toFixed(3)})`);
-    g.fillStyle = vi;
-    g.fillRect(0, chp * 0.6, cwp, chp * 0.4);
+    g.globalAlpha = inc;
+    pintarColumna(g, columna(chp * 0.4, HONDURA), chp * 0.6);
+    g.globalAlpha = 1;
 
     // la torre se levanta: el techo visto desde arriba se va y sube la torre de la partida, con su baliza
     const sube = entre(inc, 0.22, 0.9);
@@ -610,11 +794,9 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     g.fillStyle = grad;
     conoLuz(hx, hy, ang, 0.14, largo);
     g.fill();
-    const halo = g.createRadialGradient(hx, hy, 0, hx, hy, 14 * u);
-    halo.addColorStop(0, `rgba(165,243,252,${(0.5 * sube).toFixed(3)})`);
-    halo.addColorStop(1, 'rgba(34,211,238,0)');
-    g.fillStyle = halo;
-    g.fillRect(hx - 14 * u, hy - 14 * u, 28 * u, 28 * u);
+    g.globalAlpha = sube;
+    pintarHalo(haloDe('haloSube', 28 * u, 28 * u, 14 * u, 14 * u, 14 * u, [[0, 'rgba(165,243,252,0.5)'], [1, 'rgba(34,211,238,0)']]),
+      hx - 14 * u, hy - 14 * u);
     g.restore();
     g.drawImage(img, 0, 0, img.width, alto, x, y, img.width, alto);
   }
@@ -627,8 +809,8 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     g.globalAlpha = 0.92 * (t < guion.frente ? 1 : Math.max(0, 1 - (t - guion.frente) / (guion.nieblaFin + 700 - guion.frente)));
     for (const n of nubes) {
       const y = chp * (1.1 + n.orden * 0.28) - (t - desde) * (chp / 1100) * n.vel;
-      if (y > chp || y + n.img.height < 0) continue;
-      g.drawImage(n.img, n.x * u, Math.round(y / u) * u);
+      if (y > chp || y + n.alto < 0) continue;
+      pintarNube(n, n.x * u, Math.round(y / u) * u);
     }
     g.globalAlpha = 1;
     if (nb > 0) {
@@ -639,9 +821,9 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
       for (let i = 0; i < 3; i++) {
         const n = nubes[(i * 2 + 1) % nubes.length];
         const y = chp * (1.0 + i * 0.45) - (t - guion.niebla) * (chp / 520);
-        const vuelta = chp * 1.35 + n.img.height;
-        const yy = ((y % vuelta) + vuelta) % vuelta - n.img.height;
-        g.drawImage(n.img, (n.x - 10 * i) * u, Math.round(yy / u) * u);
+        const vuelta = chp * 1.35 + n.alto;
+        const yy = ((y % vuelta) + vuelta) % vuelta - n.alto;
+        pintarNube(n, (n.x - 10 * i) * u, Math.round(yy / u) * u);
       }
       g.globalAlpha = 1;
     }
@@ -649,15 +831,15 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     const p = (t - guion.niebla) / (guion.nieblaFin - guion.niebla);
     const fuerza = Math.max(0, Math.min(1, nb * 1.3 + 0.15)) * (p < 0 ? Math.max(0, 1 + p * 5) : p > 1 ? Math.max(0, 1 - (p - 1) * 3.3) : 1);
     if (fuerza > 0) {
-      const lx = cwp * (1.25 - 1.5 * p), ly = chp * 0.42;
+      // la luz, pintada una vez a toda fuerza en un disco del alto de la pantalla; se corre de lado a lado
+      const lx = cwp * (1.25 - 1.5 * p), ly = chp * 0.42, R = Math.ceil(chp * 0.55);
+      const arriba = Math.max(0, Math.ceil(ly) - R);
+      const disco = haloDe('luzNiebla', 2 * R, Math.min(chp, Math.ceil(ly) + R) - arriba, R, ly - arriba, chp * 0.55,
+        [[0, 'rgba(165,243,252,0.42)'], [0.4, 'rgba(34,211,238,0.16)'], [1, 'rgba(34,211,238,0)']]);
       g.save();
       g.globalCompositeOperation = 'lighter';
-      const luz = g.createRadialGradient(lx, ly, 0, lx, ly, chp * 0.55);
-      luz.addColorStop(0, `rgba(165,243,252,${(0.42 * fuerza).toFixed(3)})`);
-      luz.addColorStop(0.4, `rgba(34,211,238,${(0.16 * fuerza).toFixed(3)})`);
-      luz.addColorStop(1, 'rgba(34,211,238,0)');
-      g.fillStyle = luz;
-      g.fillRect(0, 0, cwp, chp);
+      g.globalAlpha = fuerza;
+      g.drawImage(disco, Math.round(lx) - R, arriba);
       g.restore();
     }
   }
@@ -698,11 +880,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
         }
       }
       // la bruma entre la ciudad lejana y la cercana
-      const bruma = gc.createLinearGradient(0, (base - 80) * U, 0, base * U);
-      bruma.addColorStop(0, 'rgba(12,26,51,0)');
-      bruma.addColorStop(1, 'rgba(12,26,51,0.55)');
-      gc.fillStyle = bruma;
-      gc.fillRect(0, (base - 80) * U, ancho, 80 * U);
+      pintarColumna(gc, columna(80 * U, BRUMA_LEJOS), (base - 80) * U);
       gc.globalAlpha = 1;
     }
     pintarCiudad(gc, L, extras, ahora, Qd, dx, dy);
@@ -714,19 +892,9 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
 
   // ---- lo que se lee: la hora, Chispa y el texto, con la viñeta de abajo. A: cuánto se ve (se va en la bajada) ----
   function interfaz(t, A) {
-    const cwp = canvas.width, chp = canvas.height;
+    const cwp = canvas.width;
     g.globalAlpha = A;
-    const vi = g.createRadialGradient(cwp / 2, chp * 0.3, cwp * 0.35, cwp / 2, chp * 0.3, Math.hypot(cwp, chp) * 0.75);
-    vi.addColorStop(0, 'rgba(3,6,14,0)');
-    vi.addColorStop(1, 'rgba(3,6,14,0.6)');
-    g.fillStyle = vi;
-    g.fillRect(0, 0, cwp, chp);
-    const abajo = g.createLinearGradient(0, chp * 0.48, 0, chp);
-    abajo.addColorStop(0, 'rgba(3,6,14,0)');
-    abajo.addColorStop(0.3, 'rgba(3,6,14,0.72)');
-    abajo.addColorStop(1, 'rgba(3,6,14,0.92)');
-    g.fillStyle = abajo;
-    g.fillRect(0, chp * 0.48, cwp, chp * 0.52);
+    if (!veloPintado) g.drawImage(capaVelo(), 0, 0);
 
     // la hora, arriba, en letra pixel
     if (hora) {
@@ -755,11 +923,9 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     if (!Q && dt > 260 && dt < 460) y -= sc;
     if (despierto) {
       const brillo = Q ? 1 : entre(dt, 0, 400);
-      const halo = g.createRadialGradient(x + 7 * sc, y + 5 * sc, 0, x + 7 * sc, y + 5 * sc, 16 * sc);
-      halo.addColorStop(0, `rgba(224,247,255,${(0.2 * brillo).toFixed(3)})`);
-      halo.addColorStop(1, 'rgba(224,247,255,0)');
-      g.fillStyle = halo;
-      g.fillRect(x - 10 * sc, y - 10 * sc, 34 * sc, 34 * sc);
+      g.globalAlpha = A * brillo;
+      g.drawImage(haloDe('haloChispa', 34 * sc, 34 * sc, 17 * sc, 15 * sc, 16 * sc, [[0, 'rgba(224,247,255,0.2)'], [1, 'rgba(224,247,255,0)']]),
+        x - 10 * sc, y - 10 * sc);
     }
     g.globalAlpha = A * (despierto ? 1 : 0.6);
     const k = `chispa-${cuadro === CHISPA.saludo ? 's' : cuadro === CHISPA.parpadeo ? 'p' : 'q'}-${despierto ? 1 : 0}`;
