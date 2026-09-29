@@ -145,7 +145,7 @@ El remate no es descubrir que la ciudad es un servidor, porque quien llega desde
 - **El guardia** es el jugador, con su apodo.
 - **Chispa** es el robot compañero: el mismo robot pixel que en el monitor representa a una sesión de Claude Code trabajando. Enseña, lee los rótulos, avisa lo que viene. Nunca juega por el jugador. Para quien programa con IA es un guiño directo: su herramienta está ahí, ayudando a cuidar la ciudad.
 - **Alba** es la vigía. Nunca aparece; solo quedan rastros: su cuaderno, su taza, su abrigo en el perchero, su usuario en la Terminal. Por qué se fue es el hilo de las temporadas.
-- **El Enjambre** es el atacante: miles de robots sin cara que prueban todas las puertas, como una red de bots real. Si alguien lo dirige es una pregunta abierta.
+- **El Enjambre** es el atacante: miles de robots sin cara que prueban todas las puertas, como una red de bots real. No ataca al azar: sigue un plan que se revela hora a hora (ver «El plan del Enjambre»). Si alguien lo dirige es una pregunta abierta.
 
 Los nombres de Chispa y Alba son de trabajo hasta que se vean dibujados.
 
