@@ -259,7 +259,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
   }
 
   function redimensionar() {
-    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const rc = canvas.getBoundingClientRect();
     cw = Math.max(1, rc.width || 390);
     ch = Math.max(1, rc.height || 844);

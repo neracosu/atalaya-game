@@ -148,7 +148,9 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   }
 
   function redimensionar() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    // tope de 1,5: más densidad no le suma nada al pixel art y en un Android modesto baja la partida a 30 cuadros
+    // por segundo. El navegador agranda el resto sin suavizar (image-rendering: pixelated en estilo.css).
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
