@@ -35,7 +35,9 @@ publicado cuenta algunos hechos con la analítica propia de Atalaya. Todo está 
 - **Qué se cuenta**, siempre como un nombre fijo y sumado por día: que se vio la portada, que empezó la primera
   partida, que la terminó y con cuántas estrellas (0 a 3), que llegó a 1, 2, 3, 5 o 10 reintentos, que empezó el
   reto del día, que compartió su resultado o el informe de su puerta, que revisó un dominio (solo el hecho), que
-  tocó «vigilar», que tocó la tarjeta de la hora que sigue («Llega pronto») y si es la primera visita, vuelve
+  tocó «vigilar», que tocó la tarjeta de la hora que sigue («Llega pronto»), si vio la apertura entera o en qué
+  tramo la saltó, cuánto tardó en su primera jugada (solo el tramo: menos de 2 s, de 2 a 3, de 3 a 5, de 5 a 10 o
+  más) y si es la primera visita, vuelve
   al día siguiente o vuelve otro día, y cuando llega a 3 y a 7 días distintos. El script de Atalaya suma además el tiempo con la página a la vista, cuánto bajó en la portada,
   la página de donde llegó (sin lo que va después del `?`), que envió un formulario y los clics a otros sitios
   (solo el nombre del sitio).

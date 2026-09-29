@@ -202,6 +202,24 @@ export const PALETA_ARANA = { k: '#e2e8f0', r: '#ef4444' };
 export const CALENDARIO = ['..k.....k..', 'rrkrrrrrkrr', 'rrrrrrrrrrr', 'wwwwwwwwwww', 'wdwdwdwdwdw', 'wwwwwwwwwww', 'wdwdwyyywdw', 'wwwwwyyywww', 'wdwdwyyywdw', 'wwwwwwwwwww', 'wwwwwwwwwww'];
 export const PALETA_CALENDARIO = { k: '#94a3b8', r: '#ef4444', w: '#e2e8f0', y: '#f59e0b', d: '#94a3b8' };
 
+// el cuaderno de la vigía, abierto, 17x13: dos páginas escritas, el lomo al medio, las tapas asomando y la cinta
+export const CUADERNO = [
+  '.kkkkkkk.kkkkkkk.',
+  'kpppppppkpppppppk',
+  'kpllllppkpllllppk',
+  'kpppppppkpppppppk',
+  'kplllllpkplllppak',
+  'kpppppppkpppppppk',
+  'kpllllppkplllllpk',
+  'kpppppppkpppppppk',
+  'kplllpppkpllllppk',
+  'kpppppppkpppppppk',
+  'kkkkkkkkkkkkkkkkk',
+  '.mmmmmmmrmmmmmmm.',
+  '........r........',
+];
+export const PALETA_CUADERNO = { k: '#0b1020', p: '#e7dcc1', l: '#64748b', a: '#b45309', m: '#78350f', r: '#ef4444' };
+
 // Convierte un sprite en un canvas a escala entera (sin suavizado: cada pixel del dibujo es un cuadro exacto)
 export function aCanvas(filas, paleta, escala) {
   const alto = filas.length, ancho = filas[0].length;

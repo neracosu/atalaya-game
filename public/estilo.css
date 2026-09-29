@@ -124,6 +124,20 @@ a { color: var(--cian); }
   font-size: .85rem; color: rgba(169, 182, 202, .72); opacity: 0; transition: opacity .6s; pointer-events: none; }
 .apertura-saltar.visible { opacity: 1; }
 .apertura.sale .apertura-saltar { opacity: 0; transition-duration: .2s; }
+/* la historia de la apertura corta: arriba, bajo el marcador, lejos del pulgar y encima de la ayuda de Chispa */
+.historia { position: absolute; z-index: 12; left: 16px; right: 16px; top: calc(max(10px, env(safe-area-inset-top)) + 96px);
+  display: flex; align-items: center; justify-content: center; gap: 12px; pointer-events: none; }
+.historia[hidden] { display: none; }
+.historia-texto { margin: 0; font-weight: 600; font-size: 1.12rem; line-height: 1.35; text-align: center; color: #f1f5f9;
+  text-shadow: 0 1px 2px #000, 0 0 12px rgba(3, 6, 14, .9); min-height: 1.35em; }
+.historia.escribiendo .historia-texto::after { content: ''; display: inline-block; width: .42em; height: .95em; margin-left: 3px;
+  vertical-align: -.12em; background: var(--cian); animation: cursor .52s steps(1) infinite; }
+@keyframes cursor { 50% { opacity: 0; } }
+.historia-cuaderno { display: none; flex: none; }
+.historia.con-cuaderno { justify-content: flex-start; }
+.historia.con-cuaderno .historia-cuaderno { display: block; }
+.historia.con-cuaderno .historia-texto { text-align: left; color: #fde68a; }
+.historia-cuaderno svg { display: block; width: 68px; height: 52px; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .7)); }
 .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
 .ajustes .ver-apertura { width: auto; min-height: 44px; justify-self: center; font-size: .95rem; font-weight: 400; }
 
@@ -264,5 +278,5 @@ button.ya:active { transform: translateY(1px); }
   .landing { border-top: 0; border-left: 1px solid var(--linea); background: linear-gradient(180deg, #081126 0%, var(--noche) 420px); padding: 56px 52px 64px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .historia.escribiendo .historia-texto::after { animation: none; } }
 @media (min-width: 700px) { #app { border-left: 1px solid var(--linea); border-right: 1px solid var(--linea); } }

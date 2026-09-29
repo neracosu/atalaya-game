@@ -6,6 +6,8 @@
 // 3. De frente: la ciudad de costado en capas que se mueven a distinta velocidad, la torre de la partida con su haz,
 //    y la cámara que baja hasta la barrera. El último cuadro es el primero de la partida: se pinta con las mismas
 //    funciones de escena.js.
+// La apertura corta (la que se juega) es solo el final del paso 3, apretado: sale de la niebla ya de frente y baja
+// a la barrera en menos de dos segundos. El texto de la corta no va aquí: lo escribe app.js arriba de la partida.
 // Capa pixel: manzanas, techos, farolas, la torre, Chispa y los edificios, a escala entera y en píxeles enteros.
 // Capa de código: la oscuridad, la luz, la niebla, el texto. Solo dibuja: el tiempo lo lleva apertura.js.
 // Todo a la densidad de la pantalla (hasta 3), con el texto nítido. Para que un teléfono modesto llegue, lo que no
@@ -405,9 +407,10 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     balizas = [];
     capa = null;
     capas = {};
-    armarCiudad();
+    // la corta no pasa por el aire: ni el mapa de la ciudad ni el texto (así arranca sin esperar)
+    if (!guion.corto) armarCiudad();
     armarFrente();
-    armarTexto();
+    if (!guion.corto) armarTexto();
   }
 
   // ---- la luz de la torre: da vueltas parejas; al empezar la bajada apunta hacia la cámara ----
@@ -530,6 +533,7 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     g.imageSmoothingEnabled = false;
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
+    if (guion.corto) { corta(t, ahora); return; }
     if (Q) { quieto(t, ahora); return; }
     veloPintado = false;
     const inc = inclinacion(t, guion);
@@ -559,6 +563,34 @@ export function crearDibujoApertura(canvas, { lineas = [], nombre = '', hora = '
     }
     g.globalAlpha = entre(t, guion.frente, guion.nieblaFin);
     g.drawImage(capa, 0, 0);
+    g.globalAlpha = 1;
+  }
+
+  // la corta: de frente desde arriba hasta la barrera, con la niebla que se abre al empezar. Con menos movimiento,
+  // la barrera quieta (se pinta una vez) y solo el fundido
+  function corta(t, ahora) {
+    if (Q) {
+      if (!capa) {
+        capa = lienzo(canvas.width, canvas.height);
+        pintarFrente(capa.getContext('2d'), ahora, 0, true);
+      }
+      g.drawImage(capa, 0, 0);
+      return;
+    }
+    pintarFrente(g, ahora, altura(t, guion), false);
+    const nb = niebla(t, guion);
+    if (nb <= 0) return;
+    const chp = canvas.height;
+    g.fillStyle = `rgba(22,36,62,${nb.toFixed(3)})`;
+    g.fillRect(0, 0, canvas.width, chp);
+    // los bancos de nube suben rápido y se deshacen: la cámara sale de la nube hacia abajo
+    g.globalAlpha = Math.min(1, nb * 1.1);
+    for (let i = 0; i < 3; i++) {
+      const n = nubes[(i * 2 + 1) % nubes.length];
+      const y = chp * (0.35 + i * 0.3) - t * (chp / 700) * n.vel;
+      if (y + n.alto < 0) continue;
+      pintarNube(n, (n.x - 10 * i) * u, Math.round(y / u) * u);
+    }
     g.globalAlpha = 1;
   }
 

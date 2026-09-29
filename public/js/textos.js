@@ -116,10 +116,20 @@ export const T = {
     clientela: n => `Hoy el reto trae la clientela de anoche: ${n.toLocaleString('es')} visitas en un servidor real.`,
   },
 
-  // la apertura: «La torre vacía» en corto, solo la primera vez (GDD, parte 6)
+  // la apertura: «La torre vacía» (GDD, parte 6). La primera vez se juega: la cámara baja a la barrera y la historia
+  // se escribe en las pausas de la primera partida. La versión larga, desde los ajustes, lleva las dos primeras líneas.
   apertura: {
     hora: '00:00',
-    lineas: ['Esta noche, la ciudad está bajo ataque.', 'Alguien tiene que tomar la guardia.'],
+    lineas: ['Medianoche. La vigía se fue sin avisar.', 'El Enjambre ya está en la puerta.'],
+    historia: {
+      bajada: 'Medianoche. La vigía se fue sin avisar.',
+      amenaza: 'El Enjambre ya está en la puerta.',
+      objetivo: 'Cuídela hasta el amanecer.',
+      // la hora del teléfono, solo de noche (se calcula en el teléfono y no se envía)
+      hora: (hh, mm) => `${hh === '01' ? 'Es la' : 'Son las'} ${hh}:${mm} donde está usted. Aquí también es de noche.`,
+      pregunta: 'Ella sabía que venían. ¿Cómo?',
+    },
+    cuaderno: 'El cuaderno de la vigía',
     saltar: 'Toque para saltar',
     saltarTeclado: 'Haga clic o pulse Espacio para saltar',
     ver: 'Ver la apertura',

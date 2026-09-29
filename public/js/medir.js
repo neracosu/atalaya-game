@@ -25,7 +25,15 @@ export const EVENTOS = [
   // la apertura: si se vio entera o en qué tramo de tres segundos se saltó (0 el encendido, 3 el texto, 6 el
   // final del texto y el comienzo de la bajada, 9 la niebla, 12 el aterrizaje)
   'apertura-completa', 'apertura-saltada-0', 'apertura-saltada-3', 'apertura-saltada-6', 'apertura-saltada-9', 'apertura-saltada-12',
+  // la primera partida: cuánto pasó desde el toque en «Tomar la guardia» hasta la primera jugada, en tramos
+  'primera-jugada-0-2', 'primera-jugada-2-3', 'primera-jugada-3-5', 'primera-jugada-5-10', 'primera-jugada-mas-10',
 ];
+
+// El tramo del tiempo hasta la primera jugada (en ms): nunca sale el número exacto
+export function tramoDePrimeraJugada(ms) {
+  const s = Math.max(0, Number(ms) || 0) / 1000;
+  return s < 2 ? '0-2' : s < 3 ? '2-3' : s < 5 ? '3-5' : s < 10 ? '5-10' : 'mas-10';
+}
 const PERMITIDOS = new Set(EVENTOS);
 const HITOS_REINTENTO = new Set([1, 2, 3, 5, 10]);
 const UNA_VEZ = { compartir: 'comparte', 'compartir-puerta': 'comparte-puerta', dominio: 'dominio', 'ir-atalaya': 'vigilar', 'landing-atalaya': 'landing-atalaya', 'landing-empezar': 'landing-empezar', proxima: 'toca-hora-2' };
@@ -49,7 +57,8 @@ export function crearMedidor(enviar) {
   let empezadas = 0, terminadas = 0;
   const hechos = new Set();
   const mandar = nombre => { if (PERMITIDOS.has(nombre)) enviar(nombre); };
-  // el segundo argumento son las estrellas al terminar, o el milisegundo en que se saltó la apertura
+  // el segundo argumento son las estrellas al terminar, el milisegundo en que se saltó la apertura o el que pasó
+  // hasta la primera jugada (de los dos últimos solo sale el tramo)
   return function medir(evento, estrellas) {
     if (evento === 'partida' || evento === 'reto') {
       empezadas++;
@@ -65,6 +74,11 @@ export function crearMedidor(enviar) {
       if (hechos.has('apertura')) return;
       hechos.add('apertura');
       mandar(evento === 'apertura-completa' ? evento : 'apertura-saltada-' + tramoDeSalto(estrellas));
+    } else if (evento === 'primera-jugada') {
+      // una vez por visita: solo la partida que viene de la apertura corta la mide
+      if (hechos.has(evento)) return;
+      hechos.add(evento);
+      mandar('primera-jugada-' + tramoDePrimeraJugada(estrellas));
     } else if (UNA_VEZ[evento] && !hechos.has(evento)) {
       hechos.add(evento);
       mandar(UNA_VEZ[evento]);
