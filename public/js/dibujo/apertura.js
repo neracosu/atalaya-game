@@ -9,17 +9,23 @@
 //    funciones de escena.js.
 // En la bajada, las dos últimas líneas van arriba, una por vez, sobre una sombra suave: el objetivo y la pregunta,
 // con el cuaderno de la vigía en pixel.
-// Capa pixel: manzanas, techos, farolas, la torre, Chispa, el cuaderno y los edificios, a escala entera y en píxeles
-// enteros. Capa de código: la oscuridad, la luz, la niebla, el texto. Solo dibuja: el tiempo lo lleva apertura.js.
-// Todo a la densidad de la pantalla (hasta 3), con el texto nítido. Para que un teléfono modesto llegue, lo que no
-// cambia en cada cuadro se pinta una vez en un lienzo aparte y se copia: la ciudad de noche, la luz bajo el haz, el
-// rojo del Enjambre, el velo del texto, los halos, la luz de la niebla y cada degradé vertical (una columna de un
-// píxel que se estira). Rellenar un degradé a pantalla completa cuesta cinco veces lo que copiar un lienzo.
+// Dos lienzos, uno sobre otro. Solo dibuja: el tiempo lo lleva apertura.js.
+// - El mundo (`mundo`): manzanas, techos, farolas, la torre, los edificios, el Enjambre, la oscuridad, la luz y la
+//   niebla, en un lienzo chico de un píxel por píxel del dibujo (unos 110 a lo ancho) que el navegador agranda a un
+//   múltiplo entero sin suavizar (image-rendering: pixelated). El pixel art se ve igual que antes, porque ya se
+//   dibujaba a esa cuadrícula; la luz y los halos quedan en la misma cuadrícula. Se dibuja en píxeles de la pantalla,
+//   como siempre: el lienzo lleva una escala de 1/u, así que cada cuadro de u píxeles cae en un píxel del lienzo.
+//   Rellenar la pantalla entera a la densidad de un teléfono (1024x2216) costaba más que todo lo demás junto: ahora
+//   se rellenan unos 28 000 píxeles en vez de 2,27 millones.
+// - El texto (`canvas`): la historia, la hora, Chispa y el cuaderno, a la densidad de la pantalla (hasta 3) y nítidos.
+//   En cada cuadro se borra solo la franja donde hubo texto.
+// Lo que no cambia en cada cuadro se pinta una vez en un lienzo aparte, a la misma cuadrícula, y se copia: la ciudad
+// de noche, la luz bajo el haz, el rojo del Enjambre, el velo del texto, los halos y la luz de la niebla.
 
 import { CHISPA, PALETA_CHISPA, PALETA_CHISPA_DORMIDO, TORRE_AIRE, PALETA_TORRE_AIRE, PALETA_TORRE_AIRE_ENCENDIDA,
   TORRE, PALETA_TORRE_ENCENDIDA, BARRERA_POSTE, PALETA_BARRERA, CUADERNO, PALETA_CUADERNO, aCanvas } from './sprites.js';
 import { disposicion, decoradoCiudad, pintarCielo, pintarCiudad, pintarTorre, pintarCalzada, pintarBarrera, columna,
-  pintarColumna, CIELO } from './escena.js';
+  pintarColumna, medida, CIELO } from './escena.js';
 import { letrasVisibles, alfaDe, inclinacion, niebla, altura } from '../apertura.js';
 
 const PAN = 8;            // lo que avanza la cámara desde el aire, en píxeles del dibujo, de a uno por vez
@@ -87,9 +93,10 @@ function pixeles(w, h) {
   };
 }
 
-export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
-  let g = canvas.getContext('2d'); // let: con menos movimiento, la vista quieta se pinta una vez en otro lienzo
-  if (!g) throw new Error('sin lienzo');
+export function crearDibujoApertura(canvas, { mundo, nombre = '', hora = '', guion }) {
+  let g = mundo.getContext('2d'); // let: con menos movimiento, la vista quieta se pinta una vez en otro lienzo
+  const gt = canvas.getContext('2d');
+  if (!g || !gt) throw new Error('sin lienzo');
   const Q = !!guion.quieto;
   let dpr = 1, u = 3, W = 100, H = 200, cw = 390, ch = 844;
   // el mapa de la ciudad a un píxel por píxel del dibujo (se agranda al pintar, sin suavizar); más grande que la
@@ -101,7 +108,6 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
   const lineas = guion.lineas;
   // la vista de frente
   let L = null, deco = null, lejanos = [], extras = [], nubes = [];
-  let capa = null; // para el fundido de menos movimiento
   // las capas pintadas una vez (ver capaDe); se sueltan al pasar de fase, para no guardar la memoria de todas juntas
   let capas = {};
   const cache = new Map();
@@ -114,14 +120,31 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
   function lienzo(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 
   // ---- las capas que no cambian en cada cuadro: se pintan la primera vez que hacen falta y después se copian ----
-  function capaDe(clave, w, h, pintar) {
+  // (w, h) en píxeles de la pantalla. Las del mundo se guardan a un píxel por píxel del dibujo, con la misma escala
+  // que el lienzo del mundo; las nítidas (`nitida`), para el lienzo del texto, a la densidad de la pantalla.
+  function capaDe(clave, w, h, pintar, nitida = false) {
     if (!capas[clave]) {
-      const c = lienzo(Math.max(1, Math.ceil(w)), Math.max(1, Math.ceil(h))), cg = c.getContext('2d');
+      const k = nitida ? 1 : u;
+      const c = lienzo(Math.max(1, Math.ceil(w / k)), Math.max(1, Math.ceil(h / k))), cg = c.getContext('2d');
       cg.imageSmoothingEnabled = false;
+      if (!nitida) { cg.setTransform(1 / u, 0, 0, 1 / u, 0, 0); c.pantalla = [c.width * u, c.height * u]; }
       pintar(cg, c);
       capas[clave] = c;
     }
     return capas[clave];
+  }
+  // copia una capa con su esquina en (x, y), en píxeles de la pantalla
+  const copiar = (cg, c, x, y) => { const [w, h] = medida(c); cg.drawImage(c, x, y, w, h); };
+
+  // lo que se pintó en el lienzo del texto desde la última vez que se borró: al empezar cada cuadro se borra solo esa
+  // franja (el resto de ese lienzo es transparente)
+  let sucio = null;
+  const marcar = (y0, y1) => { sucio = sucio ? [Math.min(sucio[0], y0), Math.max(sucio[1], y1)] : [y0, y1]; };
+  function limpiarTexto() {
+    if (!sucio) return;
+    const y0 = Math.max(0, Math.floor(sucio[0]) - 2);
+    gt.clearRect(0, y0, canvas.width, Math.ceil(sucio[1]) + 2 - y0);
+    sucio = null;
   }
   // (por prefijo: 'juntos' suelta todas las capas juntos1, juntos2...)
   const soltar = (...claves) => { for (const k of Object.keys(capas)) if (claves.some(c => k.startsWith(c))) capas[k] = null; };
@@ -133,25 +156,25 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     const k = 'juntos' + cam;
     if (!capas[k]) soltar('juntos');
     return capaDe(k, canvas.width, canvas.height, c => {
-      c.drawImage(capaAsedio(), 0, -cam * u);
-      c.drawImage(capaVelo(), 0, 0);
+      copiar(c, capaAsedio(), 0, -cam * u);
+      copiar(c, capaVelo(), 0, 0);
     });
   }
   let veloPintado = false; // si en este cuadro el velo ya fue con el rojo
 
   // un halo redondo (un degradé radial que se apaga en el borde) en su propio lienzo, del tamaño del rectángulo que se
   // pintaba; (cx, cy) es el centro del degradé dentro del rectángulo
-  function haloDe(clave, w, h, cx, cy, radio, paradas) {
+  function haloDe(clave, w, h, cx, cy, radio, paradas, nitida = false) {
     return capaDe(clave, w, h, c => {
       const grad = c.createRadialGradient(cx, cy, 0, cx, cy, radio);
       for (const [pos, color] of paradas) grad.addColorStop(pos, color);
       c.fillStyle = grad;
       c.fillRect(0, 0, w, h);
-    });
+    }, nitida);
   }
-  // un halo en un lugar que no cae en un píxel entero: se copia en el píxel más cercano (medio píxel corrido, en un
-  // degradé que se apaga, no se ve; copiar con suavizado costaba el doble)
-  function pintarHalo(img, x, y) { g.drawImage(img, Math.round(x), Math.round(y)); }
+  // un halo del mundo en un lugar que no cae en un píxel entero: se copia en el píxel más cercano (medio píxel corrido,
+  // en un degradé que se apaga, no se ve)
+  function pintarHalo(img, x, y) { copiar(g, img, Math.round(x), Math.round(y)); }
 
   // Desde el aire, la cámara solo avanza de a un píxel del dibujo (PAN pasos): lo que está pegado al mapa se pinta una
   // vez con todas las filas que puede llegar a mostrar y se copia corrido. Coordenadas de esas capas: la fila 0 es la
@@ -375,7 +398,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     }
   }
   function partirTexto(fs) {
-    g.font = `600 ${fs}px 'Space Grotesk', system-ui, sans-serif`;
+    gt.font = `600 ${fs}px 'Space Grotesk', system-ui, sans-serif`;
     const maximo = (cw - 48) * dpr;
     // corta por palabras; luego achica el ancho mientras no sume filas, para que no quede una palabra sola abajo
     const cortar = (linea, ancho) => {
@@ -383,7 +406,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
       let fila = '';
       for (const palabra of linea.split(' ')) {
         const prueba = fila ? fila + ' ' + palabra : palabra;
-        if (fila && g.measureText(prueba).width > ancho) { filas.push(fila); fila = palabra; } else fila = prueba;
+        if (fila && gt.measureText(prueba).width > ancho) { filas.push(fila); fila = palabra; } else fila = prueba;
       }
       filas.push(fila);
       return filas;
@@ -430,9 +453,17 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     u = Math.max(2, Math.floor(canvas.width / 110));
     W = Math.ceil(canvas.width / u);
     H = Math.ceil(canvas.height / u);
+    // el mundo cubre la pantalla con cuadros enteros (sobra menos de un cuadro abajo y a la derecha, que se recorta)
+    mundo.width = W;
+    mundo.height = H;
+    mundo.pantalla = [W * u, H * u];
+    mundo.style.width = `${(W * u) / dpr}px`;
+    mundo.style.height = `${(H * u) / dpr}px`;
+    g = mundo.getContext('2d');
+    g.setTransform(1 / u, 0, 0, 1 / u, 0, 0);
+    sucio = null;
     cache.clear();
     balizas = [];
-    capa = null;
     capas = {};
     armarCiudad();
     armarFrente();
@@ -510,6 +541,9 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
       if (sy > mapa.MH) { huecos.push(y); continue; }
       const r = rango && rango(y);
       if (rango && !r) continue;
+      // lejos, donde varias calles caen en un mismo cuadro de la cuadrícula, se promedian (sin suavizar salía un
+      // granulado que titila); cerca, cada píxel del mapa cae entero, como siempre
+      g.imageSmoothingEnabled = escala * u > 1.5;
       // a lo ancho, el mapa se repite: la ciudad no se corta a los lados
       const sx0 = LX - c.px0 * escala, sw = canvas.width * escala;
       for (let k = Math.floor(sx0 / mapa.MW); k * mapa.MW < sx0 + sw; k++) {
@@ -524,6 +558,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
         g.drawImage(tex, a - k * mapa.MW + (X0 - D0) * paso, sy, (X1 - X0) * paso, sh, X0, y, X1 - X0, u);
       }
     }
+    g.imageSmoothingEnabled = false;
     return { yH, huecos };
   }
   // lo que el cono de luz ocupa de cada tira de la pantalla, [desde, hasta) con un píxel de sobra a cada lado: el
@@ -559,14 +594,17 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     g.imageSmoothingEnabled = false;
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
+    limpiarTexto();
     if (Q) { quieto(t, ahora); return; }
     veloPintado = false;
     const inc = inclinacion(t, guion);
     if (t < guion.frente) {
       if (inc <= 0) aire(t, false); else inclinado(t, inc);
       const A = 1 - entre(t, guion.bajada, guion.bajada + 450);
-      if (A > 0) interfaz(t, A);
-      else soltar('noche', 'luzAire', 'asedio', 'velo', 'juntos');
+      if (A > 0) {
+        if (!veloPintado) velo(A);
+        interfaz(t, A);
+      } else soltar('noche', 'luzAire', 'asedio', 'velo', 'juntos');
     } else pintarFrente(g, ahora, altura(t, guion), false);
     if (t > guion.niebla - 400 && t < guion.nieblaFin + 700) pintarNiebla(t, niebla(t, guion));
     else if (t >= guion.nieblaFin + 700) soltar('luzNiebla');
@@ -576,19 +614,18 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
   // menos movimiento: la ciudad desde el aire quieta con todo a la vista, y un fundido a la vista de frente
   // (todo quieto: cada vista se pinta una sola vez y después se copia)
   function quieto(t, ahora) {
-    g.drawImage(capaDe('quietoAire', canvas.width, canvas.height, c => {
+    copiar(g, capaDe('quietoAire', canvas.width, canvas.height, c => {
       const antes = g;
       g = c;
-      try { aire(99999, true); interfaz(99999, 1); } finally { g = antes; }
+      try { aire(99999, true); velo(1); } finally { g = antes; }
       soltar('noche', 'luzAire', 'asedio', 'velo');
     }), 0, 0);
+    // el texto se va a medida que llega la vista de frente
+    const f = t < guion.frente ? 0 : entre(t, guion.frente, guion.nieblaFin);
+    if (f < 1) interfaz(99999, 1 - f);
     if (t < guion.frente) return;
-    if (!capa) {
-      capa = lienzo(canvas.width, canvas.height);
-      pintarFrente(capa.getContext('2d'), ahora, 0, true);
-    }
-    g.globalAlpha = entre(t, guion.frente, guion.nieblaFin);
-    g.drawImage(capa, 0, 0);
+    g.globalAlpha = f;
+    copiar(g, capaDe('quietoFrente', canvas.width, canvas.height, c => pintarFrente(c, ahora, 0, true)), 0, 0);
     g.globalAlpha = 1;
   }
 
@@ -597,7 +634,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     const cam = Qd ? PAN : Math.min(PAN, Math.floor((t / guion.bajada) * (PAN + 1)));
     const ox = mapa.x0, oy = mapa.y0 + cam, dy = -cam * u;
     const tx = (torre.x - ox + 0.5) * u, ty = (torre.y - oy + 0.5) * u;
-    g.drawImage(capaNoche(), 0, dy);
+    copiar(g, capaNoche(), 0, dy);
 
     // la noche se aclara cuando la torre se enciende; la ciudad se lee sin perder la noche. La capa ya trae el velo
     // de la torre encendida: antes, otro velo encima, que sumado a ese da el de ahora (NOCHE - (NOCHE - NOCHE_FIN)·enc)
@@ -631,7 +668,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
       conoLuz(tx, ty, ang, ABRE, largo);
       g.clip();
       g.globalAlpha = bi;
-      g.drawImage(capaLuzAire(), 0, dy);
+      copiar(g, capaLuzAire(), 0, dy);
       g.restore();
       g.save();
       g.globalCompositeOperation = 'lighter';
@@ -645,11 +682,11 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     // el Enjambre tiñe de rojo los bordes de la ciudad mientras se acerca
     const asedio = Qd ? 1 : entre(t, guion.enjambre, guion.enjambre + 2200);
     if (asedio >= 1 && !Qd) {
-      g.drawImage(capaJuntos(cam), 0, 0);
+      copiar(g, capaJuntos(cam), 0, 0);
       veloPintado = true;
     } else if (asedio > 0) {
       g.globalAlpha = asedio;
-      g.drawImage(capaAsedio(), 0, dy);
+      copiar(g, capaAsedio(), 0, dy);
       g.globalAlpha = 1;
     }
 
@@ -708,7 +745,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     }
     const esc = 2 * u;
     const img = sprite(prendida ? 'torreOn' : 'torreOff', TORRE_AIRE, prendida ? PALETA_TORRE_AIRE_ENCENDIDA : PALETA_TORRE_AIRE, esc);
-    g.drawImage(img, Math.round(tx - 7 * esc), Math.round(ty - 7 * esc));
+    g.drawImage(img, Math.round((tx - 7 * esc) / u) * u, Math.round((ty - 7 * esc) / u) * u);
     g.globalAlpha = 1;
   }
 
@@ -869,7 +906,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
       g.save();
       g.globalCompositeOperation = 'lighter';
       g.globalAlpha = fuerza;
-      g.drawImage(disco, Math.round(lx) - R, arriba);
+      copiar(g, disco, Math.round(lx) - R, arriba);
       g.restore();
     }
   }
@@ -885,7 +922,7 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
 
   function pintarFrente(gc, ahora, a, Qd) {
     const [dx, dy] = corrimiento(a);
-    const U = L.u, ancho = gc.canvas.width;
+    const U = L.u, ancho = medida(gc.canvas)[0];
     gc.imageSmoothingEnabled = false;
     pintarCielo(gc, L, deco.estrellas, ahora, Qd, Math.round(dx * 0.1), Math.round(dy * 0.12));
     // la ciudad lejana se hunde detrás de la cercana al bajar, y se pierde en la bruma antes de llegar
@@ -920,23 +957,29 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     pintarBarrera(gc, L, sprite('poste', BARRERA_POSTE, PALETA_BARRERA, U), false, dx, dy);
   }
 
-  // ---- lo que se lee desde el aire: la hora, Chispa y la página de la historia que toca, con la viñeta de abajo.
+  // ---- el velo que deja leer el texto, en el mundo (se va con A en la bajada) ----
+  function velo(A) {
+    g.globalAlpha = A;
+    copiar(g, capaVelo(), 0, 0);
+    g.globalAlpha = 1;
+  }
+
+  // ---- lo que se lee desde el aire, en el lienzo del texto: la hora, Chispa y la página de la historia que toca.
   // A: cuánto se ve (se va en la bajada). Con menos movimiento, todas las líneas juntas y el cuaderno ----
   function interfaz(t, A) {
     const cwp = canvas.width;
-    g.globalAlpha = A;
-    if (!veloPintado) g.drawImage(capaVelo(), 0, 0);
-
     // la hora, arriba, en letra pixel
     if (hora) {
-      g.globalAlpha = A * (Q ? 1 : entre(t, guion.encender + 150, guion.encender + 650));
-      g.font = `400 ${Math.round(15 * dpr)}px 'Silkscreen', ui-monospace, monospace`;
-      g.textAlign = 'center';
-      g.textBaseline = 'top';
-      g.fillStyle = '#67e8f9';
-      g.fillText(hora, cwp / 2, Math.round(26 * dpr));
+      gt.globalAlpha = A * (Q ? 1 : entre(t, guion.encender + 150, guion.encender + 650));
+      const fs = Math.round(15 * dpr), y = Math.round(26 * dpr);
+      gt.font = `400 ${fs}px 'Silkscreen', ui-monospace, monospace`;
+      gt.textAlign = 'center';
+      gt.textBaseline = 'top';
+      gt.fillStyle = '#67e8f9';
+      gt.fillText(hora, cwp / 2, y);
+      marcar(y, y + fs * 1.4);
     }
-    g.globalAlpha = A;
+    gt.globalAlpha = A;
     const yChispa = Q ? bajoLaTorre() + Math.max(0, Math.round((canvas.height - bajoLaTorre() - altoQuieto()) / 2)) : Math.round(canvas.height * 0.58);
     let y = chispa(t, A, yChispa);
     lineas.forEach((l, i) => {
@@ -948,10 +991,10 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
       // desde el aire, una página por vez: las de la bajada van arriba (ver arriba)
       const alfa = l.arriba ? 0 : alfaDe(l, t);
       if (alfa <= 0) return;
-      g.globalAlpha = alfa;
+      gt.globalAlpha = alfa;
       y = escribir(t, i, y);
     });
-    g.globalAlpha = 1;
+    gt.globalAlpha = 1;
   }
 
   // Chispa: dormido y a media luz; al despertar le parpadean los ojos, se prende la antena, da un saltito y saluda.
@@ -965,31 +1008,33 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
     if (!Q && dt > 520 && dt < 980) cuadro = CHISPA.saludo;
     else if (despierto && !Q && dt > 1200 && (dt % 2600) < 140) cuadro = CHISPA.parpadeo;
     const texto0 = y + altoChispa();
+    marcar(y - 10 * sc, texto0);
     if (!Q && dt > 260 && dt < 460) y -= sc;
     if (despierto) {
       const brillo = Q ? 1 : entre(dt, 0, 400);
-      g.globalAlpha = A * brillo;
-      g.drawImage(haloDe('haloChispa', 34 * sc, 34 * sc, 17 * sc, 15 * sc, 16 * sc, [[0, 'rgba(224,247,255,0.2)'], [1, 'rgba(224,247,255,0)']]),
+      gt.globalAlpha = A * brillo;
+      gt.drawImage(haloDe('haloChispa', 34 * sc, 34 * sc, 17 * sc, 15 * sc, 16 * sc, [[0, 'rgba(224,247,255,0.2)'], [1, 'rgba(224,247,255,0)']], true),
         x - 10 * sc, y - 10 * sc);
     }
-    g.globalAlpha = A * (despierto ? 1 : 0.6);
+    gt.globalAlpha = A * (despierto ? 1 : 0.6);
     const k = `chispa-${cuadro === CHISPA.saludo ? 's' : cuadro === CHISPA.parpadeo ? 'p' : 'q'}-${despierto ? 1 : 0}`;
-    g.drawImage(sprite(k, cuadro, despierto ? PALETA_CHISPA : PALETA_CHISPA_DORMIDO, sc), x, y);
-    g.globalAlpha = A;
+    gt.drawImage(sprite(k, cuadro, despierto ? PALETA_CHISPA : PALETA_CHISPA_DORMIDO, sc), x, y);
+    gt.globalAlpha = A;
     const yNombre = y + 16 * sc + Math.round(12 * dpr) + (!Q && dt > 260 && dt < 460 ? sc : 0);
     if (nombre && despierto) {
-      g.globalAlpha = A * (Q ? 1 : entre(dt, 150, 500));
-      g.font = `400 ${Math.round(11 * dpr)}px 'Silkscreen', ui-monospace, monospace`;
-      g.textAlign = 'center';
-      g.textBaseline = 'top';
-      g.fillStyle = '#22d3ee';
-      g.fillText(nombre.toUpperCase(), canvas.width / 2, yNombre);
-      g.globalAlpha = A;
+      gt.globalAlpha = A * (Q ? 1 : entre(dt, 150, 500));
+      gt.font = `400 ${Math.round(11 * dpr)}px 'Silkscreen', ui-monospace, monospace`;
+      gt.textAlign = 'center';
+      gt.textBaseline = 'top';
+      gt.fillStyle = '#22d3ee';
+      gt.fillText(nombre.toUpperCase(), canvas.width / 2, yNombre);
+      gt.globalAlpha = A;
     }
     return texto0;
   }
 
-  // ---- en la bajada, arriba: el objetivo y luego la pregunta con el cuaderno, una por vez, sobre su sombra ----
+  // ---- en la bajada, arriba: el objetivo y luego la pregunta con el cuaderno, una por vez. La sombra que las deja
+  // leer oscurece el mundo; la letra y el cuaderno van nítidos ----
   function arriba(t) {
     const y0 = Math.round(Math.max(canvas.height * 0.2, 96 * dpr));
     lineas.forEach((l, i) => {
@@ -998,22 +1043,25 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
       const alto = (l.cuaderno ? altoCuaderno() : 0) + texto.lineas[i].length * texto.alto;
       g.globalAlpha = alfa;
       pintarColumna(g, columna(y0 + alto + 90 * dpr, SOMBRA_ARRIBA), 0);
+      g.globalAlpha = 1;
+      gt.globalAlpha = alfa;
       let y = y0;
       if (l.cuaderno) {
         // el cuaderno asoma un poco antes que su línea
-        g.globalAlpha = alfa * Math.min(1, (t - l.aparece) / 200);
+        gt.globalAlpha = alfa * Math.min(1, (t - l.aparece) / 200);
         y = cuaderno(y);
-        g.globalAlpha = alfa;
+        gt.globalAlpha = alfa;
       }
       escribir(t, i, y);
     });
-    g.globalAlpha = 1;
+    gt.globalAlpha = 1;
   }
 
   // el cuaderno de la vigía, en pixel y centrado; devuelve dónde empieza su línea
   function cuaderno(y) {
     const img = sprite('cuaderno', CUADERNO, PALETA_CUADERNO, escCuaderno());
-    g.drawImage(img, Math.round((canvas.width - img.width) / 2), Math.round(y));
+    gt.drawImage(img, Math.round((canvas.width - img.width) / 2), Math.round(y));
+    marcar(y, y + altoCuaderno());
     return y + altoCuaderno();
   }
 
@@ -1022,23 +1070,24 @@ export function crearDibujoApertura(canvas, { nombre = '', hora = '', guion }) {
   function escribir(t, i, y0) {
     const l = lineas[i], filas = texto.lineas[i];
     const vis = letrasVisibles(Q ? 99999 : t, guion)[i];
-    g.font = `600 ${texto.fs}px 'Space Grotesk', system-ui, sans-serif`;
-    g.textAlign = 'left';
-    g.textBaseline = 'top';
-    g.fillStyle = COLOR_LINEA[l.id] || '#f1f5f9';
+    gt.font = `600 ${texto.fs}px 'Space Grotesk', system-ui, sans-serif`;
+    gt.textAlign = 'left';
+    gt.textBaseline = 'top';
+    gt.fillStyle = COLOR_LINEA[l.id] || '#f1f5f9';
     let cursor = null;
     filas.forEach((f, k) => {
       const n = Math.max(0, Math.min(f.texto.length, vis - f.desde));
-      const x = Math.round((canvas.width - g.measureText(f.texto).width) / 2);
+      const x = Math.round((canvas.width - gt.measureText(f.texto).width) / 2);
       const y = y0 + k * texto.alto;
       if (n <= 0) return;
       const parte = f.texto.slice(0, n);
-      g.fillText(parte, x, y);
-      if (vis < l.texto.length) cursor = [x + g.measureText(parte).width + 3 * dpr, y];
+      gt.fillText(parte, x, y);
+      if (vis < l.texto.length) cursor = [x + gt.measureText(parte).width + 3 * dpr, y];
     });
+    marcar(y0, y0 + filas.length * texto.alto + texto.fs * 0.3);
     if (cursor && !Q && Math.floor(t / 260) % 2 === 0) {
-      g.fillStyle = '#67e8f9';
-      g.fillRect(Math.round(cursor[0]), Math.round(cursor[1] + texto.fs * 0.12), Math.max(2, Math.round(texto.fs * 0.42)), Math.round(texto.fs * 0.95));
+      gt.fillStyle = '#67e8f9';
+      gt.fillRect(Math.round(cursor[0]), Math.round(cursor[1] + texto.fs * 0.12), Math.max(2, Math.round(texto.fs * 0.42)), Math.round(texto.fs * 0.95));
     }
     return y0 + filas.length * texto.alto;
   }

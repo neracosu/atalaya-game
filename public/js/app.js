@@ -225,7 +225,7 @@ function verApertura(tipo = 'partida', { primera = false } = {}) {
   capa.setAttribute('aria-label', T.apertura.etiqueta);
   capa.hidden = false;
   try {
-    dibujo = crearDibujoApertura($('apertura-lienzo'), { nombre: T.chispa, hora: T.apertura.hora, guion });
+    dibujo = crearDibujoApertura($('apertura-lienzo'), { mundo: $('apertura-mundo'), nombre: T.chispa, hora: T.apertura.hora, guion });
     dibujo.dibujar(0, performance.now()); // el primer cuadro ya, en el mismo instante: nunca un hueco negro
   } catch {
     control.forzar();

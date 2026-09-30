@@ -64,13 +64,17 @@ export function columna(alto, paradas) {
 }
 // la columna con su borde de arriba en y0, a todo lo ancho, solo entre las filas desde y hasta del canvas. Con
 // suavizado: estirar una sola columna no mezcla nada, y a escala 1:1 en vertical cada fila queda con su color.
-export function pintarColumna(g, col, y0, desde = 0, hasta = g.canvas.height) {
+// el tamaño de un lienzo en píxeles de la pantalla. La apertura pinta el mundo en un lienzo chico, a un píxel por
+// píxel del dibujo, y lo declara en `pantalla` (ver dibujo/apertura.js); los demás miden lo que miden
+export const medida = c => c.pantalla || [c.width, c.height];
+export function pintarColumna(g, col, y0, desde = 0, hasta = medida(g.canvas)[1]) {
   y0 = Math.round(y0);
-  const a = Math.max(desde, y0, 0), b = Math.min(hasta, y0 + col.height, g.canvas.height);
+  const [ancho, alto] = medida(g.canvas);
+  const a = Math.max(desde, y0, 0), b = Math.min(hasta, y0 + col.height, alto);
   if (b <= a) return;
   const suave = g.imageSmoothingEnabled;
   g.imageSmoothingEnabled = true;
-  g.drawImage(col, 0, a - y0, 1, b - a, 0, a, g.canvas.width, b - a);
+  g.drawImage(col, 0, a - y0, 1, b - a, 0, a, ancho, b - a);
   g.imageSmoothingEnabled = suave;
 }
 export const CIELO = [[0, '#050914'], [1, '#0c1a33']];
@@ -90,7 +94,7 @@ export function pintarCiudad(g, L, edificios, ahora, quieto, dx = 0, dy = 0) {
   const u = L.u, base = L.calle - 3 + dy;
   for (const ed of edificios) {
     const x = ed.x + dx;
-    if ((x + ed.ancho) * u < 0 || x * u > g.canvas.width) continue;
+    if ((x + ed.ancho) * u < 0 || x * u > medida(g.canvas)[0]) continue;
     g.fillStyle = ed.tono > 0.5 ? '#111a2e' : '#0e1627';
     g.fillRect(x * u, (base - ed.alto) * u, ed.ancho * u, ed.alto * u);
     g.fillStyle = '#fde68a';
@@ -136,7 +140,7 @@ export function pintarTorre(g, L, img, encendida, ahora, quieto, dx = 0, dy = 0)
 }
 
 export function pintarCalzada(g, L, dx = 0, dy = 0, suelo = null) {
-  const u = L.u, c = L.calle + dy, ancho = g.canvas.width;
+  const u = L.u, c = L.calle + dy, [ancho, alto] = medida(g.canvas);
   g.fillStyle = '#1e293b';
   g.fillRect(0, (c - 3) * u, ancho, 3 * u);
   g.fillStyle = '#111827';
@@ -149,7 +153,7 @@ export function pintarCalzada(g, L, dx = 0, dy = 0, suelo = null) {
   // abajo de la calle: el suelo de la ciudad hasta el borde. Con `suelo`, solo esos rectángulos: la partida no lo
   // repinta entero en cada cuadro (es un tercio de la pantalla y no cambia), solo donde cayó un auto bloqueado
   g.fillStyle = '#0a1120';
-  const y0 = (c + 19) * u, y1 = g.canvas.height;
+  const y0 = (c + 19) * u, y1 = alto;
   if (!suelo) g.fillRect(0, y0, ancho, Math.max(0, y1 - y0));
   else for (const [x, y, w, h] of suelo) if (Math.min(y + h, y1) > Math.max(y, y0)) g.fillRect(x, Math.max(y, y0), w, Math.min(y + h, y1) - Math.max(y, y0));
 }

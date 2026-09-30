@@ -24,7 +24,8 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
 - `public/js/giro.js`: el giro de El peaje, solo en la primera victoria (clave `guardia-giro-peaje`): si toca verlo,
   el guion como datos y dónde va el auto en cada instante. Pasa después del final y no toca el motor.
 - `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida en canvas), `apertura.js`
-  (el dibujo de la cinemática, con su texto y el cuaderno) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
+  (el dibujo de la cinemática en dos lienzos: el mundo a la cuadrícula del dibujo y el texto nítido; ver la regla
+  de pixel art más abajo) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
 - `public/js/reto.js`: el reto del día, la racha y lo que se guarda en el teléfono. Si existe
   `datos/anoche.json` de la noche de ayer, el reto toma su tono (`tonoDeAnoche`): la misma semilla con más
   ráfagas, un final más apretado o más clientes, según las cifras. Es determinista: igual para todos ese día.
@@ -85,7 +86,10 @@ vienen y la revisión de partidas. Reglas:
 - **Pixel art como acento, texto nítido.** Los sprites a escala entera, sin suavizado (`imageSmoothingEnabled
   = false`) y en píxeles enteros; nunca se rotan en ángulos raros. Los textos siempre a resolución completa y
   en una fuente legible; la letra pixel (Silkscreen) solo en títulos y números grandes. **Nunca se baja la
-  resolución** del canvas para que se vea «más pixel».
+  resolución** del canvas para que se vea «más pixel». Lo que sí se hace, por velocidad, es lo de la apertura:
+  el mundo en un lienzo de un píxel por píxel del dibujo, agrandado a un múltiplo entero con
+  `image-rendering: pixelated` (el pixel art queda idéntico porque ya estaba en esa cuadrícula), y el texto en
+  otro lienzo encima, a la densidad de la pantalla. El texto nunca va en el lienzo del mundo.
 - **Política de seguridad de contenido estricta.** En el HTML no hay `<script>` sin `src`, ni `<style>`, ni
   atributos `style`, ni `onclick` y similares. En JavaScript, `elemento.style` sí se puede.
 - **Nada de afuera.** Ni fuentes, ni imágenes, ni scripts de otros sitios: todo se sirve desde `public/`. La única

@@ -643,7 +643,7 @@ Pesa poco, cada escena es un guion en datos y puede usar datos del jugador: su a
 
 ### En el navegador
 
-- **JavaScript sin librerías ni compilación.** Canvas 2D.
+- **JavaScript sin librerías ni compilación.** Canvas 2D. Las escenas que se mueven mucho usan dos lienzos: el mundo a la cuadrícula del pixel art, agrandado sin suavizar, y el texto nítido encima (la apertura pasó así de unos 25 a unos 55 cuadros por segundo en el banco de prueba).
 - **Carga inicial de menos de 300 KB.** Cada lente se carga al entrar a su nivel.
 - Se puede jugar sin conexión, pero **sin conexión no se compite**: solo estrellas y progreso propio.
 - Todos los textos del juego en un solo archivo, por si un día llega otro idioma.
