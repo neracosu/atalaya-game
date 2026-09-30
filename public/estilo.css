@@ -27,7 +27,13 @@ button { font: inherit; color: inherit; }
 a { color: var(--cian); }
 
 #app { position: relative; height: 100dvh; max-width: 520px; margin: 0 auto; overflow: hidden; }
+/* las transiciones (js/transiciones.js): la capa pixel que cubre la pantalla mientras duran, y las pantallas que
+   se mueven con transform o clip-path mientras pasan */
 .pantalla { position: absolute; inset: 0; display: none; }
+.pantalla.en-transicion { will-change: transform, opacity; }
+#transicion { position: absolute; left: 0; top: 0; z-index: 30; display: block; pointer-events: none;
+  image-rendering: crisp-edges; image-rendering: pixelated; }
+#transicion[hidden] { display: none; }
 .pantalla.activa { display: flex; }
 
 .rotulo { font-family: var(--pixel); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--cian); margin: 0; }

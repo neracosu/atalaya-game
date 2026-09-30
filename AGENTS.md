@@ -33,6 +33,10 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
   N fallas» y la imagen para compartir, que nunca lleva el dominio.
 - `public/js/compartir.js`: compartir una imagen con su texto, o copiarlo y ofrecer la imagen para descargar.
 - `public/js/sonido.js`: efectos generados con WebAudio, sin archivos.
+- `public/js/transiciones.js`: las transiciones entre pantallas, sobre una capa pixel que cubre la pantalla solo
+  mientras duran: la barrera baja (ganó) o el Enjambre se come la pantalla (la puerta cayó) al pasar al resultado,
+  el latigazo de «Otra vez» (520 ms) y el haz que revela la tarjeta de la hora siguiente. Con menos movimiento,
+  todas son un fundido. `app.js` las pide con `trans.pasar(nombre, de, a)` y `trans.revelar(nombre, elemento)`.
 - `public/js/medir.js`: la medición del embudo. `app.js` solo llama a `medir('nombre')`; la lista de lo que
   puede salir está ahí y en el `README.md` («Qué se mide y qué no»). Nada de datos del jugador en un evento.
 - `scripts/`: herramientas que no se publican (`tarjeta.mjs` regenera la tarjeta y los íconos; `embudo.mjs`

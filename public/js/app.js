@@ -2,6 +2,7 @@
 
 import { nivelPeaje, crearPartida, jugar, avanzar, resumen, estrellasDe, ESTRELLAS, multiplicador, PASOS_POR_SEGUNDO } from './motor/peaje.js';
 import { crearEscena } from './dibujo/escena.js';
+import { crearTransiciones, DURA } from './transiciones.js';
 import { imagenResultado, fuentesListas } from './dibujo/postal.js';
 import { SPRITES, PALETAS, TORRE, PALETA_TORRE_ENCENDIDA, ESTRELLA, TORRECITA, LENTE_CASTILLO, PALETA_LENTE, ARANA, PALETA_ARANA, CALENDARIO, PALETA_CALENDARIO,
   aSVG } from './dibujo/sprites.js';
@@ -39,6 +40,11 @@ function aplicarSonido() {
 
 const menosMovimiento = () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches;
 const escena = crearEscena($('mundo'), { texto: $('mundo-texto'), menosMovimiento });
+// las transiciones entre pantallas (transiciones.js); `mostrar` sigue siendo el corte seco que ellas usan
+const trans = crearTransiciones($('transicion'), { cambiar: id => { mostrar(id); if (id === 'fin') $('fin').scrollTop = 0; }, menosMovimiento });
+const pantallaActiva = () => (document.querySelector('.pantalla.activa') || {}).id;
+// «Otra vez» pide el latigazo para la próxima partida
+let latigazo = false;
 
 function vibrar(ms) { if (datos.ajustes.vibracion && navigator.vibrate) try { navigator.vibrate(ms); } catch { } }
 
@@ -292,7 +298,10 @@ function empezar(tipo, { torreEncendida = false, medirPrimera = false } = {}) {
   espera = null;
   ayudaPaso = nivel.tutorial ? 1 : 0;
   escena.limpiar();
-  mostrar('juego');
+  // desde el resultado, con «Otra vez», la partida entra de un latigazo; si no, de un corte
+  if (latigazo && pantallaActiva() === 'fin') trans.pasar('latigazo', $('fin'), $('juego'));
+  else mostrar('juego');
+  latigazo = false;
   pintarIntegridad();
   pintarReglas();
   $('puntos').textContent = '0';
@@ -520,11 +529,14 @@ function pintarFin(r, estrellas, contado, asistido) {
   $('fin-rotulo').textContent = modo === 'reto' ? `${T.reto(retoActual.numero)}${contado ? '' : ' · sin contar'}` : T.hora;
   $('fin-titulo').textContent = T.fin[r.motivoFin];
   $('fin-puntos').textContent = r.puntos.toLocaleString('es');
+  // el resultado entra con la barrera que baja (ganó) o con el Enjambre que se come la pantalla (la puerta cayó);
+  // las estrellas esperan a que se vea la pantalla
+  const demora = pantallaActiva() === 'juego' ? trans.pasar(r.motivoFin === 'integridad' ? 'enjambre' : 'barrera', $('juego'), $('fin')) : 0;
   const est = $('fin-estrellas');
   est.innerHTML = '';
   for (let i = 0; i < 3; i++) {
     est.insertAdjacentHTML('beforeend', aSVG(ESTRELLA, { y: '#facc15' }, 'apagada'));
-    if (i < estrellas) setTimeout(() => { const s = est.children[i]; s.classList.remove('apagada'); s.classList.add('nueva'); S.sonarEstrella(i); }, 350 + i * 320);
+    if (i < estrellas) setTimeout(() => { const s = est.children[i]; s.classList.remove('apagada'); s.classList.add('nueva'); S.sonarEstrella(i); }, demora + 350 + i * 320);
   }
   const siguiente = ESTRELLAS.find(u => r.puntos < u);
   $('fin-faltan').textContent = siguiente ? T.fin.faltan(siguiente - r.puntos, estrellas + 1) : T.fin.todas;
@@ -542,8 +554,28 @@ function pintarFin(r, estrellas, contado, asistido) {
   ultimo.imagen = prepararImagen(ultimo);
   pintarAnoche();
   pintarProxima();
-  mostrar('fin');
-  $('fin').scrollTop = 0;
+  if (!demora) { mostrar('fin'); $('fin').scrollTop = 0; }
+  revelarProxima();
+}
+
+// la tarjeta de la hora siguiente aparece con el haz de la baliza la primera vez que llega a la vista (si otra
+// transición sigue en curso, espera a que termine)
+let observadorProxima = null;
+function revelarProxima() {
+  if (observadorProxima) observadorProxima.disconnect();
+  const caja = $('proxima');
+  if (!('IntersectionObserver' in window)) return;
+  caja.style.opacity = '0';
+  const revelarAhora = () => {
+    if (!observadorProxima) return;
+    if (trans.enCurso()) { setTimeout(revelarAhora, 200); return; } // la barrera o el Enjambre siguen: después
+    observadorProxima.disconnect();
+    observadorProxima = null;
+    caja.style.opacity = '';
+    trans.revelar('haz', caja);
+  };
+  observadorProxima = new IntersectionObserver(entradas => { if (entradas.some(e => e.isIntersecting)) revelarAhora(); }, { root: $('fin'), threshold: 0.2 });
+  observadorProxima.observe(caja);
 }
 
 // ---------- el giro de El peaje: la primera victoria ----------
@@ -654,7 +686,7 @@ function pintarProxima() {
   let mini = '<span class="mini">';
   for (let k = 0; k < 3; k++) mini += aSVG(ESTRELLA, { y: '#facc15' }, k < e ? '' : 'apagada');
   mini += '</span>';
-  ya.append(fila('button', mini, P.estrellas(e), P.estrellasTexto(datos.mejor || 0, ESTRELLAS[e] || 0, e), P.mejorar,
+  ya.append(fila('button', mini, P.estrellas(e), P.estrellasTexto(datos.mejor || 0, ESTRELLAS[e] || 0, e), e === 3 ? P.superar : P.mejorar,
     () => empezar('partida')));
 
   caja.replaceChildren(cabeza, el('p', 'proxima-pregunta', P.pregunta), el('p', 'proxima-texto', P.orden), ya);
@@ -708,7 +740,7 @@ $('compartir').addEventListener('click', async () => {
 $('empezar').addEventListener('click', () => tomarGuardia('partida'));
 $('reto').addEventListener('click', () => tomarGuardia('reto'));
 $('ver-apertura').addEventListener('click', () => verApertura('partida'));
-$('otra-vez').addEventListener('click', () => { medir('otra-vez'); if (ultimo && ultimo.modo === 'reto') empezarReto(); else empezar('partida'); });
+$('otra-vez').addEventListener('click', () => { medir('otra-vez'); latigazo = true; if (ultimo && ultimo.modo === 'reto') empezarReto(); else empezar('partida'); });
 $('volver').addEventListener('click', portada);
 // los dos botones grandes vienen apagados y con «Cargando…» en el HTML: en 4G lenta se ven antes de que llegue
 // el código. Desde aquí ya responden (el detalle del reto lo escribe portada(), más abajo).

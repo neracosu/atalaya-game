@@ -159,11 +159,12 @@ export const T = {
     retoManana: n => `Reto de mañana #${n}`,
     retoMananaTexto: (hora, racha, hoy) => `${hora === '00:00' ? 'Sale a medianoche' : `Sale ${hoy ? 'hoy' : 'mañana'} a las ${hora}`}. ${racha > 1 ? `Lleva ${racha} días de racha: vuelva y súmele uno.` : racha === 1 ? 'Vuelva y su racha llega a 2 días.' : 'Vuelva y empiece una racha.'}`,
     jugarReto: 'Jugar el reto',
-    estrellas: e => e === 3 ? 'Las tres estrellas' : `Sus estrellas: ${e} de 3`,
+    estrellas: e => e === 3 ? 'Ya tiene las tres estrellas' : `Sus estrellas: ${e} de 3`,
     estrellasTexto: (mejor, umbral, e) => e === 3
       ? `Su mejor marca es ${mejor.toLocaleString('es')}. A ver si la supera.`
       : `Su mejor marca es ${mejor.toLocaleString('es')}. ${e === 2 ? 'La tercera estrella' : e === 1 ? 'La segunda estrella' : 'La primera estrella'} pide ${umbral.toLocaleString('es')}.`,
     mejorar: 'Mejorar mi marca',
+    superar: 'Superar mi marca',
   },
 
   // la sección de abajo de la portada: qué es, cómo se juega y de dónde sale
