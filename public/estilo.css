@@ -157,7 +157,15 @@ a { color: var(--cian); }
 .giro.escribiendo .giro-linea.escribe::after {
   content: ''; display: inline-block; width: .42em; height: .95em; margin-left: 3px; vertical-align: -.12em; background: var(--cian);
   animation: cursor .52s steps(1) infinite; }
-#juego.en-giro .mando { opacity: 0; transition: opacity .4s; }
+#juego.en-giro .mando, #juego.en-giro .hud { opacity: 0; transition: opacity .4s; }
+/* las barras de cine del giro: entran desde los bordes; con menos movimiento (clase o preferencia) aparecen */
+.cine { position: absolute; left: 0; right: 0; height: 11%; background: #02040a; z-index: 11; pointer-events: none;
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+.cine.arriba { top: 0; transform: translateY(-100%); }
+.cine.abajo { bottom: 0; transform: translateY(100%); }
+#juego.en-giro .cine { transform: none; }
+#juego.sin-movimiento .cine { transform: none; opacity: 0; transition: opacity .3s; }
+#juego.sin-movimiento.en-giro .cine { opacity: 1; }
 .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
 .ajustes .ver-apertura { width: auto; min-height: 44px; justify-self: center; font-size: .95rem; font-weight: 400; }
 
@@ -299,5 +307,6 @@ button.ya:active { transform: translateY(1px); }
   .landing { border-top: 0; border-left: 1px solid var(--linea); background: linear-gradient(180deg, #081126 0%, var(--noche) 420px); padding: 56px 52px 64px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .giro-linea::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .combo.sube, .lado.pulso, .fin-estrellas svg.nueva, .informe .revisando, .giro-linea::after { animation: none; }
+  .cine { transform: none; opacity: 0; transition: opacity .3s; } #juego.en-giro .cine { opacity: 1; } }
 @media (min-width: 700px) { #app { border-left: 1px solid var(--linea); border-right: 1px solid var(--linea); } }

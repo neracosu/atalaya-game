@@ -22,7 +22,9 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
   probarlo en Node. Se salta con un toque que no cuenta como jugada, y termina fundida en la partida. Durante la
   partida no sale texto de historia (solo la ayuda de Chispa del tutorial).
 - `public/js/giro.js`: el giro de El peaje, solo en la primera victoria (clave `guardia-giro-peaje`): si toca verlo,
-  el guion como datos y dónde va el auto en cada instante. Pasa después del final y no toca el motor.
+  el guion como datos y dónde va el auto en cada instante (con la pausa de impacto al frenar y el avance de la
+  vuelta para los faros). Pasa después del final y no toca el motor. La puesta en escena (barras de cine, zoom a
+  escala entera del lienzo del mundo, mundo congelado) está en `app.js` › verGiro y en `escena.js` › zoomGiro y faros.
 - `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida, también en dos lienzos, con el peso de los golpes: sacudida, empujón, anillo del combo y chatarra), `apertura.js`
   (el dibujo de la cinemática en dos lienzos: el mundo a la cuadrícula del dibujo y el texto nítido; ver la regla
   de pixel art más abajo) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).

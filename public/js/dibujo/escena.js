@@ -185,11 +185,12 @@ const COLOR_COMBO = ['#67e8f9', '#a7f3d0', '#fde68a', '#facc15', '#f0abfc'];
 const CHATARRA = ['#475569', '#334155', '#94a3b8', '#7f1d1d'];
 const TOPE_CHATARRA = 72;
 // un ruido suave entre -1 y 1 (dos senos), para que la sacudida no salte al azar de un cuadro a otro
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 const ruido = (t, s) => 0.6 * Math.sin(t * 0.061 + s * 2.3) + 0.4 * Math.sin(t * 0.113 + s * 5.1);
 
 export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {}) {
   const g = canvas.getContext('2d'), gt = texto.getContext('2d');
-  let u = 3;            // píxeles de la pantalla por cada píxel del dibujo
+  let u = 3, dpr = 1;   // píxeles de la pantalla por cada píxel del dibujo, y píxeles de la pantalla por píxel CSS
   let W = 100, H = 200; // tamaño del mundo en píxeles del dibujo
   let calle = 120, barrera = 60;
   let cache = new Map();
@@ -245,7 +246,7 @@ export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {
   }
 
   function redimensionar() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = texto.getBoundingClientRect();
     texto.width = Math.round(rect.width * dpr);
     texto.height = Math.round(rect.height * dpr);
@@ -258,6 +259,7 @@ export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {
     canvas.pantalla = [MW * u, MH * u];
     canvas.style.width = `${(MW * u) / dpr}px`;
     canvas.style.height = `${(MH * u) / dpr}px`;
+    canvas.style.transform = '';
     g.setTransform(1 / u, 0, 0, 1 / u, 0, 0);
     g.imageSmoothingEnabled = false;
     cache = new Map();
@@ -401,7 +403,38 @@ export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {
       const desde = -ANCHO_AUTO - 6, x = desde + (lugar(0) - desde) * autoGiro.pos, y = calle + 1;
       const img = autoGiro.mira > 0 ? sprite('sospechoso', 0, quieto || autoGiro.espera ? 0 : ((ahora / 350) | 0)) : espejo('sospechoso', 0);
       g.drawImage(img, px(x), px(y));
+      if (autoGiro.giro !== undefined) faros(Math.round(x) + ANCHO_AUTO / 2, y + 4, autoGiro.giro);
     }
+  }
+
+  // los faros del auto del giro barren la barrera mientras da la vuelta: un cono de luz tramada que va de apuntar a
+  // la barrera (derecha) a apuntar a la salida (izquierda) en la primera mitad de la vuelta, y se apaga al irse
+  function faros(cx, cy, f) {
+    const ang = Math.PI * Math.min(1, f / 0.45), ca = Math.cos(ang), sa = Math.sin(ang) * 0.35; // casi horizontal
+    const largo = 34, abre = 0.2, alfa = f < 0.45 ? 1 : Math.max(0, 1 - (f - 0.45) / 0.4);
+    if (alfa <= 0) return;
+    g.globalAlpha = alfa * 0.8;
+    for (let y = Math.max(0, cy - 12); y < Math.min(H, cy + 12); y++) for (let x = Math.max(0, cx - largo); x < Math.min(W, cx + largo); x++) {
+      const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
+      if (d < 3 || d > largo) continue;
+      const punto = (dx * ca + dy * sa) / d, cruz = (dx * sa - dy * ca) / d;
+      if (punto <= 0) continue;
+      const k = 1 - Math.abs(cruz) / abre;
+      if (k <= 0) continue;
+      const fuerza = k * (1 - d / largo) * 18;
+      if (fuerza > BAYER4[((y & 3) << 2) | (x & 3)] + 1) { g.fillStyle = fuerza > 12 ? '#fef3c7' : '#fde68a'; g.fillRect(x * u, y * u, u, u); }
+    }
+    g.globalAlpha = 1;
+  }
+
+  // el zoom de golpe del giro: la cámara corta a la barrera a escala entera (de u a u + 1 píxeles por píxel del
+  // dibujo), moviendo solo el lienzo del mundo desde el compositor; el texto de encima no se escala (queda nítido).
+  // Con menos movimiento no hay corte.
+  function zoomGiro(activo) {
+    if (activo && !menosMovimiento()) {
+      canvas.style.transformOrigin = `${((barrera + 3) * u) / dpr}px ${((calle + 6) * u) / dpr}px`;
+      canvas.style.transform = `scale(${(u + 1) / u})`;
+    } else canvas.style.transform = '';
   }
 
   function pintarChatarra() {
@@ -543,7 +576,7 @@ export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {
   }
 
   function limpiar() {
-    autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; reloj = null; autoGiro = null;
+    autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; reloj = null; autoGiro = null; zoomGiro(false);
     trauma = 0; patadaT = 0; anillos.length = 0; chispas.length = 0; chatarra.length = 0; pila.clear();
   }
 
@@ -563,5 +596,5 @@ export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {
   }
 
   redimensionar();
-  return { redimensionar, eventos, dibujar, encenderTorre, limpiar, mostrarReloj, empezarGiro, moverGiro, patada, zonaCalle: () => (calle + 8) / H };
+  return { redimensionar, eventos, dibujar, encenderTorre, limpiar, mostrarReloj, empezarGiro, moverGiro, zoomGiro, patada, zonaCalle: () => (calle + 8) / H };
 }

@@ -32,11 +32,13 @@ export function marcarGiro(obtener) {
 export function _olvidarGiro() { vistoEnMemoria = false; }
 
 // ---- el guion, en milisegundos desde que empieza ----
-// El auto: de 0 a `frena` llega desde la izquierda y frena ante la barrera; espera sin intentar pasar mientras el
-// reloj de la barrera cuenta; en `gira` da la vuelta y en `fuera` ya salió de la pantalla. Unos 3,4 s en el mundo.
+// El auto: de 0 a `frena` llega desde la izquierda y frena ante la barrera; al frenar, el mundo se congela `congela`
+// ms (la pausa de impacto: la cámara corta al auto); espera sin intentar pasar mientras el reloj de la barrera
+// cuenta; en `gira` da la vuelta y en `fuera` ya salió de la pantalla. Unos 3,4 s en el mundo.
 // Luego las dos líneas, letra por letra, y un rato para leerlas.
 export const GUION_GIRO = {
   frena: 1100,
+  congela: 120,
   gira: 2100,
   fuera: 3400,
   linea1: 3300,
@@ -47,7 +49,9 @@ export const GUION_GIRO = {
 };
 
 // Dónde va el auto: `pos` de 0 (fuera, a la izquierda) a 1 (ante la barrera), `mira` hacia dónde apunta (1 a la
-// barrera, -1 de vuelta) y `espera`, los milisegundos que lleva parado (para el reloj). Null cuando ya no está.
+// barrera, -1 de vuelta) y `espera`, los milisegundos que lleva parado (para el reloj; la pausa no cuenta). Justo al
+// frenar, `congelado`: el mundo queda quieto esos ms. En la vuelta, `giro` va de 0 a 1 (para los faros que barren).
+// Null cuando ya no está.
 export function autoDelGiro(t, G = GUION_GIRO) {
   if (t < 0 || t >= G.fuera) return null;
   if (t < G.frena) {
@@ -55,10 +59,12 @@ export function autoDelGiro(t, G = GUION_GIRO) {
     const f = t / G.frena;
     return { pos: 1 - (1 - f) * (1 - f), mira: 1, espera: 0 };
   }
-  if (t < G.gira) return { pos: 1, mira: 1, espera: t - G.frena };
+  const congela = G.congela || 0;
+  if (t < G.frena + congela) return { pos: 1, mira: 1, espera: 0, congelado: true };
+  if (t < G.gira) return { pos: 1, mira: 1, espera: t - G.frena - congela };
   // da la vuelta: arranca despacio y se va
   const f = (t - G.gira) / (G.fuera - G.gira);
-  return { pos: 1 - f * f, mira: -1, espera: G.gira - G.frena };
+  return { pos: 1 - f * f, mira: -1, espera: G.gira - G.frena - congela, giro: f };
 }
 
 // Cuántas letras de cada línea se ven en el instante t, y cuándo termina

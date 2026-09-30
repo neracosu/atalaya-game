@@ -61,7 +61,11 @@ test('el giro: el auto llega, frena ante la barrera sin pasar y da la vuelta, en
   // nunca pasa la barrera: pos 1 es el lugar del primero de la fila, delante de la barrera
   for (let t = 0; t < G.fuera; t += 25) { const a = autoDelGiro(t); if (a) assert.ok(a.pos <= 1); }
   // espera parado mientras el reloj cuenta
-  assert.deepEqual(autoDelGiro(G.frena + 500), { pos: 1, mira: 1, espera: 500 });
+  assert.deepEqual(autoDelGiro(G.frena + 500), { pos: 1, mira: 1, espera: 500 - G.congela });
+  // al frenar, la pausa de impacto: el mundo quieto y el reloj todavía en cero
+  assert.ok(autoDelGiro(G.frena + 10).congelado && autoDelGiro(G.frena + 10).espera === 0);
+  assert.ok(!autoDelGiro(G.frena + G.congela).congelado);
+  assert.ok(G.congela <= 200, 'la pausa es corta');
   // da la vuelta y se va
   const vuelta = autoDelGiro(G.gira + 300);
   assert.equal(vuelta.mira, -1);

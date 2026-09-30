@@ -590,8 +590,9 @@ function verGiro(alTerminar) {
   const cerrar = () => {
     cancelAnimationFrame(raf);
     caja.hidden = true;
-    $('juego').classList.remove('en-giro');
+    $('juego').classList.remove('en-giro', 'sin-movimiento');
     giro = null;
+    escena.zoomGiro(false);
     escena.moverGiro(null);
     try { alTerminar(); } catch { }
   };
@@ -606,16 +607,25 @@ function verGiro(alTerminar) {
   $('giro-lector').textContent = '';
   caja.hidden = false;
   $('juego').classList.add('en-giro');
+  $('juego').classList.toggle('sin-movimiento', menosMovimiento());
   caja.classList.remove('escribiendo', 'con-texto');
+  // el paquete de impacto del giro (GDD, momento 2): las barras de cine entran (CSS, con la clase en-giro); al frenar
+  // el auto, el mundo se congela unos ms y la cámara corta a la barrera con un zoom a escala entera; al dar la
+  // vuelta, la cámara vuelve y los faros barren la barrera (escena.js)
+  let zoom = false, congeladoEn = 0;
   const cuadroGiro = ahora => {
     if (control.terminado) return;
     if (!inicio) inicio = ahora;
     const v = control.avanzar(ahora - inicio);
     if (control.terminado) return;
     escena.moverGiro(v.auto);
+    if (v.auto && v.auto.mira > 0 && v.auto.pos >= 1 && !zoom) { zoom = true; escena.zoomGiro(true); S.sonarSello(0); }
+    if (v.auto && v.auto.mira < 0 && zoom) { zoom = false; escena.zoomGiro(false); }
     // mientras el auto espera ante la barrera, el reloj cuenta lo que tarda la puerta
     if (v.auto && v.auto.espera > 0 && v.auto.mira > 0) escena.mostrarReloj(T.reloj(v.auto.espera), true);
-    escena.dibujar(ahora);
+    // la pausa de impacto: el mundo queda quieto (el mismo instante en cada cuadro)
+    if (v.auto && v.auto.congelado) { if (!congeladoEn) congeladoEn = ahora; escena.dibujar(congeladoEn); }
+    else escena.dibujar(ahora);
     const n = v.letras[0] + v.letras[1];
     if (n !== escritas) {
       if (n > escritas && n % 2 === 0) S.sonarLetra();
