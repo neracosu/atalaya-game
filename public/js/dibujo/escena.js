@@ -1,6 +1,6 @@
-// Dibujo de «El peaje» en un canvas. Dos capas, como dice el GDD:
-// - la capa pixel (autos, barrera, torre, edificios), en una cuadrícula a escala entera y siempre en píxeles enteros;
-// - la capa de código (cielo, estrellas, luz de la baliza, sellos, textos), generada en el momento.
+// Dibujo de «El peaje». Dos capas, como dice el GDD: la pixel (autos, barrera, torre, edificios), en una cuadrícula a
+// escala entera y siempre en píxeles enteros, y la de código (cielo, estrellas, luz de la baliza, sellos, textos).
+// Van en dos lienzos: el mundo a la cuadrícula y el texto nítido encima (ver crearEscena).
 // El motor no sabe nada de esto: la escena solo escucha los eventos que el motor devuelve.
 
 import { SPRITES, PALETAS, BARRERA_POSTE, PALETA_BARRERA, TORRE, PALETA_TORRE, PALETA_TORRE_ENCENDIDA, RELOJ, PALETA_RELOJ, aCanvas } from './sprites.js';
@@ -139,7 +139,7 @@ export function pintarTorre(g, L, img, encendida, ahora, quieto, dx = 0, dy = 0)
   g.drawImage(img, tx * u, ty * u);
 }
 
-export function pintarCalzada(g, L, dx = 0, dy = 0, suelo = null) {
+export function pintarCalzada(g, L, dx = 0, dy = 0) {
   const u = L.u, c = L.calle + dy, [ancho, alto] = medida(g.canvas);
   g.fillStyle = '#1e293b';
   g.fillRect(0, (c - 3) * u, ancho, 3 * u);
@@ -150,12 +150,10 @@ export function pintarCalzada(g, L, dx = 0, dy = 0, suelo = null) {
   g.fillStyle = '#475569';
   const x0 = ((dx % 8) + 8) % 8;
   for (let x = 2 + x0 - 8; x < L.W + 8; x += 8) g.fillRect(x * u, (c + 12) * u, 4 * u, u);
-  // abajo de la calle: el suelo de la ciudad hasta el borde. Con `suelo`, solo esos rectángulos: la partida no lo
-  // repinta entero en cada cuadro (es un tercio de la pantalla y no cambia), solo donde cayó un auto bloqueado
+  // abajo de la calle: el suelo de la ciudad hasta el borde
   g.fillStyle = '#0a1120';
-  const y0 = (c + 19) * u, y1 = alto;
-  if (!suelo) g.fillRect(0, y0, ancho, Math.max(0, y1 - y0));
-  else for (const [x, y, w, h] of suelo) if (Math.min(y + h, y1) > Math.max(y, y0)) g.fillRect(x, Math.max(y, y0), w, Math.min(y + h, y1) - Math.max(y, y0));
+  const y0 = (c + 19) * u;
+  g.fillRect(0, y0, ancho, Math.max(0, alto - y0));
 }
 
 // la barrera: rayado rojo y blanco. Cerrada cruza la calle a la altura de los autos, delante del que espera;
@@ -170,23 +168,54 @@ export function pintarBarrera(g, L, poste, abierta, dx = 0, dy = 0) {
   }
 }
 
-export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
-  const g = canvas.getContext('2d');
-  let u = 3;            // píxeles del canvas por cada píxel del dibujo
+// La partida en dos lienzos, como la apertura:
+// - `canvas`, el mundo: cielo, ciudad, torre y su luz, calle, autos, barrera, chatarra, anillos y chispas, a un píxel
+//   por píxel del dibujo; el navegador lo agranda a un múltiplo entero sin suavizar (image-rendering: pixelated) y
+//   el pixel art se ve igual que a la densidad de la pantalla. Se dibuja en píxeles de la pantalla, con una escala
+//   de 1/u: cada cuadro de u píxeles cae en un píxel del lienzo.
+// - `texto`, encima y a la densidad de la pantalla (hasta 3): placas, puntos que suben, sellos y el reloj de la
+//   barrera, nítidos. En cada cuadro se borra solo la franja donde hubo texto.
+// El peso de los golpes (GDD, «juice»), sin tocar el motor: solo escucha sus eventos. La sacudida sale de un
+// «trauma» que sube con cada error y baja solo; se mueve trauma² en píxeles del dibujo enteros, nunca rota. Cada
+// jugada empuja la cámara un píxel hacia donde se deslizó. Al subir el combo, un anillo de pixel y chispas en la
+// barrera; cada robot bloqueado deja su chatarra bajo la acera hasta que termina la partida. Con menos movimiento
+// no hay sacudida, empujón ni chispas, el anillo no crece y el sello no salta. Nada destella.
+const SACUDIDA = 3; // lo más que se corre la cámara con el trauma al máximo, en píxeles del dibujo
+const COLOR_COMBO = ['#67e8f9', '#a7f3d0', '#fde68a', '#facc15', '#f0abfc'];
+const CHATARRA = ['#475569', '#334155', '#94a3b8', '#7f1d1d'];
+const TOPE_CHATARRA = 72;
+// un ruido suave entre -1 y 1 (dos senos), para que la sacudida no salte al azar de un cuadro a otro
+const ruido = (t, s) => 0.6 * Math.sin(t * 0.061 + s * 2.3) + 0.4 * Math.sin(t * 0.113 + s * 5.1);
+
+export function crearEscena(canvas, { texto, menosMovimiento = () => false } = {}) {
+  const g = canvas.getContext('2d'), gt = texto.getContext('2d');
+  let u = 3;            // píxeles de la pantalla por cada píxel del dibujo
   let W = 100, H = 200; // tamaño del mundo en píxeles del dibujo
   let calle = 120, barrera = 60;
   let cache = new Map();
   const autos = new Map();
   const flotantes = [];
   const sellos = [];
-  let temblor = 0;
-  // el suelo se pinta entero solo al empezar, al cambiar de tamaño y con el temblor; si no, solo donde hubo autos
-  let sueloEntero = true, tembloAntes = false, pisados = [];
+  // los golpes: el trauma de la sacudida, el empujón de la jugada, los anillos y chispas del combo y la chatarra
+  let trauma = 0, patadaDir = 0, patadaT = 0;
+  const anillos = [], chispas = [], chatarra = [];
+  const pila = new Map(); // cuántas piezas hay apiladas en cada columna
   let abierta = 0;
   let torreEncendida = false, encendidaEn = 0;
   let estrellas = [], edificios = [], L = disposicion(300, 600);
   // el reloj chico sobre la barrera (lo que tardó la última respuesta) y el auto del giro, que no es del motor
   let reloj = null, autoGiro = null;
+
+  // la franja del lienzo del texto que hay que borrar en el próximo cuadro
+  let sucio = null;
+  const marcar = (y0, y1) => { sucio = sucio ? [Math.min(sucio[0], y0), Math.max(sucio[1], y1)] : [y0, y1]; };
+  function limpiarTexto() {
+    if (!sucio) return;
+    const m = (SACUDIDA + 2) * u; // lo que puede haberse corrido con la cámara
+    const y0 = Math.max(0, Math.floor(sucio[0]) - m);
+    gt.clearRect(0, y0, texto.width, Math.ceil(sucio[1]) + m - y0);
+    sucio = null;
+  }
 
   function sprite(tipo, paleta, cuadro) {
     const k = `${tipo}:${paleta}:${cuadro}:${u}`;
@@ -216,21 +245,58 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   }
 
   function redimensionar() {
-    // a la densidad de la pantalla (hasta 3): el texto de las placas, los puntos y los sellos, siempre nítido. La
-    // velocidad sale de no repintar degradés en cada cuadro (ver columna), no de bajar la resolución.
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
-    L = disposicion(canvas.width, canvas.height);
+    const rect = texto.getBoundingClientRect();
+    texto.width = Math.round(rect.width * dpr);
+    texto.height = Math.round(rect.height * dpr);
+    L = disposicion(texto.width, texto.height);
     ({ u, W, H, calle, barrera } = L);
-    cache = new Map();
+    // el mundo cubre la pantalla con cuadros enteros (sobra menos de un cuadro abajo y a la derecha, que se recorta)
+    const MW = Math.max(1, Math.ceil(texto.width / u)), MH = Math.max(1, Math.ceil(texto.height / u));
+    canvas.width = MW;
+    canvas.height = MH;
+    canvas.pantalla = [MW * u, MH * u];
+    canvas.style.width = `${(MW * u) / dpr}px`;
+    canvas.style.height = `${(MH * u) / dpr}px`;
+    g.setTransform(1 / u, 0, 0, 1 / u, 0, 0);
     g.imageSmoothingEnabled = false;
+    cache = new Map();
+    sucio = null;
     ({ estrellas, edificios } = decoradoCiudad(W, calle));
-    sueloEntero = true;
   }
 
   const lugar = i => barrera - ANCHO_AUTO - 2 - i * (ANCHO_AUTO + HUECO);
+
+  // un golpe: sube el trauma (la sacudida baja sola, ver dibujar)
+  function golpe(fuerza) { if (fuerza > 0 && !menosMovimiento()) trauma = Math.min(1, trauma + fuerza); }
+
+  // el combo sube: un anillo de pixel y chispas en la barrera, del color del nivel del combo
+  function combo(nivel) {
+    const color = COLOR_COMBO[Math.max(0, Math.min(COLOR_COMBO.length - 1, nivel - 1))];
+    const cx = barrera + 3, cy = calle + 6;
+    anillos.push({ x: cx, y: cy, t: 0, color });
+    if (menosMovimiento()) return;
+    for (let i = 0; i < 14; i++) {
+      const ang = (i / 14) * Math.PI * 2 + (nivel * 0.7), vel = 0.03 + ((i * 7) % 5) * 0.008;
+      chispas.push({ x: cx, y: cy, vx: Math.cos(ang) * vel, vy: Math.sin(ang) * vel - 0.02, t: 0, vida: 420 + ((i * 53) % 180), color: i % 3 ? color : '#f0fdff' });
+    }
+  }
+
+  // un robot bloqueado deja tres piezas de chatarra (de uno o dos píxeles) bajo la acera, junto a la barrera,
+  // apiladas contra ella hasta tres de alto. Dónde cae cada pieza sale del número del auto: siempre igual.
+  function dejarChatarra(id) {
+    const base = calle + 21, desde = lugar(0) - 4, ancho = ANCHO_AUTO + 8;
+    const altoEn = (x, w) => Math.max(pila.get(x) || 0, w > 1 ? pila.get(x + 1) || 0 : 0);
+    for (let k = 0; k < 3 && chatarra.length < TOPE_CHATARRA; k++) {
+      const h = Math.imul(id * 3 + k + 1, 2654435761) >>> 0, w = 1 + ((h >>> 13) & 1);
+      let x = desde + (h % (ancho - 1));
+      for (let n = 0; n < ancho && altoEn(x, w) >= 3; n++) x = desde + ((x - desde + 1) % (ancho - 1));
+      const alto = altoEn(x, w);
+      if (alto >= 3) return;
+      for (let i = 0; i < w; i++) pila.set(x + i, alto + 1);
+      chatarra.push({ x, y: base - alto, w, color: CHATARRA[(h >>> 9) % CHATARRA.length] });
+    }
+  }
 
   function eventos(lista, partida) {
     for (const ev of lista) {
@@ -245,9 +311,11 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
         const cx = (a.x + ANCHO_AUTO / 2) | 0, cy = calle - 16;
         if (ev.e === 'bien') {
           flotantes.push({ x: cx, y: cy, texto: `+${ev.puntos}`, color: ev.tipo === 'dorado' ? '#facc15' : '#a7f3d0', t: 0 });
-          if (!pasa) sellos.push({ x: cx, y: calle - 5, texto: T.marcas.bloqueado, color: '#ef4444', t: 0 });
+          if (!pasa) { sellos.push({ x: cx, y: calle - 5, texto: T.marcas.bloqueado, color: '#ef4444', t: 0 }); dejarChatarra(ev.id); }
+          if (ev.subeCombo) combo(partida ? (partida.racha / 5) | 0 : 1); // un nivel cada cinco aciertos seguidos
         } else {
-          temblor = menosMovimiento() ? 0 : 8;
+          // dejar pasar un robot pesa más que bloquear a un cliente; un cliente que se cuela, poco
+          golpe(ev.e === 'cuela' ? (ev.malo ? 0.6 : 0.25) : ev.integridad !== undefined ? 0.65 : 0.4);
           if (!pasa) sellos.push({ x: cx, y: calle - 5, texto: T.marcas.bloqueado, color: '#ef4444', t: 0 });
           if (ev.puntos) flotantes.push({ x: cx, y: cy, texto: `${ev.puntos}`, color: '#fca5a5', t: 0 });
         }
@@ -256,6 +324,9 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     // lugar de cada auto en la fila
     if (partida) partida.fila.forEach((f, i) => { const a = autos.get(f.id); if (a) a.meta = lugar(i); });
   }
+
+  // la jugada empuja la cámara un píxel hacia donde se deslizó: 1 pasar (derecha), -1 bloquear (izquierda)
+  function patada(dir) { patadaDir = dir; patadaT = 90; }
 
   function encenderTorre(ahora) { if (!torreEncendida) { torreEncendida = true; encendidaEn = ahora; } }
 
@@ -268,15 +339,16 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
 
   function etiqueta(texto, x, y, fondo, tinta) {
     const tam = Math.max(10, Math.round(3.4 * u));
-    g.font = `600 ${tam}px ui-monospace, Menlo, Consolas, monospace`;
-    const ancho = g.measureText(texto).width + tam * 0.8;
+    gt.font = `600 ${tam}px ui-monospace, Menlo, Consolas, monospace`;
+    const ancho = gt.measureText(texto).width + tam * 0.8;
     const ax = Math.round(x * u - ancho / 2), ay = Math.round(y * u - tam * 1.5);
-    g.fillStyle = fondo;
-    g.fillRect(ax, ay, Math.round(ancho), Math.round(tam * 1.4));
-    g.fillStyle = tinta;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(texto, ax + ancho / 2, ay + tam * 0.72);
+    gt.fillStyle = fondo;
+    gt.fillRect(ax, ay, Math.round(ancho), Math.round(tam * 1.4));
+    gt.fillStyle = tinta;
+    gt.textAlign = 'center';
+    gt.textBaseline = 'middle';
+    gt.fillText(texto, ax + ancho / 2, ay + tam * 0.72);
+    marcar(ay, ay + tam * 1.4);
   }
 
   function placaDe(a) {
@@ -290,7 +362,6 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   }
 
   function autosDibujo(ahora, dt, quieto) {
-    const pisa = [];
     for (const a of autos.values()) {
       if (a.estado === 'fila') {
         const meta = a.meta ?? lugar(4);
@@ -312,24 +383,67 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
       const y = calle + 1 + (a.y | 0);
       g.globalAlpha = a.alfa;
       g.drawImage(img, px(a.x), px(y));
-      pisa.push([px(a.x - 1), px(y - 1), img.width + 2 * u, img.height + 2 * u]);
       // el brillo del auto dorado es código, no dibujo
       if (a.tipo === 'dorado' && !quieto) {
         g.fillStyle = `rgba(254,240,138,${(0.25 + 0.2 * Math.sin(ahora / 180)).toFixed(2)})`;
         g.fillRect(px(a.x - 1), px(y - 1), (ANCHO_AUTO + 2) * u, u);
       }
-      const placa = placaDe(a);
-      if (placa && a.estado !== 'bloqueado') etiqueta(placa[0], a.x + ANCHO_AUTO / 2, y - 1, placa[1], placa[2]);
       g.globalAlpha = 1;
+      const placa = placaDe(a);
+      if (placa && a.estado !== 'bloqueado') {
+        gt.globalAlpha = a.alfa;
+        etiqueta(placa[0], a.x + ANCHO_AUTO / 2, y - 1, placa[1], placa[2]);
+        gt.globalAlpha = 1;
+      }
     }
     // el auto del giro: llega, frena, espera y da la vuelta (giro.js dice dónde va; aquí solo se pinta)
     if (autoGiro) {
       const desde = -ANCHO_AUTO - 6, x = desde + (lugar(0) - desde) * autoGiro.pos, y = calle + 1;
       const img = autoGiro.mira > 0 ? sprite('sospechoso', 0, quieto || autoGiro.espera ? 0 : ((ahora / 350) | 0)) : espejo('sospechoso', 0);
       g.drawImage(img, px(x), px(y));
-      pisa.push([px(x - 1), px(y - 1), img.width + 2 * u, img.height + 2 * u]);
     }
-    pisados = pisa;
+  }
+
+  function pintarChatarra() {
+    for (const c of chatarra) {
+      g.fillStyle = c.color;
+      g.fillRect(c.x * u, c.y * u, c.w * u, u);
+    }
+  }
+
+  // un círculo de pixel en la cuadrícula (punto medio): cada punto es un píxel del dibujo entero, sin suavizado
+  function anilloPixel(cx, cy, r) {
+    let x = r, y = 0, e = 1 - r;
+    while (x >= y) {
+      for (const [a, b] of [[x, y], [y, x], [-y, x], [-x, y], [-x, -y], [-y, -x], [y, -x], [x, -y]]) g.fillRect((cx + a) * u, (cy + b) * u, u, u);
+      y++;
+      if (e < 0) e += 2 * y + 1;
+      else { x--; e += 2 * (y - x) + 1; }
+    }
+  }
+
+  function pintarAnillos(dt, quieto) {
+    for (let i = anillos.length - 1; i >= 0; i--) {
+      const a = anillos[i];
+      a.t += dt;
+      if (a.t > 420) { anillos.splice(i, 1); continue; }
+      const p = a.t / 420;
+      g.globalAlpha = 1 - p;
+      g.fillStyle = a.color;
+      anilloPixel(a.x, a.y, quieto ? 9 : Math.round(3 + 15 * (1 - (1 - p) * (1 - p))));
+    }
+    for (let i = chispas.length - 1; i >= 0; i--) {
+      const c = chispas[i];
+      c.t += dt;
+      if (c.t > c.vida) { chispas.splice(i, 1); continue; }
+      c.vy += dt * 0.00006;
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      g.globalAlpha = 1 - c.t / c.vida;
+      g.fillStyle = c.color;
+      g.fillRect(Math.round(c.x) * u, Math.round(c.y) * u, u, u);
+    }
+    g.globalAlpha = 1;
   }
 
   // el reloj de la barrera: un relojito pixel y los milisegundos, chico y encima del poste
@@ -338,53 +452,58 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     reloj.t += dt;
     if (!reloj.fijo && reloj.t > 1000) { reloj = null; return; }
     const tam = Math.max(10, Math.round(3 * u));
-    g.font = `600 ${tam}px ui-monospace, Menlo, Consolas, monospace`;
+    gt.font = `600 ${tam}px ui-monospace, Menlo, Consolas, monospace`;
     const icono = fijo('reloj', RELOJ, PALETA_RELOJ);
-    const ancho = icono.width + tam * 0.35 + g.measureText(reloj.texto).width;
+    const ancho = icono.width + tam * 0.35 + gt.measureText(reloj.texto).width;
     const cx = (barrera + 4) * u, cy = (calle - 17) * u;
     const x0 = Math.round(cx - ancho / 2), alto = Math.round(tam * 1.5);
-    g.globalAlpha = reloj.fijo ? 1 : Math.min(1, (1000 - reloj.t) / 300);
-    g.fillStyle = 'rgba(8, 13, 26, .78)';
-    g.fillRect(x0 - Math.round(tam * 0.35), Math.round(cy - alto / 2), Math.round(ancho + tam * 0.7), alto);
-    g.drawImage(icono, x0, Math.round(cy - icono.height / 2));
-    g.fillStyle = '#a5f3fc';
-    g.textAlign = 'left';
-    g.textBaseline = 'middle';
-    g.fillText(reloj.texto, x0 + icono.width + Math.round(tam * 0.35), cy);
-    g.globalAlpha = 1;
+    gt.globalAlpha = reloj.fijo ? 1 : Math.min(1, (1000 - reloj.t) / 300);
+    gt.fillStyle = 'rgba(8, 13, 26, .78)';
+    gt.fillRect(x0 - Math.round(tam * 0.35), Math.round(cy - alto / 2), Math.round(ancho + tam * 0.7), alto);
+    gt.drawImage(icono, x0, Math.round(cy - icono.height / 2));
+    gt.fillStyle = '#a5f3fc';
+    gt.textAlign = 'left';
+    gt.textBaseline = 'middle';
+    gt.fillText(reloj.texto, x0 + icono.width + Math.round(tam * 0.35), cy);
+    gt.globalAlpha = 1;
+    marcar(cy - alto / 2, cy + alto / 2);
   }
 
-  function efectos(dt) {
+  function efectos(dt, quieto) {
     for (let i = flotantes.length - 1; i >= 0; i--) {
       const f = flotantes[i];
       f.t += dt;
       if (f.t > 900) { flotantes.splice(i, 1); continue; }
       const tam = Math.max(12, Math.round(4.2 * u));
-      g.font = `700 ${tam}px 'Silkscreen', ui-monospace, monospace`;
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      g.globalAlpha = 1 - f.t / 900;
-      g.fillStyle = f.color;
-      g.fillText(f.texto, f.x * u, (f.y - f.t / 90) * u);
-      g.globalAlpha = 1;
+      gt.font = `700 ${tam}px 'Silkscreen', ui-monospace, monospace`;
+      gt.textAlign = 'center';
+      gt.textBaseline = 'middle';
+      gt.globalAlpha = 1 - f.t / 900;
+      gt.fillStyle = f.color;
+      const y = (f.y - f.t / 90) * u;
+      gt.fillText(f.texto, f.x * u, y);
+      gt.globalAlpha = 1;
+      marcar(y - tam, y + tam);
     }
+    // el sello salta al estamparse: de 1,6 a su tamaño en 140 ms
     for (let i = sellos.length - 1; i >= 0; i--) {
       const s = sellos[i];
       s.t += dt;
       if (s.t > 650) { sellos.splice(i, 1); continue; }
-      const pop = s.t < 90 ? 1.35 - s.t / 300 : 1;
+      const pop = !quieto && s.t < 140 ? 1.6 - 0.6 * (s.t / 140) : 1;
       const tam = Math.round(4.6 * u * pop);
-      g.font = `700 ${tam}px 'Silkscreen', ui-monospace, monospace`;
-      const ancho = g.measureText(s.texto).width + tam;
-      g.globalAlpha = s.t > 450 ? 1 - (s.t - 450) / 200 : 1;
-      g.strokeStyle = s.color;
-      g.lineWidth = Math.max(2, u);
-      g.strokeRect(Math.round(s.x * u - ancho / 2), Math.round(s.y * u - tam * 0.8), Math.round(ancho), Math.round(tam * 1.6));
-      g.fillStyle = s.color;
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      g.fillText(s.texto, s.x * u, s.y * u);
-      g.globalAlpha = 1;
+      gt.font = `700 ${tam}px 'Silkscreen', ui-monospace, monospace`;
+      const ancho = gt.measureText(s.texto).width + tam;
+      gt.globalAlpha = s.t > 450 ? 1 - (s.t - 450) / 200 : 1;
+      gt.strokeStyle = s.color;
+      gt.lineWidth = Math.max(2, u);
+      gt.strokeRect(Math.round(s.x * u - ancho / 2), Math.round(s.y * u - tam * 0.8), Math.round(ancho), Math.round(tam * 1.6));
+      gt.fillStyle = s.color;
+      gt.textAlign = 'center';
+      gt.textBaseline = 'middle';
+      gt.fillText(s.texto, s.x * u, s.y * u);
+      gt.globalAlpha = 1;
+      marcar(s.y * u - tam * 0.8 - u, s.y * u + tam * 0.8 + u);
     }
   }
 
@@ -393,29 +512,40 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
     const dt = antes ? Math.min(50, ahora - antes) : 16;
     antes = ahora;
     if (abierta > 0) abierta -= dt / 16;
-    g.save();
-    const tiembla = temblor > 0;
-    if (tiembla) {
-      g.translate(((temblor % 2) ? 1 : -1) * u, 0);
-      temblor--;
-    }
-    const suelo = sueloEntero || tiembla || tembloAntes ? null : pisados;
-    sueloEntero = false;
-    tembloAntes = tiembla;
     const quieto = menosMovimiento();
+    // la cámara: la sacudida (trauma², en píxeles del dibujo enteros) y el empujón de la jugada
+    let sx = 0, sy = 0;
+    if (!quieto && trauma > 0) {
+      const k = trauma * trauma;
+      sx = Math.round(SACUDIDA * k * ruido(ahora, 1));
+      sy = Math.round(SACUDIDA * k * ruido(ahora, 2));
+    }
+    trauma = Math.max(0, trauma - dt / 650);
+    if (patadaT > 0) { if (!quieto) sx += patadaDir; patadaT -= dt; }
+    limpiarTexto();
+    g.save();
+    gt.save();
+    g.translate(sx * u, sy * u);
+    gt.translate(sx * u, sy * u);
     pintarCielo(g, L, estrellas, ahora, quieto);
     pintarCiudad(g, L, edificios, ahora, quieto);
     const [img, encendida] = torreImg(ahora);
     pintarTorre(g, L, img, encendida, ahora, quieto);
-    pintarCalzada(g, L, 0, 0, suelo);
+    pintarCalzada(g, L);
+    pintarChatarra();
     autosDibujo(ahora, dt, quieto);
     pintarBarrera(g, L, fijo('poste', BARRERA_POSTE, PALETA_BARRERA), abierta > 0);
-    efectos(dt);
+    pintarAnillos(dt, quieto);
+    efectos(dt, quieto);
     pintarReloj(dt);
     g.restore();
+    gt.restore();
   }
 
-  function limpiar() { autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; sueloEntero = true; reloj = null; autoGiro = null; }
+  function limpiar() {
+    autos.clear(); flotantes.length = 0; sellos.length = 0; abierta = 0; reloj = null; autoGiro = null;
+    trauma = 0; patadaT = 0; anillos.length = 0; chispas.length = 0; chatarra.length = 0; pila.clear();
+  }
 
   // lo que tardó la última respuesta; `fijo` lo deja a la vista (en el giro, mientras el auto espera)
   function mostrarReloj(texto, fijo = false) {
@@ -433,5 +563,5 @@ export function crearEscena(canvas, { menosMovimiento = () => false } = {}) {
   }
 
   redimensionar();
-  return { redimensionar, eventos, dibujar, encenderTorre, limpiar, mostrarReloj, empezarGiro, moverGiro, zonaCalle: () => (calle + 8) / H };
+  return { redimensionar, eventos, dibujar, encenderTorre, limpiar, mostrarReloj, empezarGiro, moverGiro, patada, zonaCalle: () => (calle + 8) / H };
 }

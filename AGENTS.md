@@ -23,7 +23,7 @@ ahora. El primer nivel es «El peaje»: autos que llegan a una barrera y el juga
   partida no sale texto de historia (solo la ayuda de Chispa del tutorial).
 - `public/js/giro.js`: el giro de El peaje, solo en la primera victoria (clave `guardia-giro-peaje`): si toca verlo,
   el guion como datos y dónde va el auto en cada instante. Pasa después del final y no toca el motor.
-- `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida en canvas), `apertura.js`
+- `public/js/dibujo/`: `sprites.js` (el pixel art como datos), `escena.js` (la partida, también en dos lienzos, con el peso de los golpes: sacudida, empujón, anillo del combo y chatarra), `apertura.js`
   (el dibujo de la cinemática en dos lienzos: el mundo a la cuadrícula del dibujo y el texto nítido; ver la regla
   de pixel art más abajo) y `postal.js` (dibujos quietos: la imagen del resultado, la de «Su puerta» y la tarjeta).
 - `public/js/reto.js`: el reto del día, la racha y lo que se guarda en el teléfono. Si existe
@@ -89,7 +89,9 @@ vienen y la revisión de partidas. Reglas:
   resolución** del canvas para que se vea «más pixel». Lo que sí se hace, por velocidad, es lo de la apertura:
   el mundo en un lienzo de un píxel por píxel del dibujo, agrandado a un múltiplo entero con
   `image-rendering: pixelated` (el pixel art queda idéntico porque ya estaba en esa cuadrícula), y el texto en
-  otro lienzo encima, a la densidad de la pantalla. El texto nunca va en el lienzo del mundo.
+  otro lienzo encima, a la densidad de la pantalla. El texto nunca va en el lienzo del mundo. La apertura y la
+  partida lo hacen así. La sacudida y el empujón mueven los dos lienzos en píxeles del dibujo enteros, nunca rotan,
+  y «Menos movimiento» los apaga; nada destella.
 - **Política de seguridad de contenido estricta.** En el HTML no hay `<script>` sin `src`, ni `<style>`, ni
   atributos `style`, ni `onclick` y similares. En JavaScript, `elemento.style` sí se puede.
 - **Nada de afuera.** Ni fuentes, ni imágenes, ni scripts de otros sitios: todo se sirve desde `public/`. La única

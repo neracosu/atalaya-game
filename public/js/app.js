@@ -38,7 +38,7 @@ function aplicarSonido() {
 }
 
 const menosMovimiento = () => datos.ajustes.movimiento || matchMedia('(prefers-reduced-motion: reduce)').matches;
-const escena = crearEscena($('mundo'), { menosMovimiento });
+const escena = crearEscena($('mundo'), { texto: $('mundo-texto'), menosMovimiento });
 
 function vibrar(ms) { if (datos.ajustes.vibracion && navigator.vibrate) try { navigator.vibrate(ms); } catch { } }
 
@@ -462,7 +462,7 @@ function decidir(accion) {
   if (!partida || partida.terminada) return;
   S.despertar();
   const aceptada = jugar(partida, accion);
-  if (aceptada) jugadaEn = performance.now();
+  if (aceptada) { jugadaEn = performance.now(); escena.patada(accion === 'P' ? 1 : -1); }
   if (aceptada && primeraJugadaDesde) {
     // la primera jugada de la primera partida: cuánto pasó desde que empezó, tras la apertura (solo sale el tramo)
     try { performance.mark('guardia-primera-jugada'); } catch { }
